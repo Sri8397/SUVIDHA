@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import './Testimonials.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Testimonials = () => {
     const [activeIndex, setActiveIndex] = useState(0);
+    const { trackClick } = useActivityTracker();
 
     const testimonials = [
         {
@@ -68,14 +70,17 @@ const Testimonials = () => {
     ];
 
     const nextTestimonial = () => {
+        trackClick('testimonials_next_click', { currentTestimonial: testimonials[activeIndex].name, section: 'testimonials' });
         setActiveIndex((prev) => (prev + 1) % testimonials.length);
     };
 
     const prevTestimonial = () => {
+        trackClick('testimonials_prev_click', { currentTestimonial: testimonials[activeIndex].name, section: 'testimonials' });
         setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
     };
 
     const goToTestimonial = (index) => {
+        trackClick('testimonials_dot_click', { testimonialIndex: index + 1, section: 'testimonials' });
         setActiveIndex(index);
     };
 

@@ -1,6 +1,17 @@
 import './Hero.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Hero = () => {
+    const { trackClick } = useActivityTracker();
+
+    const handleStartTrial = () => {
+        trackClick('hero_start_trial_click', { buttonText: 'Start Free Trial', section: 'hero' });
+    };
+
+    const handleWatchDemo = () => {
+        trackClick('hero_watch_demo_click', { buttonText: 'Watch Demo', section: 'hero' });
+    };
+
     return (
         <section className="hero">
             <div className="hero-background">
@@ -13,20 +24,20 @@ const Hero = () => {
                 <div className="hero-text animate-fade-in-up">
                     <h1 className="hero-title">
                         Business Management
-                        <span className="gradient-text"> Made Simple</span>
+                        <span className="gradient-text">Made Simple</span>
                     </h1>
                     <p className="hero-subtitle">
                         Empower your MSME with Suvidha - the all-in-one SaaS platform designed for Indian businesses.
                         Manage billing, inventory, customers, and more with ease.
                     </p>
                     <div className="hero-cta">
-                        <button className="btn btn-primary btn-large">
+                        <button className="btn btn-primary btn-large" onClick={handleStartTrial}>
                             Start Free Trial
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
                         </button>
-                        <button className="btn btn-secondary btn-large">
+                        <button className="btn btn-secondary btn-large" onClick={handleWatchDemo}>
                             Watch Demo
                         </button>
                     </div>

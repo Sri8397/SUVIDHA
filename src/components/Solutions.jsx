@@ -1,6 +1,16 @@
 import './Solutions.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Solutions = () => {
+    const { trackClick } = useActivityTracker();
+
+    const handleLearnMore = (solutionTitle) => {
+        trackClick('solutions_learn_more_click', { solutionTitle, section: 'solutions' });
+    };
+
+    const handleContactSales = () => {
+        trackClick('solutions_contact_sales_click', { buttonText: 'Contact Sales', section: 'solutions' });
+    };
     const solutions = [
         {
             id: 1,
@@ -139,7 +149,7 @@ const Solutions = () => {
                                     </li>
                                 ))}
                             </ul>
-                            <button className="solution-btn">
+                            <button className="solution-btn" onClick={() => handleLearnMore(solution.title)}>
                                 Learn More
                                 <span className="btn-arrow">→</span>
                             </button>
@@ -152,7 +162,7 @@ const Solutions = () => {
                         <h3>Don't see your industry?</h3>
                         <p>Our platform is highly customizable. Let's discuss your specific needs.</p>
                     </div>
-                    <button className="btn btn-primary">Contact Sales</button>
+                    <button className="btn btn-primary" onClick={handleContactSales}>Contact Sales</button>
                 </div>
             </div>
         </section>

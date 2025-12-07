@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import './Navbar.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { trackClick } = useActivityTracker();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -12,6 +14,18 @@ const Navbar = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const handleNavClick = (linkName) => {
+        trackClick('navbar_link_click', { linkName, section: 'navbar' });
+    };
+
+    const handleLogin = () => {
+        trackClick('navbar_login_click', { buttonText: 'Login', section: 'navbar' });
+    };
+
+    const handleGetStarted = () => {
+        trackClick('navbar_get_started_click', { buttonText: 'Get Started', section: 'navbar' });
+    };
 
     return (
         <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
@@ -27,15 +41,15 @@ const Navbar = () => {
                 </div>
 
                 <ul className={`navbar-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#solutions">Solutions</a></li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#features" onClick={() => handleNavClick('Features')}>Features</a></li>
+                    <li><a href="#solutions" onClick={() => handleNavClick('Solutions')}>Solutions</a></li>
+                    <li><a href="#pricing" onClick={() => handleNavClick('Pricing')}>Pricing</a></li>
+                    <li><a href="#testimonials" onClick={() => handleNavClick('Testimonials')}>Testimonials</a></li>
                 </ul>
 
                 <div className="navbar-actions">
-                    <button className="btn-login">Login</button>
-                    <button className="btn btn-primary">Get Started</button>
+                    <button className="btn-login" onClick={handleLogin}>Login</button>
+                    <button className="btn btn-primary" onClick={handleGetStarted}>Get Started</button>
                 </div>
 
                 <button

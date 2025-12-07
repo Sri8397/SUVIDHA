@@ -1,6 +1,17 @@
 import './Pricing.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Pricing = () => {
+    const { trackClick } = useActivityTracker();
+
+    const handlePlanClick = (planName) => {
+        trackClick('pricing_plan_click', {
+            planName,
+            buttonText: planName === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial',
+            section: 'pricing'
+        });
+    };
+
     const plans = [
         {
             name: 'Starter',
@@ -94,7 +105,10 @@ const Pricing = () => {
                                 ))}
                             </ul>
 
-                            <button className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'} btn-large plan-cta`}>
+                            <button
+                                className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'} btn-large plan-cta`}
+                                onClick={() => handlePlanClick(plan.name)}
+                            >
                                 {plan.name === 'Enterprise' ? 'Contact Sales' : 'Start Free Trial'}
                             </button>
                         </div>
