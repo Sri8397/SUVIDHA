@@ -4,8 +4,11 @@ import Features from './components/Features';
 import Pricing from './components/Pricing';
 import Footer from './components/Footer';
 import './App.css';
+import useUserTracker from './hooks/useUserTracker';
 
 function App() {
+  useUserTracker();
+
   return (
     <div className="App">
       <Navbar />
