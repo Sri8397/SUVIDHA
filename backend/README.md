@@ -65,12 +65,12 @@ APP_NAME=backend
 
 ```bash
 # From the backend directory
-python -m uvicorn main:app --reload --port 8080
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8080
 ```
 
 You should see:
 ```
-INFO:     Uvicorn running on http://127.0.0.1:8080
+INFO:     Uvicorn running on http://0.0.0.0:8080
 INFO:     Application startup complete.
 ```
 
@@ -104,7 +104,7 @@ VITE v7.2.6  ready in 636 ms
 **Terminal 1 - Backend:**
 ```bash
 cd backend
-python -m uvicorn main:app --reload --port 8080
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8080
 ```
 
 **Terminal 2 - Frontend:**
