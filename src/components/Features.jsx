@@ -1,6 +1,12 @@
 import './Features.css';
+import useActivityTracker from '../hooks/useActivityTracker';
 
 const Features = () => {
+    const { trackClick } = useActivityTracker();
+
+    const handleExploreFeatures = () => {
+        trackClick('features_explore_click', { buttonText: 'Explore All Features', section: 'features' });
+    };
     const features = [
         {
             icon: '📊',
@@ -67,7 +73,7 @@ const Features = () => {
                 </div>
 
                 <div className="features-cta">
-                    <button className="btn btn-primary btn-large">
+                    <button className="btn btn-primary btn-large" onClick={handleExploreFeatures}>
                         Explore All Features
                     </button>
                 </div>
