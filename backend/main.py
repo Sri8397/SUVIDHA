@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import tracking
+from routers import tracking, analytics
 from dotenv import load_dotenv
 import os
 
@@ -19,6 +19,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(tracking.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 
 @app.get("/")
 async def root():
