@@ -35,7 +35,8 @@ const useUserTracker = () => {
                 }
 
                 // Track initial visit
-                await fetch(`http://localhost:8080/api/track?userIdentifier=${userId}`, {
+                const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+                await fetch(`${API_BASE_URL}/api/track?userIdentifier=${userId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -44,7 +45,7 @@ const useUserTracker = () => {
                 console.log('User tracked:', userId);
 
                 // Log initial page view activity
-                await fetch('http://localhost:8080/api/activity', {
+                await fetch(`${API_BASE_URL}/api/activity`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

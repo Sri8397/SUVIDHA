@@ -3,25 +3,25 @@
  * Handles communication with backend analytics endpoints
  */
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 /**
  * Log an activity/event to the backend
  */
 export const logActivity = async (activityData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/activity`, {
+        const response = await fetch(`${API_BASE_URL}/api/activity`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(activityData)
         });
-        
+
         if (!response.ok) {
             throw new Error('Failed to log activity');
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error('Error logging activity:', error);
@@ -83,12 +83,12 @@ export const trackEvent = (userId, sessionId, eventType, eventName, eventData = 
 export const getAnalyticsOverview = async (params = {}) => {
     try {
         const queryParams = new URLSearchParams(params);
-        const response = await fetch(`${API_BASE_URL}/analytics/overview?${queryParams}`);
-        
+        const response = await fetch(`${API_BASE_URL}/api/analytics/overview?${queryParams}`);
+
         if (!response.ok) {
             throw new Error('Failed to fetch analytics');
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error('Error fetching analytics:', error);
@@ -101,12 +101,12 @@ export const getAnalyticsOverview = async (params = {}) => {
  */
 export const getUserTimeline = async (userId, limit = 50) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/analytics/user/${userId}?limit=${limit}`);
-        
+        const response = await fetch(`${API_BASE_URL}/api/analytics/user/${userId}?limit=${limit}`);
+
         if (!response.ok) {
             throw new Error('Failed to fetch user timeline');
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error('Error fetching user timeline:', error);
