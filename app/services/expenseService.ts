@@ -122,6 +122,8 @@ export async function getExpenseBreakdown(): Promise<Record<ExpenseCategory, num
         inventory: 0,
         transport: 0,
         maintenance: 0,
+        stock_received: 0,
+        stock_wastage: 0,
         other: 0,
     };
 

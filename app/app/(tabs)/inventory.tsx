@@ -8,6 +8,7 @@ import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { StockAdjustmentForm } from '@/components/forms/StockAdjustmentForm';
 import { Product } from '@/types';
 
 export default function InventoryScreen() {
@@ -20,7 +21,9 @@ export default function InventoryScreen() {
     const [showSaleForm, setShowSaleForm] = useState(false);
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [showCustomerForm, setShowCustomerForm] = useState(false);
+    const [showStockAdjustForm, setShowStockAdjustForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | undefined>();
+    const [adjustingProduct, setAdjustingProduct] = useState<Product | undefined>();
 
     // Filter products
     const filteredProducts = useMemo(() => {
@@ -65,6 +68,16 @@ export default function InventoryScreen() {
     const handleCloseProductForm = () => {
         setShowProductForm(false);
         setEditingProduct(undefined);
+    };
+
+    const handleStockAdjust = (product: Product) => {
+        setAdjustingProduct(product);
+        setShowStockAdjustForm(true);
+    };
+
+    const handleCloseStockAdjustForm = () => {
+        setShowStockAdjustForm(false);
+        setAdjustingProduct(undefined);
     };
 
     if (isLoading) {
@@ -146,22 +159,30 @@ export default function InventoryScreen() {
                         )}
                         <View style={styles.productInfo}>
                             <Text style={styles.productName}>{product.name}</Text>
-                            <Text style={[
-                                styles.productStock,
-                                product.stock <= product.minStock && styles.lowStock
-                            ]}>
-                                स्टॉक: {product.stock}
-                                {product.stock <= product.minStock && ' ⚠️'}
-                            </Text>
+                            <View style={product.stock <= product.minStock ? styles.lowStockBadge : null}>
+                                <Text style={[
+                                    styles.productStock,
+                                    product.stock <= product.minStock && styles.lowStockText
+                                ]}>
+                                    स्टॉक: {product.stock}
+                                </Text>
+                            </View>
                             <Text style={styles.productPrice}>₹ {product.price.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.productActions}>
+                            <TouchableOpacity
+                                style={styles.stockButton}
+                                onPress={() => handleStockAdjust(product)}
+                            >
+                                <FontAwesome name="cubes" size={14} color="#1976D2" />
+                                <Text style={styles.stockButtonText}>स्टॉक</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.editButton}
                                 onPress={() => handleEdit(product)}
                             >
                                 <FontAwesome name="pencil" size={14} color="#2E7D32" />
-                                <Text style={styles.editButtonText}>एडिट करें</Text>
+                                <Text style={styles.editButtonText}>एडिट</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.deleteButton}
@@ -212,6 +233,11 @@ export default function InventoryScreen() {
             <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
             <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
             <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
+            <StockAdjustmentForm
+                visible={showStockAdjustForm}
+                onClose={handleCloseStockAdjustForm}
+                preSelectedProduct={adjustingProduct}
+            />
         </View>
     );
 }
@@ -338,9 +364,18 @@ const styles = StyleSheet.create({
         color: '#757575',
         marginBottom: 4,
     },
-    lowStock: {
+    lowStockBadge: {
+        backgroundColor: '#FFEBEE',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+        marginBottom: 6,
+    },
+    lowStockText: {
         color: '#D32F2F',
         fontWeight: '600',
+        marginBottom: 0,
     },
     productPrice: {
         fontSize: 18,
@@ -349,15 +384,28 @@ const styles = StyleSheet.create({
     },
     productActions: {
         flexDirection: 'row',
-        gap: 16,
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: '#F5F5F5',
         marginTop: 0,
     },
-    editButton: {
+    stockButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    stockButtonText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1976D2',
+    },
+    editButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
     },
     editButtonText: {
@@ -366,8 +414,10 @@ const styles = StyleSheet.create({
         color: '#2E7D32',
     },
     deleteButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
     },
     deleteButtonText: {

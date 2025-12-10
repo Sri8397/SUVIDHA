@@ -3,17 +3,22 @@
 // ============================================
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Product, Customer, Sale, Expense, Category, DashboardStats, WeeklyData, CategoryBreakdown } from '@/types';
+import { Product, Customer, Sale, Expense, Category, DashboardStats, WeeklyData, CategoryBreakdown, Transaction } from '@/types';
 import * as productService from '@/services/productService';
 import * as customerService from '@/services/customerService';
 import * as saleService from '@/services/saleService';
 import * as expenseService from '@/services/expenseService';
 import * as statsService from '@/services/statsService';
+import * as transactionService from '@/services/transactionService';
 
 // Context Types
 interface DataContextType {
     // Loading state
     isLoading: boolean;
+
+    // Transactions
+    transactions: Transaction[];
+    refreshTransactions: () => Promise<void>;
 
     // Products
     products: Product[];
@@ -76,6 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     // Data state
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
@@ -88,6 +94,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
 
     // Refresh functions
+    const refreshTransactions = useCallback(async () => {
+        const trans = await transactionService.getTransactions();
+        setTransactions(trans);
+    }, []);
+
     const refreshProducts = useCallback(async () => {
         const [prods, cats, lowStock] = await Promise.all([
             productService.getProducts(),
@@ -133,6 +144,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         try {
             await Promise.all([
+                refreshTransactions(),
                 refreshProducts(),
                 refreshCustomers(),
                 refreshSales(),
@@ -142,33 +154,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsLoading(false);
         }
-    }, [refreshProducts, refreshCustomers, refreshSales, refreshExpenses, refreshStats]);
+    }, [refreshTransactions, refreshProducts, refreshCustomers, refreshSales, refreshExpenses, refreshStats]);
 
     // Initial load
     useEffect(() => {
         refreshAll();
     }, []);
 
+    // Note: Transactions are now derived from Sales + Expenses, not stored separately
+    // The transactionService.getTransactions() computes them on-the-fly
+
     // Product operations
     const addProduct = useCallback(async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
         const newProduct = await productService.addProduct(product);
+        const today = new Date().toISOString().split('T')[0];
 
         // Auto-create expense for inventory purchase if stock > 0 and costPrice > 0
+        // This expense will automatically appear in derived transactions
         if (product.stock > 0 && product.costPrice > 0) {
             const inventoryExpense = product.costPrice * product.stock;
-            const today = new Date().toISOString().split('T')[0];
             await expenseService.addExpense({
                 category: 'inventory',
                 amount: inventoryExpense,
-                description: `स्टॉक खरीद: ${product.name} (${product.stock} × ₹${product.costPrice})`,
+                description: `${product.name} (${product.stock} × ₹${product.costPrice})`,
                 date: today,
             });
             await refreshExpenses();
         }
 
-        await Promise.all([refreshProducts(), refreshStats()]);
+        await Promise.all([refreshProducts(), refreshStats(), refreshTransactions()]);
         return newProduct;
-    }, [refreshProducts, refreshExpenses, refreshStats]);
+    }, [refreshProducts, refreshExpenses, refreshStats, refreshTransactions]);
 
     const updateProduct = useCallback(async (id: string, updates: Partial<Product>) => {
         const updated = await productService.updateProduct(id, updates);
@@ -191,9 +207,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const updateCustomer = useCallback(async (id: string, updates: Partial<Customer>) => {
         const updated = await customerService.updateCustomer(id, updates);
-        if (updated) await refreshCustomers();
+        if (updated) {
+            await refreshCustomers();
+            // Also refresh stats if outstanding changed (affects pendingPayments on dashboard)
+            if ('outstanding' in updates) {
+                await refreshStats();
+            }
+        }
         return updated;
-    }, [refreshCustomers]);
+    }, [refreshCustomers, refreshStats]);
 
     const deleteCustomer = useCallback(async (id: string) => {
         const success = await customerService.deleteCustomer(id);
@@ -204,24 +226,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Sale operations
     const createSale = useCallback(async (sale: Omit<Sale, 'id' | 'createdAt'>) => {
         const newSale = await saleService.createSale(sale);
-        await Promise.all([refreshSales(), refreshProducts(), refreshCustomers(), refreshStats()]);
+        // Transaction is derived automatically from the sale
+        await Promise.all([refreshSales(), refreshProducts(), refreshCustomers(), refreshStats(), refreshTransactions()]);
         return newSale;
-    }, [refreshSales, refreshProducts, refreshCustomers, refreshStats]);
+    }, [refreshSales, refreshProducts, refreshCustomers, refreshStats, refreshTransactions]);
 
     const recordPayment = useCallback(async (saleId: string, amount: number) => {
+        // This is for recording payment against a specific sale
         const updated = await saleService.recordPayment(saleId, amount);
         if (updated) {
-            await Promise.all([refreshSales(), refreshCustomers(), refreshStats()]);
+            await Promise.all([refreshSales(), refreshCustomers(), refreshStats(), refreshTransactions()]);
         }
         return updated;
-    }, [refreshSales, refreshCustomers, refreshStats]);
+    }, [refreshSales, refreshCustomers, refreshStats, refreshTransactions]);
 
     // Expense operations
     const addExpense = useCallback(async (expense: Omit<Expense, 'id' | 'createdAt'>) => {
         const newExpense = await expenseService.addExpense(expense);
-        await Promise.all([refreshExpenses(), refreshStats()]);
+        // Transaction is derived automatically from the expense
+        await Promise.all([refreshExpenses(), refreshStats(), refreshTransactions()]);
         return newExpense;
-    }, [refreshExpenses, refreshStats]);
+    }, [refreshExpenses, refreshStats, refreshTransactions]);
 
     const updateExpense = useCallback(async (id: string, updates: Partial<Expense>) => {
         const updated = await expenseService.updateExpense(id, updates);
@@ -242,6 +267,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const value: DataContextType = {
         isLoading,
+        transactions,
+        refreshTransactions,
         products,
         categories,
         lowStockProducts,

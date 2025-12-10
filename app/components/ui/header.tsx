@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
@@ -10,9 +11,11 @@ interface HeaderProps {
     title: string;
     showOnlineStatus?: boolean;
     showLanguageToggle?: boolean;
+    showBackButton?: boolean;
 }
 
-export function Header({ title, showOnlineStatus = false, showLanguageToggle = true }: HeaderProps) {
+export function Header({ title, showOnlineStatus = false, showLanguageToggle = true, showBackButton = false }: HeaderProps) {
+    const router = useRouter();
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('hi');
@@ -21,13 +24,19 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
         <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <View style={styles.profileImage}>
-                        <Image
-                            source={require('@/assets/images/logo.png')}
-                            style={styles.logo}
-                            resizeMode="contain"
-                        />
-                    </View>
+                    {showBackButton ? (
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                            <FontAwesome name="arrow-left" size={20} color="#212121" />
+                        </TouchableOpacity>
+                    ) : (
+                        <View style={styles.profileImage}>
+                            <Image
+                                source={require('@/assets/images/logo.png')}
+                                style={styles.logo}
+                                resizeMode="contain"
+                            />
+                        </View>
+                    )}
                     <View>
                         <Text style={styles.headerTitle}>{title}</Text>
                         {showOnlineStatus && (
@@ -151,5 +160,12 @@ const styles = StyleSheet.create({
         height: 10,
         borderRadius: 5,
         backgroundColor: '#D32F2F',
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
     },
 });

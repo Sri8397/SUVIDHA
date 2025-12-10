@@ -8,10 +8,11 @@ import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
+import { ReceivePaymentForm } from '@/components/forms/ReceivePaymentForm';
 import { Customer } from '@/types';
 
 export default function CustomersScreen() {
-    const { isLoading, customers, deleteCustomer } = useData();
+    const { isLoading, customers, deleteCustomer, updateCustomer } = useData();
     const [searchQuery, setSearchQuery] = useState('');
 
     // Form states
@@ -19,7 +20,9 @@ export default function CustomersScreen() {
     const [showSaleForm, setShowSaleForm] = useState(false);
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [showProductForm, setShowProductForm] = useState(false);
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>();
+    const [paymentCustomer, setPaymentCustomer] = useState<Customer | undefined>();
 
     // Filter customers
     const filteredCustomers = useMemo(() => {
@@ -62,9 +65,19 @@ export default function CustomersScreen() {
         );
     };
 
+    const handleReceivePayment = (customer: Customer) => {
+        setPaymentCustomer(customer);
+        setShowPaymentForm(true);
+    };
+
     const handleCloseCustomerForm = () => {
         setShowCustomerForm(false);
         setEditingCustomer(undefined);
+    };
+
+    const handleClosePaymentForm = () => {
+        setShowPaymentForm(false);
+        setPaymentCustomer(undefined);
     };
 
     if (isLoading) {
@@ -141,7 +154,7 @@ export default function CustomersScreen() {
                                 onPress={() => handleCall(customer.phone)}
                             >
                                 <FontAwesome name="phone" size={14} color="#2E7D32" />
-                                <Text style={styles.callButtonText}>कॉल करें</Text>
+                                <Text style={styles.callButtonText}>कॉल</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.messageButton}
@@ -150,10 +163,18 @@ export default function CustomersScreen() {
                                 <FontAwesome name="whatsapp" size={14} color="#FFFFFF" />
                                 <Text style={styles.messageButtonText}>WhatsApp</Text>
                             </TouchableOpacity>
+                            {customer.outstanding > 0 && (
+                                <TouchableOpacity
+                                    style={styles.clearBakayaButton}
+                                    onPress={() => handleReceivePayment(customer)}
+                                >
+                                    <FontAwesome name="money" size={14} color="#E65100" />
+                                    <Text style={styles.clearBakayaButtonText}>बकाया लें</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 ))}
-
                 {filteredCustomers.length === 0 && (
                     <View style={styles.emptyState}>
                         <FontAwesome name="users" size={48} color="#BDBDBD" />
@@ -172,11 +193,12 @@ export default function CustomersScreen() {
                             </TouchableOpacity>
                         )}
                     </View>
-                )}
-            </ScrollView>
+                )
+                }
+            </ScrollView >
 
             {/* FAB */}
-            <FAB
+            < FAB
                 onNewSale={() => setShowSaleForm(true)}
                 onNewExpense={() => setShowExpenseForm(true)}
                 onAddProduct={() => setShowProductForm(true)}
@@ -192,7 +214,12 @@ export default function CustomersScreen() {
             <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
             <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
             <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
-        </View>
+            <ReceivePaymentForm
+                visible={showPaymentForm}
+                onClose={handleClosePaymentForm}
+                customer={paymentCustomer}
+            />
+        </View >
     );
 }
 
@@ -365,5 +392,22 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#FFFFFF',
+    },
+    clearBakayaButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: '#FFF3E0',
+        borderWidth: 1,
+        borderColor: '#FFB74D',
+    },
+    clearBakayaButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#E65100',
     },
 });

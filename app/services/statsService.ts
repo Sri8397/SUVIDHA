@@ -80,7 +80,8 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
             labels.push(dayLabels[dayOfWeek]);
 
-            const salesOnDay = allSales.filter(s => s.date === dateStr);
+            // Filter only product sales, exclude bakaya payments
+            const salesOnDay = allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
             const daySales = salesOnDay.reduce((sum, s) => sum + s.total, 0);
             salesAmounts.push(daySales);
 
@@ -118,7 +119,8 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
                 date.setDate(date.getDate() - (week * 7 + day));
                 const dateStr = date.toISOString().split('T')[0];
 
-                const salesOnDay = allSales.filter(s => s.date === dateStr);
+                // Filter only product sales, exclude bakaya payments
+                const salesOnDay = allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
                 weekSales += salesOnDay.reduce((sum, s) => sum + s.total, 0);
 
                 for (const sale of salesOnDay) {
@@ -153,7 +155,8 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const monthStart = new Date(year, monthIndex, 1).toISOString().split('T')[0];
             const monthEnd = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
 
-            const salesInMonth = allSales.filter(s => s.date >= monthStart && s.date <= monthEnd);
+            // Get all product sales in this month (exclude bakaya payments)
+            const salesInMonth = allSales.filter(s => s.date >= monthStart && s.date <= monthEnd && s.saleType !== 'BAKAYA_PAYMENT');
             const monthSales = salesInMonth.reduce((sum, s) => sum + s.total, 0);
             salesAmounts.push(monthSales);
 
@@ -257,6 +260,9 @@ export async function getMonthlySummary(): Promise<{
     const sales = await getSalesInRange(startOfMonth, endOfMonth);
     const expenses = await getExpensesInRange(startOfMonth, endOfMonth);
 
+    // Filter only product sales for counting and totals
+    const productSales = sales.filter(s => s.saleType !== 'BAKAYA_PAYMENT');
+
     const totalSales = calculateTotalSales(sales);
     const totalExpenses = calculateTotalExpenses(expenses);
 
@@ -264,6 +270,6 @@ export async function getMonthlySummary(): Promise<{
         totalSales,
         totalExpenses,
         netProfit: totalSales - totalExpenses,
-        salesCount: sales.length,
+        salesCount: productSales.length,
     };
 }

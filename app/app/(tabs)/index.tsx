@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { DualLineChart } from '@/components/ui/line-chart';
@@ -10,10 +11,12 @@ import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { TransactionList } from '@/components/ui/TransactionList';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { isLoading, dashboardStats, weeklyData, lowStockProducts, refreshAll } = useData();
 
   // Form visibility states
@@ -108,13 +111,15 @@ export default function HomeScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <Text style={styles.chartTitle}>साप्ताहिक बिक्री और लाभ</Text>
-            <TouchableOpacity style={styles.viewReportBtn}>
-              <Text style={styles.viewReportText}>View Report</Text>
+            <TouchableOpacity
+              style={styles.viewReportBtn}
+              onPress={() => router.push('/transactions')}
+            >
+              <Text style={styles.viewReportText}>View Transactions</Text>
               <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
             </TouchableOpacity>
           </View>
 
-          {/* Line Chart */}
           {/* Dual Line Chart */}
           <DualLineChart
             data1={weeklyData.sales}

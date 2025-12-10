@@ -139,20 +139,29 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
 
         setIsLoading(true);
         try {
-            const productData = {
-                name: name.trim(),
-                price: Number(price),
-                costPrice: Number(costPrice) || 0,
-                stock: Number(stock),
-                minStock: Number(minStock) || 5,
-                category,
-                image,
-            };
-
             if (editProduct) {
-                await updateProduct(editProduct.id, productData);
+                // When editing, don't update stock (use StockAdjustmentForm instead)
+                const updateData = {
+                    name: name.trim(),
+                    price: Number(price),
+                    costPrice: Number(costPrice) || 0,
+                    minStock: Number(minStock) || 5,
+                    category,
+                    image,
+                };
+                await updateProduct(editProduct.id, updateData);
                 Alert.alert('सफलता', 'प्रोडक्ट अपडेट हो गया');
             } else {
+                // New product - include stock
+                const productData = {
+                    name: name.trim(),
+                    price: Number(price),
+                    costPrice: Number(costPrice) || 0,
+                    stock: Number(stock),
+                    minStock: Number(minStock) || 5,
+                    category,
+                    image,
+                };
                 await addProduct(productData);
                 Alert.alert('सफलता', 'प्रोडक्ट जोड़ दिया गया');
             }
@@ -263,15 +272,21 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     {/* Stock */}
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>वर्तमान स्टॉक *</Text>
+                            <Text style={styles.label}>वर्तमान स्टॉक {editProduct ? '' : '*'}</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, editProduct && styles.inputDisabled]}
                                 value={stock}
-                                onChangeText={setStock}
+                                onChangeText={editProduct ? undefined : setStock}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
+                                editable={!editProduct}
                             />
+                            {editProduct && (
+                                <Text style={styles.helperText}>
+                                    स्टॉक बदलने के लिए 'स्टॉक समायोजन' करें
+                                </Text>
+                            )}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                             <Text style={styles.label}>न्यूनतम स्टॉक</Text>
@@ -425,6 +440,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#212121',
         backgroundColor: '#FAFAFA',
+    },
+    inputDisabled: {
+        backgroundColor: '#F0F0F0',
+        color: '#9E9E9E',
+    },
+    helperText: {
+        fontSize: 11,
+        color: '#757575',
+        marginTop: 4,
+        fontStyle: 'italic',
     },
     row: {
         flexDirection: 'row',

@@ -83,12 +83,15 @@ export interface SaleItem {
     total: number;
 }
 
+// Sale Type - distinguishes between product sale and bakaya payment
+export type SaleType = 'PRODUCT_SALE' | 'BAKAYA_PAYMENT';
+
 // Sale/Transaction Entity
 export interface Sale {
     id: string;
-    customerId?: string; // Optional - for walk-in customers
-    customerName: string;
-    items: SaleItem[];
+    saleType: SaleType;          // NEW: Type of sale
+    customerId?: string;          // Optional - for walk-in customers
+    items: SaleItem[];            // Empty for BAKAYA_PAYMENT
     subtotal: number;
     discount: number;
     total: number;
@@ -107,6 +110,8 @@ export type ExpenseCategory =
     | 'inventory'
     | 'transport'
     | 'maintenance'
+    | 'stock_received'    // Stock received (purchase, return)
+    | 'stock_wastage'     // Damaged, expired, lost
     | 'other';
 
 // Expense Entity
@@ -150,6 +155,7 @@ export interface StoreSettings {
     gstin?: string;
     ownerName: string;
     currency: string;
+    businessType?: string;
 }
 
 // User Profile
@@ -157,6 +163,7 @@ export interface UserProfile {
     name: string;
     phone: string;
     email?: string;
+    profileImage?: string;
     language: 'hi' | 'en';
 }
 
@@ -166,11 +173,25 @@ export const STORAGE_KEYS = {
     CATEGORIES: '@suvidha/categories',
     CUSTOMERS: '@suvidha/customers',
     SALES: '@suvidha/sales',
-    EXPENSES: '@suvidha/expenses',
+    EXPENSES: '@suvidha/expenses',  // Added for clarity
     STORE_SETTINGS: '@suvidha/store_settings',
     USER_PROFILE: '@suvidha/user_profile',
     FIRST_LAUNCH: '@suvidha/first_launch',
+    // Note: Transactions are derived from Sales + Expenses, not stored
 } as const;
+
+// Transaction Entity
+export type TransactionType = 'SALE' | 'EXPENSE' | 'PRODUCT_ADD' | 'PAYMENT_RECEIVED' | 'PAYMENT_GIVEN';
+
+export interface Transaction {
+    id: string;
+    type: TransactionType;
+    amount: number;
+    description: string;
+    date: string;       // YYYY-MM-DD
+    timestamp: number;  // For sorting
+    referenceId?: string; // ID of the related sale/product/expense
+}
 
 // Default Categories
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -191,6 +212,8 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
     inventory: 'स्टॉक खरीद',
     transport: 'ट्रांसपोर्ट',
     maintenance: 'रखरखाव',
+    stock_received: 'माल आया',
+    stock_wastage: 'बर्बादी/नुकसान',
     other: 'अन्य',
 };
 
