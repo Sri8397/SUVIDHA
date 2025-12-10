@@ -1,24 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
-
-// Mock data
-const mockCustomers = [
-    { id: '1', name: 'रमेश कुमार', phone: '9876543210', outstanding: 1200 },
-    { id: '2', name: 'सुनीता शर्मा', phone: '9988776655', outstanding: 500 },
-    { id: '3', name: 'विक्रम सिंह', phone: '9123456789', outstanding: 2500 },
-];
+import { useData } from '@/contexts/DataContext';
+import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { AddSaleForm } from '@/components/forms/AddSaleForm';
+import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
+import { AddProductForm } from '@/components/forms/AddProductForm';
+import { Customer } from '@/types';
 
 export default function CustomersScreen() {
+    const { isLoading, customers, deleteCustomer } = useData();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredCustomers = mockCustomers.filter((customer) =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.phone.includes(searchQuery)
-    );
+    // Form states
+    const [showCustomerForm, setShowCustomerForm] = useState(false);
+    const [showSaleForm, setShowSaleForm] = useState(false);
+    const [showExpenseForm, setShowExpenseForm] = useState(false);
+    const [showProductForm, setShowProductForm] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>();
+
+    // Filter customers
+    const filteredCustomers = useMemo(() => {
+        return customers.filter((customer) =>
+            customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            customer.phone.includes(searchQuery)
+        );
+    }, [customers, searchQuery]);
 
     const handleCall = (phone: string) => {
         Linking.openURL(`tel:${phone}`);
@@ -27,6 +36,44 @@ export default function CustomersScreen() {
     const handleMessage = (phone: string) => {
         Linking.openURL(`https://wa.me/91${phone}`);
     };
+
+    const handleEdit = (customer: Customer) => {
+        setEditingCustomer(customer);
+        setShowCustomerForm(true);
+    };
+
+    const handleDelete = (customer: Customer) => {
+        Alert.alert(
+            'ग्राहक हटाएं',
+            `क्या आप "${customer.name}" को हटाना चाहते हैं?`,
+            [
+                { text: 'रद्द करें', style: 'cancel' },
+                {
+                    text: 'हटाएं',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const success = await deleteCustomer(customer.id);
+                        if (success) {
+                            Alert.alert('सफल', 'ग्राहक हटा दिया गया');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleCloseCustomerForm = () => {
+        setShowCustomerForm(false);
+        setEditingCustomer(undefined);
+    };
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2E7D32" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -40,11 +87,18 @@ export default function CustomersScreen() {
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="खोजें..."
+                    placeholder="नाम या फोन से खोजें..."
                     placeholderTextColor="#9E9E9E"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
+            </View>
+
+            {/* Customer Count */}
+            <View style={styles.countContainer}>
+                <Text style={styles.countText}>
+                    {filteredCustomers.length} ग्राहक
+                </Text>
             </View>
 
             {/* Customer List */}
@@ -55,11 +109,31 @@ export default function CustomersScreen() {
             >
                 {filteredCustomers.map((customer) => (
                     <View key={customer.id} style={styles.customerCard}>
-                        <Text style={styles.customerName}>{customer.name}</Text>
-                        <Text style={styles.customerPhone}>{customer.phone}</Text>
-                        <Text style={styles.customerOutstanding}>
-                            कुल बकाया: <Text style={styles.outstandingAmount}>₹ {customer.outstanding.toLocaleString('en-IN')}</Text>
-                        </Text>
+                        <View style={styles.customerHeader}>
+                            <View style={styles.customerAvatar}>
+                                <Text style={styles.avatarText}>
+                                    {customer.name.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
+                            <View style={styles.customerInfo}>
+                                <Text style={styles.customerName}>{customer.name}</Text>
+                                <Text style={styles.customerPhone}>{customer.phone}</Text>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.moreButton}
+                                onPress={() => handleEdit(customer)}
+                            >
+                                <FontAwesome name="pencil" size={16} color="#757575" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {customer.outstanding > 0 && (
+                            <View style={styles.outstandingBadge}>
+                                <Text style={styles.customerOutstanding}>
+                                    बकाया: <Text style={styles.outstandingAmount}>₹{customer.outstanding.toLocaleString('en-IN')}</Text>
+                                </Text>
+                            </View>
+                        )}
 
                         <View style={styles.customerActions}>
                             <TouchableOpacity
@@ -74,7 +148,7 @@ export default function CustomersScreen() {
                                 onPress={() => handleMessage(customer.phone)}
                             >
                                 <FontAwesome name="whatsapp" size={14} color="#FFFFFF" />
-                                <Text style={styles.messageButtonText}>संदेश भेजें</Text>
+                                <Text style={styles.messageButtonText}>WhatsApp</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -83,18 +157,41 @@ export default function CustomersScreen() {
                 {filteredCustomers.length === 0 && (
                     <View style={styles.emptyState}>
                         <FontAwesome name="users" size={48} color="#BDBDBD" />
-                        <Text style={styles.emptyStateText}>कोई ग्राहक नहीं मिला</Text>
+                        <Text style={styles.emptyStateText}>
+                            {customers.length === 0
+                                ? 'कोई ग्राहक नहीं है। नया ग्राहक जोड़ें।'
+                                : 'कोई ग्राहक नहीं मिला'}
+                        </Text>
+                        {customers.length === 0 && (
+                            <TouchableOpacity
+                                style={styles.addFirstButton}
+                                onPress={() => setShowCustomerForm(true)}
+                            >
+                                <FontAwesome name="plus" size={14} color="#FFFFFF" />
+                                <Text style={styles.addFirstButtonText}>ग्राहक जोड़ें</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
             </ScrollView>
 
             {/* FAB */}
             <FAB
-                onNewSale={() => console.log('New Sale')}
-                onNewExpense={() => console.log('New Expense')}
-                onAddProduct={() => console.log('Add Product')}
-                onAddCustomer={() => console.log('Add Customer')}
+                onNewSale={() => setShowSaleForm(true)}
+                onNewExpense={() => setShowExpenseForm(true)}
+                onAddProduct={() => setShowProductForm(true)}
+                onAddCustomer={() => setShowCustomerForm(true)}
             />
+
+            {/* Forms */}
+            <AddCustomerForm
+                visible={showCustomerForm}
+                onClose={handleCloseCustomerForm}
+                editCustomer={editingCustomer}
+            />
+            <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
+            <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
+            <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
         </View>
     );
 }
@@ -103,6 +200,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
     },
     searchContainer: {
         flexDirection: 'row',
@@ -121,6 +224,14 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         color: '#212121',
+    },
+    countContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+    },
+    countText: {
+        fontSize: 14,
+        color: '#757575',
     },
     scrollView: {
         flex: 1,
@@ -143,35 +254,66 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
+    customerHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    customerAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#E8F5E9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    avatarText: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#2E7D32',
+    },
+    customerInfo: {
+        flex: 1,
+    },
     customerName: {
         fontSize: 18,
         fontWeight: '700',
         color: '#212121',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     customerPhone: {
         fontSize: 14,
         color: '#757575',
-        marginBottom: 4,
+    },
+    moreButton: {
+        padding: 8,
+    },
+    outstandingBadge: {
+        backgroundColor: '#FFF8E1',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginTop: 12,
     },
     customerOutstanding: {
         fontSize: 14,
         color: '#757575',
-        marginBottom: 16,
     },
     outstandingAmount: {
         fontWeight: '700',
-        color: '#212121',
+        color: '#F57C00',
     },
     customerActions: {
         flexDirection: 'row',
         gap: 12,
+        marginTop: 16,
     },
     callButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
-        paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 8,
         borderWidth: 1,
@@ -183,13 +325,14 @@ const styles = StyleSheet.create({
         color: '#2E7D32',
     },
     messageButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
-        paddingHorizontal: 16,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: '#25D366',
     },
     messageButtonText: {
         fontSize: 14,
@@ -205,5 +348,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#757575',
         marginTop: 16,
+        textAlign: 'center',
+        paddingHorizontal: 32,
+    },
+    addFirstButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#2E7D32',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 8,
+        marginTop: 20,
+    },
+    addFirstButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
     },
 });

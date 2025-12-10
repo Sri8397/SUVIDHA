@@ -1,160 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line, Text as SvgText, G, Rect } from 'react-native-svg';
-
-interface LineChartProps {
-    data: number[];
-    labels: string[];
-    color?: string;
-    gradientColors?: string[];
-    height?: number;
-    showDots?: boolean;
-    showValues?: boolean;
-}
-
-export function LineChart({
-    data,
-    labels,
-    color = '#2E7D32',
-    gradientColors = ['rgba(46, 125, 50, 0.15)', 'rgba(46, 125, 50, 0)'],
-    height = 120,
-    showDots = true,
-}: LineChartProps) {
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-    const width = Dimensions.get('window').width - 64; // Account for padding
-    const padding = { top: 30, bottom: 30, left: 20, right: 20 };
-    const chartHeight = height - padding.top - padding.bottom;
-    const chartWidth = width - padding.left - padding.right;
-
-    const maxValue = Math.max(...data);
-    const minValue = Math.min(...data);
-    const range = maxValue - minValue || 1;
-
-    // Calculate points
-    const points = data.map((value, index) => ({
-        x: padding.left + (index / (data.length - 1)) * chartWidth,
-        y: padding.top + chartHeight - ((value - minValue) / range) * chartHeight,
-        value,
-    }));
-
-    // Create line path
-    const linePath = points
-        .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
-        .join(' ');
-
-    // Create area path (closed shape for gradient fill)
-    const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z`;
-
-    // Generate unique ID for this chart instance
-    const gradientId = `areaGradient-${Math.random().toString(36).substr(2, 9)}`;
-
-    const handlePress = (index: number) => {
-        setSelectedIndex(index === selectedIndex ? null : index);
-    };
-
-    return (
-        <View style={[styles.container, { height }]}>
-            <Svg width={width} height={height}>
-                <Defs>
-                    <LinearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor={gradientColors[0]} stopOpacity="0.2" />
-                        <Stop offset="100%" stopColor={gradientColors[1]} stopOpacity="0" />
-                    </LinearGradient>
-                </Defs>
-
-                {/* Grid lines */}
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => (
-                    <Line
-                        key={index}
-                        x1={padding.left}
-                        y1={padding.top + chartHeight * ratio}
-                        x2={width - padding.right}
-                        y2={padding.top + chartHeight * ratio}
-                        stroke="#E0E0E0"
-                        strokeWidth={1}
-                        strokeDasharray="3,3"
-                    />
-                ))}
-
-                {/* Area fill */}
-                <Path d={areaPath} fill={`url(#${gradientId})`} />
-
-                {/* Line */}
-                <Path
-                    d={linePath}
-                    stroke={color}
-                    strokeWidth={2.5}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
-
-                {/* Interactive Dots */}
-                {showDots && points.map((point, index) => {
-                    const isSelected = selectedIndex === index;
-                    const isLast = index === points.length - 1;
-                    const showValueForPoint = isSelected || (selectedIndex === null && isLast);
-
-                    return (
-                        <G key={index} onPress={() => handlePress(index)}>
-                            {/* Larger transparent touch target */}
-                            <Circle
-                                cx={point.x}
-                                cy={point.y}
-                                r={20}
-                                fill="transparent"
-                            />
-                            {/* Visible dot */}
-                            <Circle
-                                cx={point.x}
-                                cy={point.y}
-                                r={isSelected ? 6 : 4}
-                                fill="#FFFFFF"
-                                stroke={color}
-                                strokeWidth={2}
-                            />
-                            {/* Value Label */}
-                            {showValueForPoint && (
-                                <G>
-                                    <Circle
-                                        cx={point.x}
-                                        cy={point.y - 16}
-                                        r={14}
-                                        fill={color}
-                                    />
-                                    <SvgText
-                                        x={point.x}
-                                        y={point.y - 12}
-                                        fill="#FFFFFF"
-                                        fontSize={10}
-                                        fontWeight="600"
-                                        textAnchor="middle"
-                                    >
-                                        {Math.round(point.value / 1000)}k
-                                    </SvgText>
-                                </G>
-                            )}
-                        </G>
-                    );
-                })}
-
-                {/* X-axis labels */}
-                {labels.map((label, index) => (
-                    <SvgText
-                        key={index}
-                        x={padding.left + (index / (labels.length - 1)) * chartWidth}
-                        y={height - 8}
-                        fill="#757575"
-                        fontSize={10}
-                        textAnchor="middle"
-                    >
-                        {label}
-                    </SvgText>
-                ))}
-            </Svg>
-        </View>
-    );
-}
 
 interface DualLineChartProps {
     data1: number[];
@@ -173,8 +19,16 @@ export function DualLineChart({
     color2 = '#F57C00',
     height = 120,
 }: DualLineChartProps) {
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(labels.length > 0 ? labels.length - 1 : null);
+
+    useEffect(() => {
+        if (labels.length > 0) {
+            setSelectedIndex(labels.length - 1);
+        }
+    }, [labels]);
+
     const width = Dimensions.get('window').width - 64;
+    // Removed extraBottomSpace logic to let container grow naturally
     const padding = { top: 30, bottom: 30, left: 20, right: 20 };
     const chartHeight = height - padding.top - padding.bottom;
     const chartWidth = width - padding.left - padding.right;
@@ -208,7 +62,7 @@ export function DualLineChart({
     };
 
     return (
-        <View style={[styles.container, { height }]}>
+        <View style={styles.container}>
             <Svg width={width} height={height}>
                 <Defs>
                     <LinearGradient id={gradientId1} x1="0%" y1="0%" x2="0%" y2="100%">
@@ -253,14 +107,31 @@ export function DualLineChart({
                     const p1 = points1[index];
                     const p2 = points2[index];
                     const distance = Math.abs(p1.y - p2.y);
-                    const offset = 16;
+                    const offset = 18;
                     // If too close, push labels away from each other
-                    const isTooClose = distance < 30;
-                    const y1Label = isTooClose && p1.y < p2.y ? p1.y - offset - 10 : p1.y - offset;
-                    const y2Label = isTooClose && p2.y < p1.y ? p2.y - offset - 10 : (isTooClose ? p2.y + offset + 10 : p2.y - offset);
+                    const isTooClose = distance < 35;
+                    const y1Label = isTooClose && p1.y < p2.y ? p1.y - offset - 12 : p1.y - offset;
+                    const y2Label = isTooClose && p2.y < p1.y ? p2.y - offset - 12 : (isTooClose ? p2.y + offset + 12 : p2.y - offset);
 
                     // Ensure Y2 label doesn't go below chart
                     const safeY2Label = y2Label > height - 15 ? p2.y - offset : y2Label;
+
+                    // Smart value formatting function
+                    const formatValue = (value: number): string => {
+                        if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
+                        if (value >= 1000) return `${Math.round(value / 1000)}K`;
+                        return `${Math.round(value)}`;
+                    };
+
+                    // Calculate dynamic width based on value length
+                    const getLabel1Width = () => {
+                        const formatted = formatValue(p1.value);
+                        return Math.max(24, formatted.length * 7 + 8);
+                    };
+                    const getLabel2Width = () => {
+                        const formatted = formatValue(p2.value);
+                        return Math.max(24, formatted.length * 7 + 8);
+                    };
 
                     return (
                         <G key={index} onPress={() => handlePress(index)}>
@@ -294,16 +165,30 @@ export function DualLineChart({
                             {/* Value Labels */}
                             {showValueForPoint && (
                                 <G>
-                                    {/* Label for Line 1 */}
-                                    <Circle cx={points1[index].x} cy={y1Label - 4} r={14} fill={color1} />
+                                    {/* Label for Line 1 - Pill shape */}
+                                    <Rect
+                                        x={points1[index].x - getLabel1Width() / 2}
+                                        y={y1Label - 14}
+                                        width={getLabel1Width()}
+                                        height={20}
+                                        rx={10}
+                                        fill={color1}
+                                    />
                                     <SvgText x={points1[index].x} y={y1Label} fill="#FFFFFF" fontSize={10} fontWeight="600" textAnchor="middle">
-                                        {Math.round(points1[index].value / 1000)}k
+                                        {formatValue(p1.value)}
                                     </SvgText>
 
-                                    {/* Label for Line 2 */}
-                                    <Circle cx={points2[index].x} cy={safeY2Label - 4} r={14} fill={color2} />
+                                    {/* Label for Line 2 - Pill shape */}
+                                    <Rect
+                                        x={points2[index].x - getLabel2Width() / 2}
+                                        y={safeY2Label - 14}
+                                        width={getLabel2Width()}
+                                        height={20}
+                                        rx={10}
+                                        fill={color2}
+                                    />
                                     <SvgText x={points2[index].x} y={safeY2Label} fill="#FFFFFF" fontSize={10} fontWeight="600" textAnchor="middle">
-                                        {Math.round(points2[index].value / 1000)}k
+                                        {formatValue(p2.value)}
                                     </SvgText>
                                 </G>
                             )}
@@ -317,14 +202,38 @@ export function DualLineChart({
                         key={index}
                         x={padding.left + (index / (labels.length - 1)) * chartWidth}
                         y={height - 8}
-                        fill="#757575"
-                        fontSize={10}
+                        fill={selectedIndex === index ? '#212121' : '#757575'}
+                        fontSize={selectedIndex === index ? 11 : 10}
+                        fontWeight={selectedIndex === index ? '600' : '400'}
                         textAnchor="middle"
                     >
                         {label}
                     </SvgText>
                 ))}
             </Svg>
+
+            {/* Selected Point Info Display - Native View */}
+            {selectedIndex !== null && (
+                <View style={styles.selectedInfoContainer}>
+                    {/* <Text style={styles.selectedLabel}>{labels[selectedIndex]}</Text> */}
+                    <View style={styles.summaryRow}>
+                        <View style={styles.summaryItem}>
+                            <View style={[styles.summaryDot, { backgroundColor: color1 }]} />
+                            <Text style={styles.summaryLabel}>बिक्री:</Text>
+                            <Text style={[styles.summaryValue, { color: color1 }]}>
+                                ₹{data1[selectedIndex]?.toLocaleString('en-IN') || 0}
+                            </Text>
+                        </View>
+                        <View style={styles.summaryItem}>
+                            <View style={[styles.summaryDot, { backgroundColor: color2 }]} />
+                            <Text style={styles.summaryLabel}>लाभ:</Text>
+                            <Text style={[styles.summaryValue, { color: data2[selectedIndex] >= 0 ? color2 : '#D32F2F' }]}>
+                                ₹{data2[selectedIndex]?.toLocaleString('en-IN') || 0}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            )}
         </View>
     );
 }
@@ -333,5 +242,44 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    selectedInfoContainer: {
+        width: '100%',
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#EEEEEE',
+        marginTop: 4,
+        alignItems: 'center',
+    },
+    selectedLabel: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#212121',
+        marginBottom: 8,
+    },
+    summaryRow: {
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'center',
+        gap: 12,
+    },
+    summaryItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    summaryDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginRight: 6,
+    },
+    summaryLabel: {
+        fontSize: 12,
+        color: '#616161',
+        marginRight: 4,
+    },
+    summaryValue: {
+        fontSize: 13,
+        fontWeight: '700',
     },
 });

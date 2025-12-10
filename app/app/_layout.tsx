@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { DataProvider } from '@/contexts/DataContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 export const unstable_settings = {
@@ -43,7 +44,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <DataProvider>
+        <RootLayoutNav />
+      </DataProvider>
     </AuthProvider>
   );
 }

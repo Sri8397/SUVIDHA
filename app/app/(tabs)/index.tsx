@@ -1,32 +1,36 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { LineChart } from '@/components/ui/line-chart';
+import { DualLineChart } from '@/components/ui/line-chart';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
+import { useData } from '@/contexts/DataContext';
+import { AddSaleForm } from '@/components/forms/AddSaleForm';
+import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
+import { AddProductForm } from '@/components/forms/AddProductForm';
+import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 
 const { width } = Dimensions.get('window');
 
-// Mock data
-const mockStats = {
-  todaySales: 12500,
-  pendingPayments: 3200,
-  profit: 4800,
-  expenses: 1500,
-};
-
-const mockWeeklySales = [8000, 10000, 7000, 12000, 9000, 11000, 15000];
-const days = ['सोम', 'मंग', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'];
-
-const mockLowStock = [
-  { id: '1', name: 'पारले-जी बिस्कुट', stock: 5, image: 'https://m.media-amazon.com/images/I/61WfCf0CEQL.jpg' },
-  { id: '2', name: 'आशीर्वाद आटा', stock: 2, image: 'https://m.media-amazon.com/images/I/71xWPpJdpwL.jpg' },
-];
-
 export default function HomeScreen() {
+  const { isLoading, dashboardStats, weeklyData, lowStockProducts, refreshAll } = useData();
+
+  // Form visibility states
+  const [showSaleForm, setShowSaleForm] = useState(false);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={styles.loadingText}>लोड हो रहा है...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -41,7 +45,7 @@ export default function HomeScreen() {
       >
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>नमस्ते, रमेश!</Text>
+          <Text style={styles.welcomeTitle}>नमस्ते!</Text>
           <Text style={styles.welcomeSubtitle}>आज के लिए आपका व्यवसाय सारांश यहाँ है।</Text>
         </View>
 
@@ -56,7 +60,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <Text style={styles.statLabel}>आज की बिक्री</Text>
-              <Text style={styles.statValue}>₹ {mockStats.todaySales.toLocaleString('en-IN')}</Text>
+              <Text style={styles.statValue}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -69,7 +73,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <Text style={styles.statLabel}>लंबित भुगतान</Text>
-              <Text style={styles.statValue}>₹ {mockStats.pendingPayments.toLocaleString('en-IN')}</Text>
+              <Text style={styles.statValue}>₹ {dashboardStats.pendingPayments.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -82,7 +86,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <Text style={styles.statLabel}>लाभ</Text>
-              <Text style={[styles.statValue, { color: '#2E7D32' }]}>₹ {mockStats.profit.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -95,7 +99,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <Text style={styles.statLabel}>खर्च</Text>
-              <Text style={[styles.statValue, { color: '#F57C00' }]}>₹ {mockStats.expenses.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: '#F57C00' }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
             </View>
           </View>
         </View>
@@ -103,7 +107,7 @@ export default function HomeScreen() {
         {/* Weekly Sales Chart */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>साप्ताहिक बिक्री</Text>
+            <Text style={styles.chartTitle}>साप्ताहिक बिक्री और लाभ</Text>
             <TouchableOpacity style={styles.viewReportBtn}>
               <Text style={styles.viewReportText}>View Report</Text>
               <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
@@ -111,13 +115,14 @@ export default function HomeScreen() {
           </View>
 
           {/* Line Chart */}
-          <LineChart
-            data={mockWeeklySales}
-            labels={days}
-            color="#2E7D32"
+          {/* Dual Line Chart */}
+          <DualLineChart
+            data1={weeklyData.sales}
+            data2={weeklyData.profit}
+            labels={weeklyData.labels}
+            color1="#2E7D32"
+            color2="#F57C00"
             height={140}
-            showDots={true}
-            showValues={true}
           />
         </View>
 
@@ -130,28 +135,47 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {mockLowStock.map((item) => (
-            <View key={item.id} style={styles.lowStockCard}>
-              <Image source={{ uri: item.image }} style={styles.productImage} />
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.stockWarning}>केवल {item.stock} स्टॉक में बचे हैं</Text>
-              </View>
-              <TouchableOpacity style={styles.reorderButton}>
-                <Text style={styles.reorderButtonText}>पुनः ऑर्डर करें</Text>
-              </TouchableOpacity>
+          {lowStockProducts.length === 0 ? (
+            <View style={styles.emptyLowStock}>
+              <FontAwesome name="check-circle" size={32} color="#2E7D32" />
+              <Text style={styles.emptyLowStockText}>सभी प्रोडक्ट्स में पर्याप्त स्टॉक है</Text>
             </View>
-          ))}
+          ) : (
+            lowStockProducts.slice(0, 3).map((item) => (
+              <View key={item.id} style={styles.lowStockCard}>
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.productImage} />
+                ) : (
+                  <View style={[styles.productImage, styles.productImagePlaceholder]}>
+                    <FontAwesome name="cube" size={24} color="#BDBDBD" />
+                  </View>
+                )}
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.stockWarning}>केवल {item.stock} स्टॉक में बचे हैं</Text>
+                </View>
+                <TouchableOpacity style={styles.reorderButton}>
+                  <Text style={styles.reorderButtonText}>पुनः ऑर्डर करें</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
 
       {/* FAB */}
       <FAB
-        onNewSale={() => console.log('New Sale')}
-        onNewExpense={() => console.log('New Expense')}
-        onAddProduct={() => console.log('Add Product')}
-        onAddCustomer={() => console.log('Add Customer')}
+        onNewSale={() => setShowSaleForm(true)}
+        onNewExpense={() => setShowExpenseForm(true)}
+        onAddProduct={() => setShowProductForm(true)}
+        onAddCustomer={() => setShowCustomerForm(true)}
       />
+
+      {/* Forms */}
+      <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
+      <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
+      <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
+      <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
     </View>
   );
 }
@@ -160,6 +184,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#757575',
   },
   headerSafeArea: {
     backgroundColor: '#FFFFFF',
@@ -402,6 +437,17 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontWeight: '500',
   },
+  emptyLowStock: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyLowStockText: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 12,
+  },
   lowStockCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -421,6 +467,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#F5F5F5',
     marginRight: 12,
+  },
+  productImagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   productInfo: {
     flex: 1,

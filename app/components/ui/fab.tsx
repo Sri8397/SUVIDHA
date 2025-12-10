@@ -66,7 +66,7 @@ export function FAB({ onNewSale, onNewExpense, onAddProduct, onAddCustomer }: FA
             {isOpen && (
                 <Pressable style={styles.backdrop} onPress={toggleMenu} />
             )}
-            <View style={styles.container}>
+            <View style={styles.container} pointerEvents="box-none">
                 {/* Menu */}
                 <Animated.View
                     style={[

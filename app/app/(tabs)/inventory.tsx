@@ -1,33 +1,79 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
-
-// Mock data
-const categories = [
-    { id: 'all', label: 'सभी' },
-    { id: 'grocery', label: 'किराना' },
-    { id: 'snacks', label: 'स्नैक्स' },
-    { id: 'beverages', label: 'पेय' },
-];
-
-const mockProducts = [
-    { id: '1', name: 'पारले-जी बिस्कुट', stock: 5, price: 20, image: 'https://m.media-amazon.com/images/I/61WfCf0CEQL.jpg', category: 'snacks' },
-    { id: '2', name: 'आशीर्वाद आटा', stock: 2, price: 450, image: 'https://m.media-amazon.com/images/I/71xWPpJdpwL.jpg', category: 'grocery' },
-    { id: '3', name: 'मैगी नूडल्स', stock: 15, price: 144, image: 'https://m.media-amazon.com/images/I/71dZMB+-ObL.jpg', category: 'snacks' },
-];
+import { useData } from '@/contexts/DataContext';
+import { AddProductForm } from '@/components/forms/AddProductForm';
+import { AddSaleForm } from '@/components/forms/AddSaleForm';
+import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
+import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { Product } from '@/types';
 
 export default function InventoryScreen() {
+    const { isLoading, products, categories, deleteProduct } = useData();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredProducts = mockProducts.filter((product) => {
-        const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-    });
+    // Form states
+    const [showProductForm, setShowProductForm] = useState(false);
+    const [showSaleForm, setShowSaleForm] = useState(false);
+    const [showExpenseForm, setShowExpenseForm] = useState(false);
+    const [showCustomerForm, setShowCustomerForm] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | undefined>();
+
+    // Filter products
+    const filteredProducts = useMemo(() => {
+        return products.filter((product) => {
+            const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+    }, [products, selectedCategory, searchQuery]);
+
+    // Category list with "All" option
+    const categoryList = useMemo(() => [
+        { id: 'all', name: 'सभी' },
+        ...categories
+    ], [categories]);
+
+    const handleEdit = (product: Product) => {
+        setEditingProduct(product);
+        setShowProductForm(true);
+    };
+
+    const handleDelete = (product: Product) => {
+        Alert.alert(
+            'प्रोडक्ट हटाएं',
+            `क्या आप "${product.name}" को हटाना चाहते हैं?`,
+            [
+                { text: 'रद्द करें', style: 'cancel' },
+                {
+                    text: 'हटाएं',
+                    style: 'destructive',
+                    onPress: async () => {
+                        const success = await deleteProduct(product.id);
+                        if (success) {
+                            Alert.alert('सफल', 'प्रोडक्ट हटा दिया गया');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleCloseProductForm = () => {
+        setShowProductForm(false);
+        setEditingProduct(undefined);
+    };
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2E7D32" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -56,7 +102,7 @@ export default function InventoryScreen() {
                     contentContainerStyle={styles.filtersContainer}
                     style={styles.filterScrollView}
                 >
-                    {categories.map((cat) => (
+                    {categoryList.map((cat) => (
                         <TouchableOpacity
                             key={cat.id}
                             onPress={() => setSelectedCategory(cat.id)}
@@ -69,11 +115,18 @@ export default function InventoryScreen() {
                                 styles.filterChipText,
                                 selectedCategory === cat.id && styles.filterChipTextActive
                             ]}>
-                                {cat.label}
+                                {cat.name}
                             </Text>
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
+            </View>
+
+            {/* Product Count */}
+            <View style={styles.countContainer}>
+                <Text style={styles.countText}>
+                    {filteredProducts.length} प्रोडक्ट्स
+                </Text>
             </View>
 
             {/* Product List */}
@@ -84,18 +137,36 @@ export default function InventoryScreen() {
             >
                 {filteredProducts.map((product) => (
                     <View key={product.id} style={styles.productCard}>
-                        <Image source={{ uri: product.image }} style={styles.productImage} />
+                        {product.image ? (
+                            <Image source={{ uri: product.image }} style={styles.productImage} />
+                        ) : (
+                            <View style={[styles.productImage, styles.productImagePlaceholder]}>
+                                <FontAwesome name="cube" size={32} color="#BDBDBD" />
+                            </View>
+                        )}
                         <View style={styles.productInfo}>
                             <Text style={styles.productName}>{product.name}</Text>
-                            <Text style={styles.productStock}>स्टॉक: {product.stock}</Text>
-                            <Text style={styles.productPrice}>₹ {product.price}</Text>
+                            <Text style={[
+                                styles.productStock,
+                                product.stock <= product.minStock && styles.lowStock
+                            ]}>
+                                स्टॉक: {product.stock}
+                                {product.stock <= product.minStock && ' ⚠️'}
+                            </Text>
+                            <Text style={styles.productPrice}>₹ {product.price.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.productActions}>
-                            <TouchableOpacity style={styles.editButton}>
+                            <TouchableOpacity
+                                style={styles.editButton}
+                                onPress={() => handleEdit(product)}
+                            >
                                 <FontAwesome name="pencil" size={14} color="#2E7D32" />
                                 <Text style={styles.editButtonText}>एडिट करें</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.deleteButton}>
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => handleDelete(product)}
+                            >
                                 <FontAwesome name="trash" size={14} color="#D32F2F" />
                                 <Text style={styles.deleteButtonText}>हटाएं</Text>
                             </TouchableOpacity>
@@ -106,18 +177,41 @@ export default function InventoryScreen() {
                 {filteredProducts.length === 0 && (
                     <View style={styles.emptyState}>
                         <FontAwesome name="inbox" size={48} color="#BDBDBD" />
-                        <Text style={styles.emptyStateText}>कोई प्रोडक्ट नहीं मिला</Text>
+                        <Text style={styles.emptyStateText}>
+                            {products.length === 0
+                                ? 'कोई प्रोडक्ट नहीं है। नया प्रोडक्ट जोड़ें।'
+                                : 'कोई प्रोडक्ट नहीं मिला'}
+                        </Text>
+                        {products.length === 0 && (
+                            <TouchableOpacity
+                                style={styles.addFirstButton}
+                                onPress={() => setShowProductForm(true)}
+                            >
+                                <FontAwesome name="plus" size={14} color="#FFFFFF" />
+                                <Text style={styles.addFirstButtonText}>प्रोडक्ट जोड़ें</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
             </ScrollView>
 
             {/* FAB */}
             <FAB
-                onNewSale={() => console.log('New Sale')}
-                onNewExpense={() => console.log('New Expense')}
-                onAddProduct={() => console.log('Add Product')}
-                onAddCustomer={() => console.log('Add Customer')}
+                onNewSale={() => setShowSaleForm(true)}
+                onNewExpense={() => setShowExpenseForm(true)}
+                onAddProduct={() => setShowProductForm(true)}
+                onAddCustomer={() => setShowCustomerForm(true)}
             />
+
+            {/* Forms */}
+            <AddProductForm
+                visible={showProductForm}
+                onClose={handleCloseProductForm}
+                editProduct={editingProduct}
+            />
+            <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
+            <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
+            <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
         </View>
     );
 }
@@ -126,6 +220,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
     },
     headerSafeArea: {
         backgroundColor: '#FFFFFF',
@@ -181,6 +281,14 @@ const styles = StyleSheet.create({
     filterChipTextActive: {
         color: '#FFFFFF',
     },
+    countContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+    },
+    countText: {
+        fontSize: 14,
+        color: '#757575',
+    },
     scrollView: {
         flex: 1,
     },
@@ -209,6 +317,10 @@ const styles = StyleSheet.create({
         left: 16,
         top: 16,
     },
+    productImagePlaceholder: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     productInfo: {
         marginLeft: 96,
         marginBottom: 12,
@@ -225,6 +337,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#757575',
         marginBottom: 4,
+    },
+    lowStock: {
+        color: '#D32F2F',
+        fontWeight: '600',
     },
     productPrice: {
         fontSize: 18,
@@ -268,5 +384,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#757575',
         marginTop: 16,
+        textAlign: 'center',
+        paddingHorizontal: 32,
+    },
+    addFirstButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#2E7D32',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 8,
+        marginTop: 20,
+    },
+    addFirstButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
     },
 });
