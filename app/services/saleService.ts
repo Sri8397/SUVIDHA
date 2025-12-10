@@ -37,15 +37,18 @@ export async function createSale(
         createdAt: getTimestamp(),
     };
 
-    // Update product stock for each item
-    for (const item of sale.items) {
-        await updateProductStock(item.productId, -item.quantity);
-    }
+    // Update product stock for each item (only for product sales)
+    if (sale.saleType !== 'BAKAYA_PAYMENT') {
+        for (const item of sale.items) {
+            await updateProductStock(item.productId, -item.quantity);
+        }
 
-    // Update customer outstanding if applicable
-    if (sale.customerId && sale.paymentStatus !== 'paid') {
-        const outstandingAmount = sale.total - sale.amountPaid;
-        await updateCustomerOutstanding(sale.customerId, outstandingAmount);
+        // Update customer outstanding if applicable (only for product sales)
+        // BAKAYA_PAYMENT handles outstanding update separately in ReceivePaymentForm
+        if (sale.customerId && sale.paymentStatus !== 'paid') {
+            const outstandingAmount = sale.total - sale.amountPaid;
+            await updateCustomerOutstanding(sale.customerId, outstandingAmount);
+        }
     }
 
     sales.push(newSale);
@@ -127,9 +130,12 @@ export async function recordPayment(
 
 /**
  * Calculate total sales amount for given sales
+ * Only counts PRODUCT_SALE, excludes BAKAYA_PAYMENT to avoid double counting
  */
 export function calculateTotalSales(sales: Sale[]): number {
-    return sales.reduce((sum, s) => sum + s.total, 0);
+    return sales
+        .filter(s => s.saleType !== 'BAKAYA_PAYMENT')
+        .reduce((sum, s) => sum + s.total, 0);
 }
 
 /**

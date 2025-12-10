@@ -44,6 +44,21 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
     const discountAmount = Number(discount) || 0;
     const total = Math.max(0, subtotal - discountAmount);
 
+    // Update amount paid when total changes or customer type changes
+    React.useEffect(() => {
+        if (!selectedCustomerId) {
+            // Walk-in: always pay full amount
+            setAmountPaid(total.toString());
+        } else {
+            // Registered: clamp if current amount exceeds new total
+            setAmountPaid(prev => {
+                const current = Number(prev);
+                if (current > total) return total.toString();
+                return prev;
+            });
+        }
+    }, [total, selectedCustomerId]);
+
     const resetForm = () => {
         setSelectedCustomerId(undefined);
         setCustomerName('वॉक-इन ग्राहक');
@@ -57,9 +72,20 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
         const product = products.find(p => p.id === productId);
         if (!product) return;
 
+        if (product.stock <= 0) {
+            Alert.alert('स्टॉक खत्म', 'यह प्रोडक्ट स्टॉक में नहीं है');
+            return;
+        }
+
         // Check if already in list
         const existingIndex = items.findIndex(i => i.productId === productId);
         if (existingIndex >= 0) {
+            // Check stock limit
+            if (items[existingIndex].quantity >= product.stock) {
+                Alert.alert('स्टॉक सीमा', `केवल ${product.stock} आइटम उपलब्ध हैं`);
+                return;
+            }
+
             // Increase quantity
             const newItems = [...items];
             newItems[existingIndex].quantity += 1;
@@ -84,6 +110,14 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
             // Remove item
             setItems(items.filter((_, i) => i !== index));
         } else {
+            const item = items[index];
+            const product = products.find(p => p.id === item.productId);
+
+            if (product && qty > product.stock) {
+                Alert.alert('स्टॉक सीमा', `केवल ${product.stock} आइटम उपलब्ध हैं`);
+                return;
+            }
+
             const newItems = [...items];
             newItems[index].quantity = qty;
             newItems[index].total = qty * newItems[index].unitPrice;
@@ -120,8 +154,8 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
             }
 
             await createSale({
+                saleType: 'PRODUCT_SALE',
                 customerId: selectedCustomerId,
-                customerName,
                 items,
                 subtotal,
                 discount: discountAmount,
@@ -233,7 +267,20 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         <TextInput
                             style={styles.input}
                             value={discount}
-                            onChangeText={setDiscount}
+                            onChangeText={(text) => {
+                                if (text === '') {
+                                    setDiscount('');
+                                    return;
+                                }
+                                const val = Number(text);
+                                if (!isNaN(val)) {
+                                    if (val > subtotal) {
+                                        setDiscount(subtotal.toString());
+                                    } else {
+                                        setDiscount(text);
+                                    }
+                                }
+                            }}
                             placeholder="0"
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
@@ -244,7 +291,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>भुगतान का तरीका</Text>
                         <View style={styles.paymentMethods}>
-                            {(['cash', 'upi', 'card', 'credit'] as const).map((method) => (
+                            {(['cash', 'upi', 'card'] as const).map((method) => (
                                 <TouchableOpacity
                                     key={method}
                                     style={[
@@ -257,9 +304,8 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                         styles.paymentChipText,
                                         paymentMethod === method && styles.paymentChipTextActive,
                                     ]}>
-                                        {method === 'cash' ? 'नकद' :
-                                            method === 'upi' ? 'UPI' :
-                                                method === 'card' ? 'कार्ड' : 'उधार'}
+                                        {method === 'cash' ? 'Cash' :
+                                            method === 'upi' ? 'UPI' : 'Card'}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -270,12 +316,32 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>भुगतान राशि (₹)</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[
+                                styles.input,
+                                !selectedCustomerId && styles.inputDisabled
+                            ]}
                             value={amountPaid}
-                            onChangeText={setAmountPaid}
+                            onChangeText={(text) => {
+                                if (!selectedCustomerId) return;
+
+                                if (text === '') {
+                                    setAmountPaid('');
+                                    return;
+                                }
+
+                                const val = Number(text);
+                                if (isNaN(val)) return;
+
+                                if (val > total) {
+                                    setAmountPaid(total.toString());
+                                } else {
+                                    setAmountPaid(text);
+                                }
+                            }}
                             placeholder={total.toString()}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
+                            editable={!!selectedCustomerId}
                         />
                     </View>
 
@@ -547,6 +613,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#212121',
         backgroundColor: '#FFFFFF',
+    },
+    inputDisabled: {
+        backgroundColor: '#F5F5F5',
+        color: '#9E9E9E',
     },
     paymentMethods: {
         flexDirection: 'row',

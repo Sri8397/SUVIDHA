@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
 import { removeData } from '@/services/storage';
 import { useData } from '@/contexts/DataContext';
+import { useSettings } from '@/contexts/settings-context';
 import { STORAGE_KEYS, Customer } from '@/types';
 import { getData, setData } from '@/services/storage';
 
@@ -17,10 +18,83 @@ interface ClearOptions {
     bakaya: boolean; // Outstanding balances
 }
 
+// Edit Modal Component
+interface EditModalProps {
+    visible: boolean;
+    title: string;
+    value: string;
+    onSave: (value: string) => void;
+    onClose: () => void;
+    keyboardType?: 'default' | 'phone-pad' | 'email-address';
+    placeholder?: string;
+}
+
+function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'default', placeholder }: EditModalProps) {
+    const [inputValue, setInputValue] = useState(value);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        setInputValue(value);
+    }, [value, visible]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await onSave(inputValue);
+        setIsSaving(false);
+        onClose();
+    };
+
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            <View style={styles.editModalOverlay}>
+                <View style={styles.editModalContent}>
+                    <Text style={styles.editModalTitle}>{title}</Text>
+                    <TextInput
+                        style={styles.editModalInput}
+                        value={inputValue}
+                        onChangeText={setInputValue}
+                        keyboardType={keyboardType}
+                        placeholder={placeholder}
+                        placeholderTextColor="#9E9E9E"
+                        autoFocus
+                    />
+                    <View style={styles.editModalButtons}>
+                        <TouchableOpacity
+                            style={styles.editCancelButton}
+                            onPress={onClose}
+                            disabled={isSaving}
+                        >
+                            <Text style={styles.editCancelButtonText}>रद्द करें</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.editSaveButton}
+                            onPress={handleSave}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? (
+                                <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                                <Text style={styles.editSaveButtonText}>सेव करें</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+}
+
 export default function StoreSettingsScreen() {
     const { refreshAll } = useData();
+    const { storeSettings, updateStoreSettings, isLoading: settingsLoading } = useSettings();
     const [showClearDataModal, setShowClearDataModal] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
+    const [editField, setEditField] = useState<'name' | 'address' | 'businessType' | 'gstin' | null>(null);
     const [clearOptions, setClearOptions] = useState<ClearOptions>({
         products: true,
         customers: true,
@@ -105,6 +179,29 @@ export default function StoreSettingsScreen() {
         }
     };
 
+    const handleFieldSave = async (field: keyof typeof storeSettings, value: string) => {
+        const success = await updateStoreSettings({ [field]: value });
+        if (success) {
+            Alert.alert('सफलता', 'जानकारी सफलतापूर्वक अपडेट हो गई।');
+        } else {
+            Alert.alert('त्रुटि', 'कुछ गलत हो गया।');
+        }
+    };
+
+    // Helper functions for display values
+    const getStoreName = () => storeSettings.name || 'सेट नहीं है';
+    const getStoreAddress = () => storeSettings.address || 'सेट नहीं है';
+    const getBusinessType = () => storeSettings.businessType || 'सेट नहीं है';
+    const getGstin = () => storeSettings.gstin || 'सेट नहीं है';
+
+    if (settingsLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2E7D32" />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -133,9 +230,9 @@ export default function StoreSettingsScreen() {
                     <View style={styles.fieldCard}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का नाम</Text>
-                            <Text style={styles.fieldValue}>अपना स्टोर</Text>
+                            <Text style={styles.fieldValue}>{getStoreName()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
+                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('name')}>
                             <FontAwesome name="pencil" size={18} color="#2E7D32" />
                         </TouchableOpacity>
                     </View>
@@ -144,9 +241,9 @@ export default function StoreSettingsScreen() {
                     <View style={styles.fieldCard}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का पता</Text>
-                            <Text style={styles.fieldValue}>शॉप नं. 12, जैन मार्केट, मुंबई</Text>
+                            <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
+                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('address')}>
                             <FontAwesome name="pencil" size={18} color="#2E7D32" />
                         </TouchableOpacity>
                     </View>
@@ -155,9 +252,9 @@ export default function StoreSettingsScreen() {
                     <View style={styles.fieldCard}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>व्यवसाय का प्रकार</Text>
-                            <Text style={styles.fieldValue}>खुदरा व्यापार</Text>
+                            <Text style={styles.fieldValue}>{getBusinessType()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
+                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('businessType')}>
                             <FontAwesome name="pencil" size={18} color="#2E7D32" />
                         </TouchableOpacity>
                     </View>
@@ -166,9 +263,9 @@ export default function StoreSettingsScreen() {
                     <View style={styles.fieldCard}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>जीएसटी विवरण</Text>
-                            <Text style={styles.fieldValue}>27AABCU9603R1ZM</Text>
+                            <Text style={styles.fieldValue}>{getGstin()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
+                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('gstin')}>
                             <FontAwesome name="pencil" size={18} color="#2E7D32" />
                         </TouchableOpacity>
                     </View>
@@ -221,6 +318,40 @@ export default function StoreSettingsScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Edit Modals */}
+            <EditModal
+                visible={editField === 'name'}
+                title="दुकान का नाम बदलें"
+                value={storeSettings.name || ''}
+                onSave={(value) => handleFieldSave('name', value)}
+                onClose={() => setEditField(null)}
+                placeholder="दुकान का नाम दर्ज करें"
+            />
+            <EditModal
+                visible={editField === 'address'}
+                title="दुकान का पता बदलें"
+                value={storeSettings.address || ''}
+                onSave={(value) => handleFieldSave('address', value)}
+                onClose={() => setEditField(null)}
+                placeholder="पता दर्ज करें"
+            />
+            <EditModal
+                visible={editField === 'businessType'}
+                title="व्यवसाय का प्रकार बदलें"
+                value={storeSettings.businessType || ''}
+                onSave={(value) => handleFieldSave('businessType', value)}
+                onClose={() => setEditField(null)}
+                placeholder="व्यवसाय का प्रकार दर्ज करें"
+            />
+            <EditModal
+                visible={editField === 'gstin'}
+                title="जीएसटी विवरण बदलें"
+                value={storeSettings.gstin || ''}
+                onSave={(value) => handleFieldSave('gstin', value)}
+                onClose={() => setEditField(null)}
+                placeholder="जीएसटी नंबर दर्ज करें"
+            />
 
             {/* Clear Data Confirmation Modal */}
             <Modal
@@ -365,6 +496,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+    },
     headerSafeArea: {
         backgroundColor: '#FFFFFF',
     },
@@ -485,7 +622,67 @@ const styles = StyleSheet.create({
         color: '#757575',
         marginTop: 2,
     },
-    // Modal Styles
+    // Edit Modal Styles
+    editModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    editModalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        maxWidth: 340,
+    },
+    editModalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#212121',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    editModalInput: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: '#212121',
+        marginBottom: 20,
+    },
+    editModalButtons: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    editCancelButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        alignItems: 'center',
+    },
+    editCancelButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#757575',
+    },
+    editSaveButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#2E7D32',
+        alignItems: 'center',
+    },
+    editSaveButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    // Clear Data Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
