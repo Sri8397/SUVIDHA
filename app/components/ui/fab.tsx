@@ -1,28 +1,129 @@
-import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, StyleSheet, View, Text, Animated, Pressable, Dimensions } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { MaterialIcons } from '@expo/vector-icons';
 
-interface FABProps {
+interface FABMenuItem {
+    id: string;
+    label: string;
+    icon: keyof typeof MaterialIcons.glyphMap;
     onPress: () => void;
 }
 
-export function FAB({ onPress }: FABProps) {
+interface FABProps {
+    onNewSale?: () => void;
+    onNewExpense?: () => void;
+    onAddProduct?: () => void;
+    onAddCustomer?: () => void;
+}
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
+export function FAB({ onNewSale, onNewExpense, onAddProduct, onAddCustomer }: FABProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [animation] = useState(new Animated.Value(0));
+
+    const menuItems: FABMenuItem[] = [
+        { id: 'sale', label: 'नई बिक्री', icon: 'sell', onPress: onNewSale || (() => { }) },
+        { id: 'expense', label: 'नया खर्च', icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
+        { id: 'product', label: 'उत्पाद जोड़ें', icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
+        { id: 'customer', label: 'ग्राहक जोड़ें', icon: 'person-add', onPress: onAddCustomer || (() => { }) },
+    ];
+
+    const toggleMenu = () => {
+        const toValue = isOpen ? 0 : 1;
+        Animated.spring(animation, {
+            toValue,
+            friction: 6,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
+        setIsOpen(!isOpen);
+    };
+
+    const handleMenuItemPress = (item: FABMenuItem) => {
+        toggleMenu();
+        item.onPress();
+    };
+
+    const rotation = animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '45deg'],
+    });
+
+    const menuScale = animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+    });
+
+    const menuOpacity = animation.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, 0.5, 1],
+    });
+
     return (
-        <TouchableOpacity
-            onPress={onPress}
-            style={styles.fab}
-            activeOpacity={0.8}
-        >
-            <FontAwesome name="plus" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        <>
+            {isOpen && (
+                <Pressable style={styles.backdrop} onPress={toggleMenu} />
+            )}
+            <View style={styles.container}>
+                {/* Menu */}
+                <Animated.View
+                    style={[
+                        styles.menu,
+                        {
+                            transform: [{ scale: menuScale }],
+                            opacity: menuOpacity,
+                        },
+                    ]}
+                    pointerEvents={isOpen ? 'auto' : 'none'}
+                >
+                    {menuItems.map((item) => (
+                        <TouchableOpacity
+                            key={item.id}
+                            style={styles.menuItem}
+                            onPress={() => handleMenuItemPress(item)}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialIcons name={item.icon} size={20} color="#333" style={styles.menuIcon} />
+                            <Text style={styles.menuLabel}>{item.label}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </Animated.View>
+
+                {/* FAB Button */}
+                <TouchableOpacity
+                    onPress={toggleMenu}
+                    style={styles.fab}
+                    activeOpacity={0.8}
+                >
+                    <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+                        <FontAwesome name="plus" size={24} color="#FFFFFF" />
+                    </Animated.View>
+                </TouchableOpacity>
+            </View>
+        </>
     );
 }
 
 const styles = StyleSheet.create({
-    fab: {
+    backdrop: {
         position: 'absolute',
-        bottom: 100,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        zIndex: 99,
+    },
+    container: {
+        position: 'absolute',
+        bottom: 20,
         right: 20,
+        alignItems: 'flex-end',
+        zIndex: 100,
+    },
+    fab: {
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -34,5 +135,31 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 6,
         elevation: 8,
+    },
+    menu: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        paddingVertical: 8,
+        marginBottom: 16,
+        minWidth: 160,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 10,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    menuIcon: {
+        marginRight: 12,
+    },
+    menuLabel: {
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
     },
 });

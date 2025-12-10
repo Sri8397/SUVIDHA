@@ -109,11 +109,6 @@ const styles = StyleSheet.create({
         maxHeight: 400, // Limit height
     },
     header: {
-        flexDirection: 'row-reverse', // To put back arrow on left if needed, but mock shows title left and arrow left? Actually mock shows back arrow left and title right.
-        // Wait, mock shows "Soochnaye" title and back arrow. It looks like a full screen or persistent dropdown.
-        // Let's implement as a dropdown menu first for simplicity in current context, or close to it.
-        // Actually, looking at the mock, it seems like a dropdown directly under the bell icon or a header overlay.
-        // Let's stick to a simple modal with a header for now suited for the "popup" look.
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,

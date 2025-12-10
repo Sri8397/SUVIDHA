@@ -1,9 +1,11 @@
-import React from 'react';
-import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/ui/header';
+import { useAuth } from '@/contexts/auth-context';
+import { router } from 'expo-router';
+import { FAB } from '@/components/ui';
 
 const menuItems = [
     { id: 'profile', icon: 'user', label: 'मेरी प्रोफाइल', type: 'fontawesome' },
@@ -15,8 +17,31 @@ const menuItems = [
 ];
 
 export default function MoreScreen() {
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const { logout } = useAuth();
+
     const handleMenuPress = (itemId: string) => {
-        console.log('Menu pressed:', itemId);
+        if (itemId === 'logout') {
+            setShowLogoutModal(true);
+        } else if (itemId === 'profile') {
+            router.push('/profile');
+        } else if (itemId === 'store') {
+            router.push('/store-settings');
+        } else if (itemId === 'employees') {
+            router.push('/employees');
+        } else if (itemId === 'billing') {
+            router.push('/billing');
+        } else if (itemId === 'support') {
+            router.push('/support');
+        } else {
+            console.log('Menu pressed:', itemId);
+        }
+    };
+
+    const handleLogout = async () => {
+        setShowLogoutModal(false);
+        await logout();
+        router.replace('/(auth)/login');
     };
 
     return (
@@ -69,9 +94,43 @@ export default function MoreScreen() {
             </ScrollView>
 
             {/* FAB */}
-            <TouchableOpacity style={styles.fab}>
-                <FontAwesome name="plus" size={24} color="#FFFFFF" />
-            </TouchableOpacity>
+            <FAB
+                onNewSale={() => console.log('New Sale')}
+                onNewExpense={() => console.log('New Expense')}
+                onAddProduct={() => console.log('Add Product')}
+                onAddCustomer={() => console.log('Add Customer')}
+            />
+
+            {/* Logout Confirmation Modal */}
+            <Modal
+                visible={showLogoutModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowLogoutModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>लॉग आउट</Text>
+                        <Text style={styles.modalMessage}>
+                            क्या आप अपना स्टोर से लॉग{'\n'}आउट करना चाहते हैं?
+                        </Text>
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setShowLogoutModal(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>रद्द करें</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.logoutButton}
+                                onPress={handleLogout}
+                            >
+                                <Text style={styles.logoutButtonText}>लॉग आउट</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -133,5 +192,62 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 6,
         elevation: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#212121',
+        marginBottom: 12,
+    },
+    modalMessage: {
+        fontSize: 14,
+        color: '#757575',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: 12,
+        width: '100%',
+    },
+    cancelButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#757575',
+    },
+    logoutButton: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#2E7D32',
+        alignItems: 'center',
+    },
+    logoutButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#FFFFFF',
     },
 });
