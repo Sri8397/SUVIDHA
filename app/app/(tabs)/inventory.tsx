@@ -253,9 +253,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
-    headerSafeArea: {
-        backgroundColor: '#FFFFFF',
-    },
+    
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',

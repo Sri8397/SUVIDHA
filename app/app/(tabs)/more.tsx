@@ -177,22 +177,7 @@ const styles = StyleSheet.create({
     menuItemTextDanger: {
         color: '#D32F2F',
     },
-    fab: {
-        position: 'absolute',
-        bottom: 20,
-        right: 20,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#2E7D32',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 8,
-    },
+    
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',

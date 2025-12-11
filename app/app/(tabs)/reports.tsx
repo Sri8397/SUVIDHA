@@ -274,9 +274,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
-    headerSafeArea: {
-        backgroundColor: '#FFFFFF',
-    },
+    
     filterWrapper: {
         height: 48,
     },
@@ -443,16 +441,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#757575',
     },
-    viewReportBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    viewReportText: {
-        fontSize: 14,
-        color: '#2E7D32',
-        fontWeight: '500',
-    },
+    
+    
     pieChartCard: {
         backgroundColor: '#FFFFFF',
         marginHorizontal: 16,

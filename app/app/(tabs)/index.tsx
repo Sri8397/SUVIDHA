@@ -201,83 +201,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#757575',
   },
-  headerSafeArea: {
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  profileImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logo: {
-    width: 40,
-    height: 40,
-  },
-  storeName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#212121',
-  },
-  onlineStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  onlineDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2E7D32',
-  },
-  onlineText: {
-    fontSize: 12,
-    color: '#757575',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  langButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-  },
-  langText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#212121',
-  },
-  bellButton: {
-    position: 'relative',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#D32F2F',
-  },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   scrollView: {
     flex: 1,
   },
@@ -381,47 +318,13 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontWeight: '500',
   },
-  chartContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 120,
-    paddingHorizontal: 8,
-  },
-  chartBarWrapper: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  chartBarContainer: {
-    height: 100,
-    justifyContent: 'flex-end',
-    width: '100%',
-    alignItems: 'center',
-  },
-  chartBar: {
-    width: 20,
-    borderRadius: 4,
-    minHeight: 8,
-  },
-  chartLabel: {
-    fontSize: 10,
-    color: '#757575',
-    marginTop: 8,
-  },
-  chartAnnotation: {
-    position: 'absolute',
-    top: 40,
-    right: 24,
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  chartAnnotationText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-  },
+  
+  
+  
+  
+  
+  
+  
   lowStockSection: {
     marginHorizontal: 16,
     marginTop: 16,

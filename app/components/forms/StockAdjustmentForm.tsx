@@ -433,11 +433,7 @@ const styles = StyleSheet.create({
         minHeight: 80,
         textAlignVertical: 'top',
     },
-    helperText: {
-        fontSize: 12,
-        color: '#757575',
-        marginTop: 6,
-    },
+    
     submitButton: {
         backgroundColor: '#2E7D32',
         borderRadius: 12,

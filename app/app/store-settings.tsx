@@ -714,13 +714,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         textAlign: 'center',
     },
-    modalMessage: {
-        fontSize: 14,
-        color: '#616161',
-        textAlign: 'left',
-        lineHeight: 22,
-        marginBottom: 24,
-    },
+    
     modalButtons: {
         flexDirection: 'row',
         gap: 12,
