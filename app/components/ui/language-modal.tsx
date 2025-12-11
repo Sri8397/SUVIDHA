@@ -11,17 +11,18 @@ interface LanguageModalProps {
     onSelectLanguage: (lang: string) => void;
 }
 
-{ id: 'hi', label: 'हिंदी' },
-{ id: 'en', label: 'English' },
-{ id: 'mr', label: 'मराठी' },
-{ id: 'gu', label: 'ગુજરાતી' },
-{ id: 'bn', label: 'বাংলা' },
-{ id: 'ta', label: 'தமிழ்' },
-{ id: 'te', label: 'తెలుగు' },
-{ id: 'kn', label: 'ಕನ್ನಡ' },
-{ id: 'ml', label: 'മലയാളം' },
-{ id: 'pa', label: 'ਪੰਜਾਬੀ' },
-{ id: 'or', label: 'ଓଡ଼ିଆ' },
+const languages = [
+    { id: 'hi', label: 'हिंदी' },
+    { id: 'en', label: 'English' },
+    { id: 'mr', label: 'मराठी' },
+    { id: 'gu', label: 'ગુજરાતી' },
+    { id: 'bn', label: 'বাংলা' },
+    { id: 'ta', label: 'தமிழ்' },
+    { id: 'te', label: 'తెలుగు' },
+    { id: 'kn', label: 'ಕನ್ನಡ' },
+    { id: 'ml', label: 'മലയാളം' },
+    { id: 'pa', label: 'ਪੰਜਾਬੀ' },
+    { id: 'or', label: 'ଓଡ଼ିଆ' },
 ];
 
 export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLanguage }: LanguageModalProps) {
