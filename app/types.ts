@@ -158,6 +158,9 @@ export interface CategoryBreakdown {
     color: string;
 }
 
+// Profit Calculation Method
+export type ProfitCalculationMethod = 'accrual' | 'cash';
+
 // Store/Business Settings
 export interface StoreSettings {
     name: string;
@@ -167,6 +170,7 @@ export interface StoreSettings {
     ownerName: string;
     currency: string;
     businessType?: string;
+    profitCalculationMethod: ProfitCalculationMethod;
 }
 
 // User Profile

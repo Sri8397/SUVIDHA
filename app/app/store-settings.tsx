@@ -280,6 +280,47 @@ export default function StoreSettingsScreen() {
                         <FontAwesome name="chevron-right" size={18} color="#757575" />
                     </TouchableOpacity>
 
+                    {/* Profit Calculation Method */}
+                    <View style={styles.settingSection}>
+                        <Text style={styles.settingSectionTitle}>लाभ की गणना</Text>
+                        <View style={styles.radioGroup}>
+                            <TouchableOpacity
+                                style={styles.radioOption}
+                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'accrual' })}
+                            >
+                                <View style={[
+                                    styles.radioCircle,
+                                    storeSettings.profitCalculationMethod === 'accrual' && styles.radioCircleSelected
+                                ]}>
+                                    {storeSettings.profitCalculationMethod === 'accrual' && (
+                                        <View style={styles.radioInner} />
+                                    )}
+                                </View>
+                                <View style={styles.radioContent}>
+                                    <Text style={styles.radioLabel}>बिक्री पर आधारित</Text>
+                                    <Text style={styles.radioDesc}>पूरी बिक्री राशि गिनें (भले ही अभी पूरा भुगतान न मिला हो)</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.radioOption}
+                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'cash' })}
+                            >
+                                <View style={[
+                                    styles.radioCircle,
+                                    storeSettings.profitCalculationMethod === 'cash' && styles.radioCircleSelected
+                                ]}>
+                                    {storeSettings.profitCalculationMethod === 'cash' && (
+                                        <View style={styles.radioInner} />
+                                    )}
+                                </View>
+                                <View style={styles.radioContent}>
+                                    <Text style={styles.radioLabel}>प्राप्त राशि पर आधारित</Text>
+                                    <Text style={styles.radioDesc}>केवल जो पैसा मिला है वही गिनें</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
                     {/* Clear Data - Danger Zone */}
                     <View style={styles.dangerSection}>
                         <Text style={styles.dangerSectionTitle}>डेटा प्रबंधन</Text>
@@ -786,5 +827,66 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: 16,
         textAlign: 'center',
+    },
+    // Profit Calculation Method Styles
+    settingSection: {
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+        marginBottom: 12,
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    settingSectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#212121',
+        marginBottom: 12,
+    },
+    radioGroup: {
+        gap: 12,
+    },
+    radioOption: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: '#F9F9F9',
+    },
+    radioCircle: {
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        borderWidth: 2,
+        borderColor: '#BDBDBD',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+        marginTop: 2,
+    },
+    radioCircleSelected: {
+        borderColor: '#2E7D32',
+    },
+    radioInner: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#2E7D32',
+    },
+    radioContent: {
+        flex: 1,
+    },
+    radioLabel: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#212121',
+    },
+    radioDesc: {
+        fontSize: 12,
+        color: '#757575',
+        marginTop: 2,
     },
 });

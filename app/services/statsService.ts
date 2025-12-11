@@ -2,26 +2,37 @@
 // Stats Service - Dashboard & Report Statistics
 // ============================================
 
-import { DashboardStats, WeeklyData, CategoryBreakdown, Sale } from '@/types';
+import { DashboardStats, WeeklyData, CategoryBreakdown, Sale, StoreSettings, STORAGE_KEYS, ProfitCalculationMethod } from '@/types';
 import { getTodaySales, calculateTotalSales, getSales } from './saleService';
 import { getTodayExpenses, calculateTotalExpenses } from './expenseService';
 import { getTotalOutstanding } from './customerService';
 import { getProducts } from './productService';
+import { getData } from './storage';
 
 /**
- * Calculate profit from sales using cost prices
+ * Get the profit calculation method from settings
  */
-function calculateProfitFromSales(sales: Sale[]): number {
-    let totalProfit = 0;
-    for (const sale of sales) {
-        for (const item of sale.items) {
-            // Profit = (Selling Price - Cost Price) × Quantity
-            const itemProfit = (item.unitPrice - (item.costPrice || 0)) * item.quantity;
-            totalProfit += itemProfit;
-        }
-    }
-    return totalProfit;
+async function getProfitCalculationMethod(): Promise<ProfitCalculationMethod> {
+    const settings = await getData<StoreSettings>(STORAGE_KEYS.STORE_SETTINGS);
+    return settings?.profitCalculationMethod || 'accrual';
 }
+
+/**
+ * Calculate sales amount based on profit calculation method
+ * - 'accrual': uses total sale amount
+ * - 'cash': uses only amount paid
+ */
+function calculateSalesAmount(sales: Sale[], method: ProfitCalculationMethod): number {
+    if (method === 'cash') {
+        return sales.reduce((sum, s) => sum + s.amountPaid, 0);
+    }
+    return sales.reduce((sum, s) => sum + s.total, 0);
+}
+
+/**
+ * Calculate profit as Sales - Expenses
+ * Profit = Total Sales Amount - Total Expenses (Spend)
+ */
 
 /**
  * Get dashboard statistics for today
@@ -30,14 +41,22 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     const todaySales = await getTodaySales();
     const todayExpenses = await getTodayExpenses();
     const pendingPayments = await getTotalOutstanding();
+    const profitMethod = await getProfitCalculationMethod();
 
-    const salesAmount = calculateTotalSales(todaySales);
+    // For accrual: filter out BAKAYA_PAYMENT (already counted in original sale total)
+    // For cash: include BAKAYA_PAYMENT (it's actual money received)
+    const relevantSales = profitMethod === 'cash'
+        ? todaySales  // Include all sales including bakaya payments
+        : todaySales.filter(s => s.saleType !== 'BAKAYA_PAYMENT');
+
+    // Use appropriate calculation based on setting
+    const salesAmount = profitMethod === 'cash'
+        ? relevantSales.reduce((sum, s) => sum + s.amountPaid, 0)
+        : calculateTotalSales(relevantSales);
     const expensesAmount = calculateTotalExpenses(todayExpenses);
 
-    // Calculate actual profit from cost prices
-    const grossProfit = calculateProfitFromSales(todaySales);
-    // Net profit after expenses
-    const profit = grossProfit - expensesAmount;
+    // Profit = Sales - Expenses (Spend)
+    const profit = salesAmount - expensesAmount;
 
     return {
         todaySales: salesAmount,
@@ -62,6 +81,7 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
     const allSales = await getSales();
     const { getExpenses } = await import('./expenseService');
     const allExpenses = await getExpenses();
+    const profitMethod = await getProfitCalculationMethod();
     const today = new Date();
 
     let labels: string[] = [];
@@ -80,26 +100,23 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
             labels.push(dayLabels[dayOfWeek]);
 
-            // Filter only product sales, exclude bakaya payments
-            const salesOnDay = allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
-            const daySales = salesOnDay.reduce((sum, s) => sum + s.total, 0);
+            // For accrual: exclude BAKAYA_PAYMENT (already counted in original sale total)
+            // For cash: include BAKAYA_PAYMENT (actual money received)
+            const salesOnDay = profitMethod === 'cash'
+                ? allSales.filter(s => s.date === dateStr)
+                : allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
+            const daySales = profitMethod === 'cash'
+                ? salesOnDay.reduce((sum, s) => sum + s.amountPaid, 0)
+                : salesOnDay.reduce((sum, s) => sum + s.total, 0);
             salesAmounts.push(daySales);
-
-            // Calculate gross profit from sales
-            let grossProfit = 0;
-            for (const sale of salesOnDay) {
-                for (const item of sale.items) {
-                    grossProfit += (item.unitPrice - (item.costPrice || 0)) * item.quantity;
-                }
-            }
 
             // Subtract expenses for this day
             const expensesOnDay = allExpenses.filter(e => e.date === dateStr);
             const dayExpenses = expensesOnDay.reduce((sum, e) => sum + e.amount, 0);
 
-            // Net profit = Gross Profit - Expenses
-            const netProfit = grossProfit - dayExpenses;
-            profits.push(netProfit);
+            // Profit = Sales - Expenses (Spend)
+            const profit = daySales - dayExpenses;
+            profits.push(profit);
         }
 
     } else if (period === 'weekly') {
@@ -110,7 +127,6 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             labels.push(weekLabels[3 - week]);
 
             let weekSales = 0;
-            let weekGrossProfit = 0;
             let weekExpenses = 0;
 
             // Each week is 7 days
@@ -119,15 +135,14 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
                 date.setDate(date.getDate() - (week * 7 + day));
                 const dateStr = date.toISOString().split('T')[0];
 
-                // Filter only product sales, exclude bakaya payments
-                const salesOnDay = allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
-                weekSales += salesOnDay.reduce((sum, s) => sum + s.total, 0);
-
-                for (const sale of salesOnDay) {
-                    for (const item of sale.items) {
-                        weekGrossProfit += (item.unitPrice - (item.costPrice || 0)) * item.quantity;
-                    }
-                }
+                // For accrual: exclude BAKAYA_PAYMENT (already counted in original sale total)
+                // For cash: include BAKAYA_PAYMENT (actual money received)
+                const salesOnDay = profitMethod === 'cash'
+                    ? allSales.filter(s => s.date === dateStr)
+                    : allSales.filter(s => s.date === dateStr && s.saleType !== 'BAKAYA_PAYMENT');
+                weekSales += profitMethod === 'cash'
+                    ? salesOnDay.reduce((sum, s) => sum + s.amountPaid, 0)
+                    : salesOnDay.reduce((sum, s) => sum + s.total, 0);
 
                 // Add expenses for this day
                 const expensesOnDay = allExpenses.filter(e => e.date === dateStr);
@@ -135,8 +150,8 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             }
 
             salesAmounts.push(weekSales);
-            // Net profit = Gross Profit - Expenses
-            profits.push(weekGrossProfit - weekExpenses);
+            // Profit = Sales - Expenses (Spend)
+            profits.push(weekSales - weekExpenses);
         }
 
     } else if (period === 'monthly') {
@@ -155,25 +170,22 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const monthStart = new Date(year, monthIndex, 1).toISOString().split('T')[0];
             const monthEnd = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
 
-            // Get all product sales in this month (exclude bakaya payments)
-            const salesInMonth = allSales.filter(s => s.date >= monthStart && s.date <= monthEnd && s.saleType !== 'BAKAYA_PAYMENT');
-            const monthSales = salesInMonth.reduce((sum, s) => sum + s.total, 0);
+            // For accrual: exclude BAKAYA_PAYMENT (already counted in original sale total)
+            // For cash: include BAKAYA_PAYMENT (actual money received)
+            const salesInMonth = profitMethod === 'cash'
+                ? allSales.filter(s => s.date >= monthStart && s.date <= monthEnd)
+                : allSales.filter(s => s.date >= monthStart && s.date <= monthEnd && s.saleType !== 'BAKAYA_PAYMENT');
+            const monthSales = profitMethod === 'cash'
+                ? salesInMonth.reduce((sum, s) => sum + s.amountPaid, 0)
+                : salesInMonth.reduce((sum, s) => sum + s.total, 0);
             salesAmounts.push(monthSales);
-
-            // Calculate gross profit
-            let monthGrossProfit = 0;
-            for (const sale of salesInMonth) {
-                for (const item of sale.items) {
-                    monthGrossProfit += (item.unitPrice - (item.costPrice || 0)) * item.quantity;
-                }
-            }
 
             // Subtract expenses for this month
             const expensesInMonth = allExpenses.filter(e => e.date >= monthStart && e.date <= monthEnd);
             const monthExpenses = expensesInMonth.reduce((sum, e) => sum + e.amount, 0);
 
-            // Net profit = Gross Profit - Expenses
-            profits.push(monthGrossProfit - monthExpenses);
+            // Profit = Sales - Expenses (Spend)
+            profits.push(monthSales - monthExpenses);
         }
     }
 
