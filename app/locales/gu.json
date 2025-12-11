@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} મિનિટ પહેલા",
         "hourAgo": "{{count}} કલાક પહેલા",
         "hoursAgo": "{{count}} કલાક પહેલા",
-        "dayAgo": "{{count}} દિવસ પહેલા"
+        "dayAgo": "{{count}} દિવસ પહેલા",
+        "noNotifications": "કોઈ નોટિફિકેશન નથી",
+        "emptySubtitle": "આપની નોટિફિકેશનો અહીં દેખાશે"
     },
     "billing": {
         "title": "બિલિંગ અને ચુકવણી",

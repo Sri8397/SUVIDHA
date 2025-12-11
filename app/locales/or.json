@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} ମିନିଟ୍ ପୂର୍ବରୁ",
         "hourAgo": "{{count}} ଘଣ୍ଟା ପୂର୍ବରୁ",
         "hoursAgo": "{{count}} ଘଣ୍ଟା ପୂର୍ବରୁ",
-        "dayAgo": "{{count}} ଦିନ ପୂର୍ବରୁ"
+        "dayAgo": "{{count}} ଦିନ ପୂର୍ବରୁ",
+        "noNotifications": "କୌଣସି ବିଜ୍ଞପ୍ତି ନାହିଁ",
+        "emptySubtitle": "ଆପଣଙ୍କର ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ବିଜ୍ଞପ୍ତି ନାହିଁ।"
     },
     "billing": {
         "title": "ବିଲିଂ ଏବଂ ପେମେଣ୍ଟ",

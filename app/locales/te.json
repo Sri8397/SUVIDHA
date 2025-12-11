@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} నిమిషాల క్రితం",
         "hourAgo": "{{count}} గంట క్రితం",
         "hoursAgo": "{{count}} గంటల క్రితం",
-        "dayAgo": "{{count}} రోజు క్రితం"
+        "dayAgo": "{{count}} రోజు క్రితం",
+        "noNotifications": "నోటిఫికేషన్‌లు లేవు",
+        "emptySubtitle": "మీకు ప్రస్తుతానికి ఎటువంటి నోటిఫికేషన్‌లు లేవు."
     },
     "billing": {
         "title": "బిల్లింగ్ మరియు చెల్లింపులు",

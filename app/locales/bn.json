@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} মিনিট আগে",
         "hourAgo": "{{count}} ঘণ্টা আগে",
         "hoursAgo": "{{count}} ঘণ্টা আগে",
-        "dayAgo": "{{count}} দিন আগে"
+        "dayAgo": "{{count}} দিন আগে",
+        "noNotifications": "কোনো নোটিফিকেশন নেই",
+        "emptySubtitle": "আপনার নোটিফিকেশন অন্যান্য নেই।"
     },
     "billing": {
         "title": "বিলিং এবং পেমেন্ট",
