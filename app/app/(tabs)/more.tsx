@@ -8,7 +8,7 @@ import { useSettings } from '@/contexts/settings-context';
 import { useData } from '@/contexts/DataContext';
 import { router } from 'expo-router';
 import { Header } from '@/components/ui/header';
-import { useTranslation } from 'react-i18next';
+
 
 
 
