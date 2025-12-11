@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useLocalSearchParams } from 'expo-router';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
 import { useData } from '@/contexts/DataContext';
@@ -12,9 +13,17 @@ import { StockAdjustmentForm } from '@/components/forms/StockAdjustmentForm';
 import { Product } from '@/types';
 
 export default function InventoryScreen() {
-    const { isLoading, products, categories, deleteProduct } = useData();
+    const { filter } = useLocalSearchParams<{ filter?: string }>();
+    const { isLoading, products, categories, lowStockProducts, deleteProduct } = useData();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Set initial filter based on URL params
+    useEffect(() => {
+        if (filter === 'low-stock') {
+            setSelectedCategory('low-stock');
+        }
+    }, [filter]);
 
     // Form states
     const [showProductForm, setShowProductForm] = useState(false);
@@ -27,18 +36,25 @@ export default function InventoryScreen() {
 
     // Filter products
     const filteredProducts = useMemo(() => {
+        // Handle low stock filter
+        if (selectedCategory === 'low-stock') {
+            return lowStockProducts.filter((product) =>
+                product.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
         return products.filter((product) => {
             const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
             const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesSearch;
         });
-    }, [products, selectedCategory, searchQuery]);
+    }, [products, lowStockProducts, selectedCategory, searchQuery]);
 
-    // Category list with "All" option
+    // Category list with "All" and "Low Stock" options
     const categoryList = useMemo(() => [
         { id: 'all', name: 'सभी' },
+        { id: 'low-stock', name: 'कम स्टॉक', count: lowStockProducts.length },
         ...categories
-    ], [categories]);
+    ], [categories, lowStockProducts.length]);
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product);
@@ -121,14 +137,16 @@ export default function InventoryScreen() {
                             onPress={() => setSelectedCategory(cat.id)}
                             style={[
                                 styles.filterChip,
-                                selectedCategory === cat.id && styles.filterChipActive
+                                selectedCategory === cat.id && styles.filterChipActive,
+                                cat.id === 'low-stock' && styles.lowStockChip
                             ]}
                         >
                             <Text style={[
                                 styles.filterChipText,
-                                selectedCategory === cat.id && styles.filterChipTextActive
+                                selectedCategory === cat.id && styles.filterChipTextActive,
+                                cat.id === 'low-stock' && selectedCategory !== cat.id && styles.lowStockChipText
                             ]}>
-                                {cat.name}
+                                {cat.name}{'count' in cat && cat.count > 0 ? ` (${cat.count})` : ''}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -253,7 +271,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
-    
+
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -304,6 +322,13 @@ const styles = StyleSheet.create({
     },
     filterChipTextActive: {
         color: '#FFFFFF',
+    },
+    lowStockChip: {
+        borderColor: '#FFCDD2',
+        backgroundColor: '#FFEBEE',
+    },
+    lowStockChipText: {
+        color: '#D32F2F',
     },
     countContainer: {
         paddingHorizontal: 16,

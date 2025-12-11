@@ -18,6 +18,7 @@ const DEFAULT_STORE_SETTINGS: StoreSettings = {
     ownerName: '',
     currency: '₹',
     businessType: 'खुदरा व्यापार',
+    profitCalculationMethod: 'accrual', // Default: count full sales
 };
 
 interface SettingsContextType {

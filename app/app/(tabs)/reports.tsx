@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { DualLineChart } from '@/components/ui/line-chart';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
@@ -21,11 +22,20 @@ const timePeriods = [
 type PeriodType = 'daily' | 'weekly' | 'monthly';
 
 export default function ReportsScreen() {
+    const { period } = useLocalSearchParams<{ period?: string }>();
+    const router = useRouter();
     const { isLoading, dashboardStats, weeklyData, categoryBreakdown, getChartDataByPeriod } = useData();
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('weekly');
     const [searchQuery, setSearchQuery] = useState('');
     const [chartData, setChartData] = useState<WeeklyData>(weeklyData);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
+
+    // Set initial period based on URL params
+    useEffect(() => {
+        if (period === 'daily' || period === 'weekly' || period === 'monthly') {
+            setSelectedPeriod(period);
+        }
+    }, [period]);
 
     // Form states
     const [showSaleForm, setShowSaleForm] = useState(false);
@@ -163,6 +173,14 @@ export default function ReportsScreen() {
                             <Text style={[styles.todayStatValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹{dashboardStats.profit.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
+                    <TouchableOpacity
+                        style={styles.transactionsButton}
+                        onPress={() => router.push('/transactions')}
+                    >
+                        <FontAwesome name="list" size={14} color="#2E7D32" />
+                        <Text style={styles.transactionsButtonText}>लेन-देन देखें</Text>
+                        <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Sales & Profit Chart */}
@@ -209,26 +227,93 @@ export default function ReportsScreen() {
                         </View>
                     ) : (
                         <View style={styles.pieChartContainer}>
-                            {/* Simplified Pie Visualization */}
+                            {/* Circular Pie Chart with proportional segments */}
                             <View style={styles.pieChart}>
-                                {categoryBreakdown.slice(0, 4).map((item, index) => (
-                                    <View
-                                        key={item.name}
-                                        style={[
-                                            styles.pieSegment,
-                                            {
-                                                backgroundColor: item.color,
-                                                width: '50%',
-                                                height: '50%',
-                                                position: 'absolute',
-                                                top: index < 2 ? 0 : undefined,
-                                                bottom: index >= 2 ? 0 : undefined,
-                                                left: index % 2 === 0 ? 0 : undefined,
-                                                right: index % 2 !== 0 ? 0 : undefined,
-                                            }
-                                        ]}
-                                    />
-                                ))}
+                                {(() => {
+                                    let cumulativeAngle = 0;
+                                    return categoryBreakdown.map((item, index) => {
+                                        const percentage = item.percentage || 0;
+                                        const angle = (percentage / 100) * 360;
+                                        const startAngle = cumulativeAngle;
+                                        cumulativeAngle += angle;
+
+                                        // Create pie slice using rotation and clipping
+                                        const sliceRotation = startAngle - 90; // Start from top
+                                        const halfAngle = angle / 2;
+
+                                        if (percentage <= 0) return null;
+
+                                        // For segments <= 180 degrees
+                                        if (angle <= 180) {
+                                            return (
+                                                <View
+                                                    key={item.name}
+                                                    style={[
+                                                        styles.pieSlice,
+                                                        {
+                                                            backgroundColor: item.color,
+                                                            transform: [{ rotate: `${sliceRotation}deg` }],
+                                                        }
+                                                    ]}
+                                                >
+                                                    <View
+                                                        style={[
+                                                            styles.pieSliceInner,
+                                                            {
+                                                                backgroundColor: item.color,
+                                                                transform: [{ rotate: `${angle}deg` }],
+                                                            }
+                                                        ]}
+                                                    />
+                                                </View>
+                                            );
+                                        } else {
+                                            // For segments > 180 degrees, we need two halves
+                                            return (
+                                                <React.Fragment key={item.name}>
+                                                    <View
+                                                        style={[
+                                                            styles.pieSlice,
+                                                            {
+                                                                backgroundColor: item.color,
+                                                                transform: [{ rotate: `${sliceRotation}deg` }],
+                                                            }
+                                                        ]}
+                                                    >
+                                                        <View
+                                                            style={[
+                                                                styles.pieSliceInner,
+                                                                {
+                                                                    backgroundColor: item.color,
+                                                                    transform: [{ rotate: '180deg' }],
+                                                                }
+                                                            ]}
+                                                        />
+                                                    </View>
+                                                    <View
+                                                        style={[
+                                                            styles.pieSlice,
+                                                            {
+                                                                backgroundColor: item.color,
+                                                                transform: [{ rotate: `${sliceRotation + 180}deg` }],
+                                                            }
+                                                        ]}
+                                                    >
+                                                        <View
+                                                            style={[
+                                                                styles.pieSliceInner,
+                                                                {
+                                                                    backgroundColor: item.color,
+                                                                    transform: [{ rotate: `${angle - 180}deg` }],
+                                                                }
+                                                            ]}
+                                                        />
+                                                    </View>
+                                                </React.Fragment>
+                                            );
+                                        }
+                                    });
+                                })()}
                             </View>
 
                             {/* Legend */}
@@ -274,7 +359,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
-    
+
     filterWrapper: {
         height: 48,
     },
@@ -400,6 +485,21 @@ const styles = StyleSheet.create({
         height: 40,
         backgroundColor: '#E0E0E0',
     },
+    transactionsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        marginTop: 16,
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+    },
+    transactionsButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2E7D32',
+    },
     chartCard: {
         backgroundColor: '#FFFFFF',
         marginHorizontal: 16,
@@ -441,8 +541,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#757575',
     },
-    
-    
+
+
     pieChartCard: {
         backgroundColor: '#FFFFFF',
         marginHorizontal: 16,
@@ -477,8 +577,18 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginRight: 24,
     },
-    pieSegment: {
+    pieSlice: {
         position: 'absolute',
+        width: '50%',
+        height: '100%',
+        left: '50%',
+        transformOrigin: 'left center',
+        overflow: 'hidden',
+    },
+    pieSliceInner: {
+        width: '100%',
+        height: '100%',
+        transformOrigin: 'left center',
     },
     categoryLegendContainer: {
         flex: 1,

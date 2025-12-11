@@ -213,9 +213,7 @@ export default function StoreSettingsScreen() {
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>स्टोर की सेटिंग</Text>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <FontAwesome name="bell" size={20} color="#212121" />
-                    </TouchableOpacity>
+                    <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
 
@@ -227,59 +225,44 @@ export default function StoreSettingsScreen() {
                 {/* Editable Fields */}
                 <View style={styles.fieldsContainer}>
                     {/* Store Name */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('name')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का नाम</Text>
                             <Text style={styles.fieldValue}>{getStoreName()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('name')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Store Address */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का पता</Text>
                             <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('address')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Business Type */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('businessType')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>व्यवसाय का प्रकार</Text>
                             <Text style={styles.fieldValue}>{getBusinessType()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('businessType')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* GST Details */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('gstin')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>जीएसटी विवरण</Text>
                             <Text style={styles.fieldValue}>{getGstin()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('gstin')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Canvasing Settings */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>कानवासिंग सेट</Text>
                             <Text style={styles.fieldValue}>डिफ़ॉल्ट सेटिंग</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Store Rate */}
                     <TouchableOpacity style={styles.navigationCard}>
@@ -296,6 +279,47 @@ export default function StoreSettingsScreen() {
                         </View>
                         <FontAwesome name="chevron-right" size={18} color="#757575" />
                     </TouchableOpacity>
+
+                    {/* Profit Calculation Method */}
+                    <View style={styles.settingSection}>
+                        <Text style={styles.settingSectionTitle}>लाभ की गणना</Text>
+                        <View style={styles.radioGroup}>
+                            <TouchableOpacity
+                                style={styles.radioOption}
+                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'accrual' })}
+                            >
+                                <View style={[
+                                    styles.radioCircle,
+                                    storeSettings.profitCalculationMethod === 'accrual' && styles.radioCircleSelected
+                                ]}>
+                                    {storeSettings.profitCalculationMethod === 'accrual' && (
+                                        <View style={styles.radioInner} />
+                                    )}
+                                </View>
+                                <View style={styles.radioContent}>
+                                    <Text style={styles.radioLabel}>बिक्री पर आधारित</Text>
+                                    <Text style={styles.radioDesc}>पूरी बिक्री राशि गिनें (भले ही अभी पूरा भुगतान न मिला हो)</Text>
+                                </View>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.radioOption}
+                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'cash' })}
+                            >
+                                <View style={[
+                                    styles.radioCircle,
+                                    storeSettings.profitCalculationMethod === 'cash' && styles.radioCircleSelected
+                                ]}>
+                                    {storeSettings.profitCalculationMethod === 'cash' && (
+                                        <View style={styles.radioInner} />
+                                    )}
+                                </View>
+                                <View style={styles.radioContent}>
+                                    <Text style={styles.radioLabel}>प्राप्त राशि पर आधारित</Text>
+                                    <Text style={styles.radioDesc}>केवल जो पैसा मिला है वही गिनें</Text>
+                                </View>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
 
                     {/* Clear Data - Danger Zone */}
                     <View style={styles.dangerSection}>
@@ -508,7 +532,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        gap: 16,
         paddingHorizontal: 16,
         paddingVertical: 16,
         backgroundColor: '#FFFFFF',
@@ -522,9 +546,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: '#212121',
-    },
-    notificationButton: {
-        padding: 8,
     },
     scrollView: {
         flex: 1,
@@ -714,7 +735,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         textAlign: 'center',
     },
-    
+
     modalButtons: {
         flexDirection: 'row',
         gap: 12,
@@ -806,5 +827,66 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: 16,
         textAlign: 'center',
+    },
+    // Profit Calculation Method Styles
+    settingSection: {
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+        marginBottom: 12,
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    settingSectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#212121',
+        marginBottom: 12,
+    },
+    radioGroup: {
+        gap: 12,
+    },
+    radioOption: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        padding: 12,
+        borderRadius: 8,
+        backgroundColor: '#F9F9F9',
+    },
+    radioCircle: {
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        borderWidth: 2,
+        borderColor: '#BDBDBD',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+        marginTop: 2,
+    },
+    radioCircleSelected: {
+        borderColor: '#2E7D32',
+    },
+    radioInner: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#2E7D32',
+    },
+    radioContent: {
+        flex: 1,
+    },
+    radioLabel: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#212121',
+    },
+    radioDesc: {
+        fontSize: 12,
+        color: '#757575',
+        marginTop: 2,
     },
 });

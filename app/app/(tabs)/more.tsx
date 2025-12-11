@@ -1,24 +1,52 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Image, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Header } from '@/components/ui/header';
 import { useAuth } from '@/contexts/auth-context';
+import { useSettings } from '@/contexts/settings-context';
+import { useData } from '@/contexts/DataContext';
 import { router } from 'expo-router';
-import { FAB } from '@/components/ui';
+import { Header } from '@/components/ui/header';
 
 const menuItems = [
-    { id: 'profile', icon: 'user', label: 'मेरी प्रोफाइल', type: 'fontawesome' },
+    { id: 'profile', icon: 'user', label: 'प्रोफाइल संपादित करें', type: 'fontawesome' },
     { id: 'store', icon: 'settings', label: 'स्टोर की सेटिंग', type: 'material' },
     { id: 'employees', icon: 'people', label: 'कर्मचारी प्रबंधन', type: 'material' },
     { id: 'billing', icon: 'folder', label: 'बिलिंग और भुगतान', type: 'material' },
     { id: 'support', icon: 'help-outline', label: 'सहायता और समर्थन', type: 'material' },
-    { id: 'logout', icon: 'sign-out', label: 'लॉग आउट', type: 'fontawesome', danger: true },
+    { id: 'logout', icon: 'logout', label: 'लॉग आउट', type: 'material', danger: true },
 ];
+
+// Format large numbers with K, L suffixes
+const formatValue = (value: number): string => {
+    if (value >= 100000) {
+        return `₹${(value / 100000).toFixed(1)}L`;
+    } else if (value >= 1000) {
+        return `₹${(value / 1000).toFixed(1)}K`;
+    }
+    return value.toLocaleString('en-IN');
+};
 
 export default function MoreScreen() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
+    const { userProfile, storeSettings, isLoading } = useSettings();
+    const { products, sales, dashboardStats } = useData();
+
+    // Calculate stats
+    const stats = useMemo(() => {
+        const totalProducts = products.length;
+        const totalOrders = sales.length;
+        const totalSales = dashboardStats?.todaySales || 0;
+        const totalProfit = dashboardStats?.profit || 0;
+
+        return {
+            products: totalProducts,
+            orders: totalOrders,
+            sales: totalSales,
+            profit: totalProfit,
+        };
+    }, [products, sales, dashboardStats]);
 
     const handleMenuPress = (itemId: string) => {
         if (itemId === 'logout') {
@@ -44,6 +72,28 @@ export default function MoreScreen() {
         router.replace('/(auth)/login');
     };
 
+    const getDisplayName = () => {
+        return userProfile?.name || user?.name || 'नाम सेट करें';
+    };
+
+    const getStoreName = () => {
+        return storeSettings?.name || 'स्टोर का नाम सेट करें';
+    };
+
+    const getProfileImage = () => {
+        return userProfile?.profileImage
+            ? { uri: userProfile.profileImage }
+            : { uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' };
+    };
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2E7D32" />
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -56,6 +106,47 @@ export default function MoreScreen() {
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                {/* Profile Section */}
+                <View
+                    style={styles.profileSection}
+                >
+                    <View style={styles.profileImageContainer}>
+                        <Image
+                            source={getProfileImage()}
+                            style={styles.profileImage}
+                        />
+                    </View>
+                    <View style={styles.profileInfo}>
+                        <Text style={styles.userName}>{getDisplayName()}</Text>
+                        <Text style={styles.storeName}>{getStoreName()}</Text>
+                    </View>
+                </View>
+
+                {/* Stats Row */}
+                <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>उत्पाद:</Text>
+                        <Text style={styles.statValue}>{stats.products.toLocaleString('en-IN')}</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>ऑर्डर:</Text>
+                        <Text style={styles.statValue}>{stats.orders.toLocaleString('en-IN')}</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>बिक्री:</Text>
+                        <Text style={styles.statValue}>{formatValue(stats.sales)}</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>लाभ:</Text>
+                        <Text style={[styles.statValue, stats.profit < 0 && styles.negativeValue]}>
+                            {formatValue(stats.profit)}
+                        </Text>
+                    </View>
+                </View>
+
                 {/* Menu Card */}
                 <View style={styles.menuCard}>
                     {menuItems.map((item, index) => (
@@ -67,7 +158,7 @@ export default function MoreScreen() {
                                 index !== menuItems.length - 1 && styles.menuItemBorder
                             ]}
                         >
-                            <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+                            <View style={styles.menuIconContainer}>
                                 {item.type === 'material' ? (
                                     <MaterialIcons
                                         name={item.icon as any}
@@ -77,7 +168,7 @@ export default function MoreScreen() {
                                 ) : (
                                     <FontAwesome
                                         name={item.icon as any}
-                                        size={22}
+                                        size={20}
                                         color={item.danger ? '#D32F2F' : '#616161'}
                                     />
                                 )}
@@ -92,14 +183,6 @@ export default function MoreScreen() {
                     ))}
                 </View>
             </ScrollView>
-
-            {/* FAB */}
-            <FAB
-                onNewSale={() => console.log('New Sale')}
-                onNewExpense={() => console.log('New Expense')}
-                onAddProduct={() => console.log('Add Product')}
-                onAddCustomer={() => console.log('Add Customer')}
-            />
 
             {/* Logout Confirmation Modal */}
             <Modal
@@ -138,36 +221,128 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#FAFAFA',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FAFAFA',
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
         paddingBottom: 100,
-        paddingTop: 16,
     },
+
+    // Profile Section
+    profileSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 24,
+        backgroundColor: '#FAFAFA',
+    },
+    profileImageContainer: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        overflow: 'hidden',
+        backgroundColor: '#E8E8E8',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    profileImage: {
+        width: '100%',
+        height: '100%',
+    },
+    profileInfo: {
+        marginLeft: 16,
+        flex: 1,
+    },
+    userName: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#212121',
+        marginBottom: 4,
+    },
+    storeName: {
+        fontSize: 14,
+        color: '#757575',
+        fontWeight: '400',
+    },
+
+    // Stats Row
+    statsRow: {
+        flexDirection: 'row',
+        backgroundColor: '#FFFFFF',
+        marginHorizontal: 16,
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 1,
+        marginBottom: 16,
+    },
+    statItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    statLabel: {
+        fontSize: 12,
+        color: '#9E9E9E',
+        marginBottom: 4,
+    },
+    statValue: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#212121',
+    },
+    negativeValue: {
+        color: '#D32F2F',
+    },
+    statDivider: {
+        width: 1,
+        backgroundColor: '#E0E0E0',
+        marginVertical: 4,
+    },
+
+    // Menu Card
     menuCard: {
         backgroundColor: '#FFFFFF',
         marginHorizontal: 16,
         borderRadius: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 1,
         overflow: 'hidden',
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 18,
         gap: 16,
     },
     menuItemBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
+        borderBottomColor: '#F0F0F0',
+    },
+    menuIconContainer: {
+        width: 24,
+        height: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     menuItemText: {
         fontSize: 16,
@@ -177,7 +352,8 @@ const styles = StyleSheet.create({
     menuItemTextDanger: {
         color: '#D32F2F',
     },
-    
+
+    // Modal Styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
