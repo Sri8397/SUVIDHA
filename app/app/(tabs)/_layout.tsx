@@ -3,8 +3,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs } from 'expo-router';
 import { View, Platform, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -43,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'होम',
+          title: t('tabs.home'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="home" size={22} color={color} />
           ),
@@ -52,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="inventory"
         options={{
-          title: 'इन्वेंटरी',
+          title: t('inventory.title'),
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="inventory" size={22} color={color} />
           ),
@@ -61,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="customers"
         options={{
-          title: 'ग्राहक',
+          title: t('customers.title'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="users" size={20} color={color} />
           ),
@@ -70,7 +72,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reports"
         options={{
-          title: 'रिपोर्ट',
+          title: t('reports.title'),
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="pie-chart" size={22} color={color} />
           ),
@@ -79,7 +81,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="more"
         options={{
-          title: 'अधिक',
+          title: t('more.title'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="bars" size={20} color={color} />
           ),

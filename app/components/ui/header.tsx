@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/utils/i18n';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
@@ -16,11 +18,28 @@ interface HeaderProps {
 }
 
 export function Header({ title, showOnlineStatus = false, showLanguageToggle = true, showBackButton = false }: HeaderProps) {
+    const { t, i18n: i18nInstance } = useTranslation();
     const router = useRouter();
     const { getVisibleNotifications } = useData();
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState('hi');
+    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+
+    // Listen to language change events
+    useEffect(() => {
+        const handleLanguageChange = (lng: string) => {
+            setSelectedLanguage(lng);
+        };
+
+        i18nInstance.on('languageChanged', handleLanguageChange);
+
+        // Set initial language
+        setSelectedLanguage(i18nInstance.language);
+
+        return () => {
+            i18nInstance.off('languageChanged', handleLanguageChange);
+        };
+    }, [i18nInstance]);
 
     // Get notification count from context (consistent across all pages)
     const visibleNotifications = getVisibleNotifications();
@@ -49,7 +68,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                         {showOnlineStatus && (
                             <View style={styles.onlineStatus}>
                                 <View style={styles.onlineDot} />
-                                <Text style={styles.onlineText}>ऑनलाइन</Text>
+                                <Text style={styles.onlineText}>{t('common.online')}</Text>
                             </View>
                         )}
                     </View>
@@ -61,7 +80,12 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                             onPress={() => setLanguageModalVisible(true)}
                         >
                             <Text style={styles.langText}>
-                                {selectedLanguage === 'hi' ? 'अ' : selectedLanguage === 'en' ? 'En' : 'अ'}
+                                {selectedLanguage === 'hi' ? 'हि' : selectedLanguage === 'en' ? 'En' :
+                                    selectedLanguage === 'mr' ? 'मर' : selectedLanguage === 'gu' ? 'ગુ' :
+                                        selectedLanguage === 'bn' ? 'বা' : selectedLanguage === 'ta' ? 'த' :
+                                            selectedLanguage === 'te' ? 'తె' : selectedLanguage === 'kn' ? 'ಕ' :
+                                                selectedLanguage === 'ml' ? 'മ' : selectedLanguage === 'pa' ? 'ਪੰ' :
+                                                    selectedLanguage === 'or' ? 'ଓ' : 'हि'}
                             </Text>
                         </TouchableOpacity>
                     )}

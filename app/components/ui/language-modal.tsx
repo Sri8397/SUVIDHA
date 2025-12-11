@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '@/utils/i18n';
 
 interface LanguageModalProps {
     visible: boolean;
@@ -12,12 +14,26 @@ interface LanguageModalProps {
 const languages = [
     { id: 'hi', label: 'हिंदी' },
     { id: 'en', label: 'English' },
-    { id: 'mr', label: 'मराठी' },
-    { id: 'gu', label: 'गुजरती' },
-    { id: 'Bn', label: 'বাংলা' },
+    { id: 'mr', label: 'मराठ' },
+    { id: 'gu', label: 'ગુજરાતી' },
+    { id: 'bn', label: 'বাংলা' },
+    { id: 'ta', label: 'தமிழ்' },
+    { id: 'te', label: 'తెలుగు' },
+    { id: 'kn', label: 'ಕನ್ನಡ' },
+    { id: 'ml', label: 'മലയാളം' },
+    { id: 'pa', label: 'ਪੰਜਾਬੀ' },
+    { id: 'or', label: 'ଓଡ଼ିଆ' },
 ];
 
 export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLanguage }: LanguageModalProps) {
+    const { t } = useTranslation();
+
+    const handleLanguageSelect = async (langId: string) => {
+        await changeLanguage(langId);
+        onSelectLanguage(langId);
+        onClose();
+    };
+
     return (
         <Modal
             animationType="fade"
@@ -27,14 +43,14 @@ export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLang
         >
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
-                    <Text style={styles.modalTitle}>भाषा चुनें</Text>
+                    <Text style={styles.modalTitle}>{t('more.selectLanguage', 'भाषा चुनें')}</Text>
 
                     <View style={styles.radioGroup}>
                         {languages.map((lang) => (
                             <TouchableOpacity
                                 key={lang.id}
                                 style={styles.radioButton}
-                                onPress={() => onSelectLanguage(lang.id)}
+                                onPress={() => handleLanguageSelect(lang.id)}
                             >
                                 <MaterialIcons
                                     name={selectedLanguage === lang.id ? "radio-button-on" : "radio-button-off"}
@@ -48,10 +64,7 @@ export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLang
 
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.buttonCancel} onPress={onClose}>
-                            <Text style={styles.textCancel}>रद्द करें</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.buttonApply} onPress={onClose}>
-                            <Text style={styles.textApply}>लागू करें</Text>
+                            <Text style={styles.textCancel}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -66,12 +79,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 20,
     },
     modalView: {
-        width: 300,
+        width: '100%',
+        maxWidth: 400,
         backgroundColor: 'white',
-        borderRadius: 8,
-        padding: 24,
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'stretch',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -85,40 +101,40 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#000',
+        color: '#212121',
+        textAlign: 'center',
     },
     radioGroup: {
-        gap: 16,
-        marginBottom: 24,
+        gap: 8,
+        marginBottom: 20,
     },
     radioButton: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
         gap: 12,
     },
     radioLabel: {
         fontSize: 16,
-        color: '#000',
+        color: '#212121',
     },
     buttonContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 20,
+        gap: 12,
+        justifyContent: 'center',
     },
     buttonCancel: {
-        padding: 8,
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: '#F5F5F5',
     },
     textCancel: {
-        color: '#757575',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    buttonApply: {
-        padding: 8,
-    },
-    textApply: {
-        color: '#2E7D32',
-        fontSize: 14,
-        fontWeight: '600',
+        color: '#212121',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
