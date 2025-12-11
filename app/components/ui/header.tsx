@@ -3,10 +3,25 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
 import { useData } from '@/contexts/DataContext';
+
+const languageLabels: Record<string, string> = {
+    'hi': 'अ',
+    'en': 'En',
+    'mr': 'म',
+    'gu': 'ગ',
+    'bn': 'ব',
+    'ta': 'த',
+    'te': 'తె',
+    'kn': 'ಕ',
+    'ml': 'മ',
+    'pa': 'ਪ',
+    'or': 'ଓ',
+};
 
 interface HeaderProps {
     title: string;
@@ -16,11 +31,17 @@ interface HeaderProps {
 }
 
 export function Header({ title, showOnlineStatus = false, showLanguageToggle = true, showBackButton = false }: HeaderProps) {
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const { getVisibleNotifications } = useData();
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [selectedLanguage, setSelectedLanguage] = useState('hi');
+    const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'hi');
+
+    // Sync selectedLanguage with i18n.language
+    React.useEffect(() => {
+        setSelectedLanguage(i18n.language);
+    }, [i18n.language]);
 
     // Get notification count from context (consistent across all pages)
     const visibleNotifications = getVisibleNotifications();
@@ -49,7 +70,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                         {showOnlineStatus && (
                             <View style={styles.onlineStatus}>
                                 <View style={styles.onlineDot} />
-                                <Text style={styles.onlineText}>ऑनलाइन</Text>
+                                <Text style={styles.onlineText}>{t('common.online')}</Text>
                             </View>
                         )}
                     </View>
@@ -61,7 +82,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                             onPress={() => setLanguageModalVisible(true)}
                         >
                             <Text style={styles.langText}>
-                                {selectedLanguage === 'hi' ? 'अ' : selectedLanguage === 'en' ? 'En' : 'अ'}
+                                {languageLabels[selectedLanguage] || selectedLanguage.substring(0, 2).toUpperCase()}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -85,7 +106,10 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                 visible={languageModalVisible}
                 onClose={() => setLanguageModalVisible(false)}
                 selectedLanguage={selectedLanguage}
-                onSelectLanguage={setSelectedLanguage}
+                onSelectLanguage={(lang) => {
+                    i18n.changeLanguage(lang);
+                    setSelectedLanguage(lang);
+                }}
             />
 
             <NotificationList

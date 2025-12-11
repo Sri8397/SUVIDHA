@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -18,6 +19,7 @@ interface EditModalProps {
 }
 
 function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'default', placeholder }: EditModalProps) {
+    const { t } = useTranslation();
     const [inputValue, setInputValue] = useState(value);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -57,7 +59,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             onPress={onClose}
                             disabled={isSaving}
                         >
-                            <Text style={styles.cancelButtonText}>रद्द करें</Text>
+                            <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.saveButton}
@@ -67,7 +69,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             {isSaving ? (
                                 <ActivityIndicator size="small" color="#FFFFFF" />
                             ) : (
-                                <Text style={styles.saveButtonText}>सेव करें</Text>
+                                <Text style={styles.saveButtonText}>{t('common.save')}</Text>
                             )}
                         </TouchableOpacity>
                     </View>
@@ -78,6 +80,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
 }
 
 export default function ProfileScreen() {
+    const { t } = useTranslation();
     const { userProfile, storeSettings, updateUserProfile, updateStoreSettings, isLoading } = useSettings();
     const { user } = useAuth();
 
@@ -87,9 +90,9 @@ export default function ProfileScreen() {
     const handleSave = async (field: string, value: string) => {
         const success = await updateUserProfile({ [field]: value });
         if (success) {
-            Alert.alert('सफलता', 'जानकारी सफलतापूर्वक अपडेट हो गई।');
+            Alert.alert(t('common.success'), t('profile.updateSuccess'));
         } else {
-            Alert.alert('त्रुटि', 'कुछ गलत हो गया।');
+            Alert.alert(t('common.error'), t('profile.updateError'));
         }
     };
 
@@ -99,13 +102,13 @@ export default function ProfileScreen() {
             if (useCamera) {
                 const permission = await ImagePicker.requestCameraPermissionsAsync();
                 if (!permission.granted) {
-                    Alert.alert('अनुमति आवश्यक', 'कैमरा उपयोग करने के लिए अनुमति दें');
+                    Alert.alert(t('common.permission'), t('forms.cameraPermission'));
                     return;
                 }
             } else {
                 const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
                 if (!permission.granted) {
-                    Alert.alert('अनुमति आवश्यक', 'गैलरी एक्सेस करने के लिए अनुमति दें');
+                    Alert.alert(t('common.permission'), t('forms.galleryPermission'));
                     return;
                 }
             }
@@ -128,35 +131,35 @@ export default function ProfileScreen() {
                 const imageUri = result.assets[0].uri;
                 const success = await updateUserProfile({ profileImage: imageUri });
                 if (success) {
-                    Alert.alert('सफलता', 'प्रोफाइल फोटो अपडेट हो गई।');
+                    Alert.alert(t('common.success'), t('profile.photoUpdateSuccess'));
                 }
             }
             setShowImagePicker(false);
         } catch (error) {
             console.error('Image picker error:', error);
-            Alert.alert('त्रुटि', 'फोटो चुनने में समस्या हुई');
+            Alert.alert(t('common.error'), t('profile.photoError'));
             setShowImagePicker(false);
         }
     };
 
     const getDisplayName = () => {
-        return userProfile.name || user?.name || 'नाम सेट करें';
+        return userProfile.name || user?.name || t('profile.setName');
     };
 
     const getDisplayPhone = () => {
-        return userProfile.phone || user?.phone || 'सेट नहीं है';
+        return userProfile.phone || user?.phone || t('profile.notSet');
     };
 
     const getDisplayEmail = () => {
-        return userProfile.email || 'सेट नहीं है';
+        return userProfile.email || t('profile.notSet');
     };
 
     const getDisplayAddress = () => {
-        return storeSettings.address || 'सेट नहीं है';
+        return storeSettings.address || t('profile.notSet');
     };
 
     const getStoreName = () => {
-        return storeSettings.name || 'स्टोर का नाम सेट करें';
+        return storeSettings.name || t('profile.setStoreName');
     };
 
     if (isLoading) {
@@ -177,7 +180,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>प्रोफाइल संपादित करें</Text>
+                    <Text style={styles.headerTitle}>{t('profile.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -216,7 +219,7 @@ export default function ProfileScreen() {
                     {/* Phone Number */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('phone')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>फ़ोन नंबर:</Text>
+                            <Text style={styles.fieldLabel}>{t('profile.phoneNumber')}</Text>
                             <Text style={styles.fieldValue}>{getDisplayPhone()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -224,7 +227,7 @@ export default function ProfileScreen() {
                     {/* Email */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('email')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>ईमेल:</Text>
+                            <Text style={styles.fieldLabel}>{t('profile.email')}</Text>
                             <Text style={styles.fieldValue}>{getDisplayEmail()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -232,7 +235,7 @@ export default function ProfileScreen() {
                     {/* Address */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>पता:</Text>
+                            <Text style={styles.fieldLabel}>{t('profile.address')}</Text>
                             <Text style={styles.fieldValue}>{getDisplayAddress()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -240,14 +243,14 @@ export default function ProfileScreen() {
 
                 {/* Account Settings Section */}
                 <View style={styles.settingsSection}>
-                    <Text style={styles.sectionTitle}>खाता सेटिंग</Text>
+                    <Text style={styles.sectionTitle}>{t('profile.accountSettings')}</Text>
 
                     <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>पासवर्ड बदलें</Text>
+                        <Text style={styles.settingText}>{t('profile.changePassword')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>ऐप सेटिंग</Text>
+                        <Text style={styles.settingText}>{t('profile.appSettings')}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -255,44 +258,44 @@ export default function ProfileScreen() {
             {/* Edit Modals */}
             <EditModal
                 visible={editField === 'name'}
-                title="नाम बदलें"
+                title={t('profile.changeName')}
                 value={userProfile.name || user?.name || ''}
                 onSave={(value) => handleSave('name', value)}
                 onClose={() => setEditField(null)}
-                placeholder="अपना नाम दर्ज करें"
+                placeholder={t('profile.enterName')}
             />
             <EditModal
                 visible={editField === 'phone'}
-                title="फ़ोन नंबर बदलें"
+                title={t('profile.changePhone')}
                 value={userProfile.phone || user?.phone || ''}
                 onSave={(value) => handleSave('phone', value)}
                 onClose={() => setEditField(null)}
                 keyboardType="phone-pad"
-                placeholder="फ़ोन नंबर दर्ज करें"
+                placeholder={t('profile.enterPhone')}
             />
             <EditModal
                 visible={editField === 'email'}
-                title="ईमेल बदलें"
+                title={t('profile.changeEmail')}
                 value={userProfile.email || ''}
                 onSave={(value) => handleSave('email', value)}
                 onClose={() => setEditField(null)}
                 keyboardType="email-address"
-                placeholder="ईमेल दर्ज करें"
+                placeholder={t('profile.enterEmail')}
             />
             <EditModal
                 visible={editField === 'address'}
-                title="पता बदलें"
+                title={t('profile.changeAddress')}
                 value={storeSettings.address || ''}
                 onSave={async (value) => {
                     const success = await updateStoreSettings({ address: value });
                     if (success) {
-                        Alert.alert('सफलता', 'पता सफलतापूर्वक अपडेट हो गया।');
+                        Alert.alert(t('common.success'), t('profile.updateSuccess'));
                     } else {
-                        Alert.alert('त्रुटि', 'कुछ गलत हो गया।');
+                        Alert.alert(t('common.error'), t('profile.updateError'));
                     }
                 }}
                 onClose={() => setEditField(null)}
-                placeholder="पता दर्ज करें"
+                placeholder={t('profile.enterAddress')}
             />
 
             {/* Image Picker Modal */}
@@ -304,26 +307,26 @@ export default function ProfileScreen() {
             >
                 <View style={styles.imagePickerOverlay}>
                     <View style={styles.imagePickerContent}>
-                        <Text style={styles.imagePickerTitle}>प्रोफाइल फोटो बदलें</Text>
+                        <Text style={styles.imagePickerTitle}>{t('profile.changeProfilePhoto')}</Text>
                         <TouchableOpacity
                             style={styles.imagePickerOption}
                             onPress={() => pickImage(true)}
                         >
                             <FontAwesome name="camera" size={20} color="#2E7D32" />
-                            <Text style={styles.imagePickerOptionText}>कैमरा से फोटो लें</Text>
+                            <Text style={styles.imagePickerOptionText}>{t('profile.takePhoto')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.imagePickerOption}
                             onPress={() => pickImage(false)}
                         >
                             <FontAwesome name="photo" size={20} color="#2E7D32" />
-                            <Text style={styles.imagePickerOptionText}>गैलरी से चुनें</Text>
+                            <Text style={styles.imagePickerOptionText}>{t('profile.chooseFromGallery')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.imagePickerCancel}
                             onPress={() => setShowImagePicker(false)}
                         >
-                            <Text style={styles.imagePickerCancelText}>रद्द करें</Text>
+                            <Text style={styles.imagePickerCancelText}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

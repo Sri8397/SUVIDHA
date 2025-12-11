@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
 import { useData } from '@/contexts/DataContext';
@@ -13,6 +14,7 @@ import { StockAdjustmentForm } from '@/components/forms/StockAdjustmentForm';
 import { Product } from '@/types';
 
 export default function InventoryScreen() {
+    const { t } = useTranslation();
     const { filter } = useLocalSearchParams<{ filter?: string }>();
     const { isLoading, products, categories, lowStockProducts, deleteProduct } = useData();
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -51,10 +53,10 @@ export default function InventoryScreen() {
 
     // Category list with "All" and "Low Stock" options
     const categoryList = useMemo(() => [
-        { id: 'all', name: 'सभी' },
-        { id: 'low-stock', name: 'कम स्टॉक', count: lowStockProducts.length },
+        { id: 'all', name: t('inventory.all') },
+        { id: 'low-stock', name: t('dashboard.lowStockAlerts'), count: lowStockProducts.length },
         ...categories
-    ], [categories, lowStockProducts.length]);
+    ], [categories, lowStockProducts.length, t]);
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product);
@@ -63,17 +65,17 @@ export default function InventoryScreen() {
 
     const handleDelete = (product: Product) => {
         Alert.alert(
-            'प्रोडक्ट हटाएं',
-            `क्या आप "${product.name}" को हटाना चाहते हैं?`,
+            t('inventory.deleteProduct'),
+            t('inventory.deleteProductConfirm', { name: product.name }),
             [
-                { text: 'रद्द करें', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'हटाएं',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         const success = await deleteProduct(product.id);
                         if (success) {
-                            Alert.alert('सफल', 'प्रोडक्ट हटा दिया गया');
+                            Alert.alert(t('common.success'), t('inventory.productDeleted'));
                         }
                     }
                 }
@@ -109,14 +111,14 @@ export default function InventoryScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title="इन्वेंटरी" showLanguageToggle={true} />
+            <Header title={t('inventory.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="खोजें..."
+                    placeholder={t('common.search')}
                     placeholderTextColor="#9E9E9E"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -156,7 +158,7 @@ export default function InventoryScreen() {
             {/* Product Count */}
             <View style={styles.countContainer}>
                 <Text style={styles.countText}>
-                    {filteredProducts.length} प्रोडक्ट्स
+                    {filteredProducts.length} {t('inventory.products')}
                 </Text>
             </View>
 
@@ -182,7 +184,7 @@ export default function InventoryScreen() {
                                     styles.productStock,
                                     product.stock <= product.minStock && styles.lowStockText
                                 ]}>
-                                    स्टॉक: {product.stock}
+                                    {t('inventory.stock')}: {product.stock}
                                 </Text>
                             </View>
                             <Text style={styles.productPrice}>₹ {product.price.toLocaleString('en-IN')}</Text>
@@ -193,21 +195,21 @@ export default function InventoryScreen() {
                                 onPress={() => handleStockAdjust(product)}
                             >
                                 <FontAwesome name="cubes" size={14} color="#1976D2" />
-                                <Text style={styles.stockButtonText}>स्टॉक</Text>
+                                <Text style={styles.stockButtonText}>{t('inventory.stock')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.editButton}
                                 onPress={() => handleEdit(product)}
                             >
                                 <FontAwesome name="pencil" size={14} color="#2E7D32" />
-                                <Text style={styles.editButtonText}>एडिट</Text>
+                                <Text style={styles.editButtonText}>{t('common.edit')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.deleteButton}
                                 onPress={() => handleDelete(product)}
                             >
                                 <FontAwesome name="trash" size={14} color="#D32F2F" />
-                                <Text style={styles.deleteButtonText}>हटाएं</Text>
+                                <Text style={styles.deleteButtonText}>{t('common.delete')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -218,8 +220,8 @@ export default function InventoryScreen() {
                         <FontAwesome name="inbox" size={48} color="#BDBDBD" />
                         <Text style={styles.emptyStateText}>
                             {products.length === 0
-                                ? 'कोई प्रोडक्ट नहीं है। नया प्रोडक्ट जोड़ें।'
-                                : 'कोई प्रोडक्ट नहीं मिला'}
+                                ? t('inventory.noProducts')
+                                : t('inventory.noProductsFound')}
                         </Text>
                         {products.length === 0 && (
                             <TouchableOpacity
@@ -227,7 +229,7 @@ export default function InventoryScreen() {
                                 onPress={() => setShowProductForm(true)}
                             >
                                 <FontAwesome name="plus" size={14} color="#FFFFFF" />
-                                <Text style={styles.addFirstButtonText}>प्रोडक्ट जोड़ें</Text>
+                                <Text style={styles.addFirstButtonText}>{t('inventory.addProduct')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
