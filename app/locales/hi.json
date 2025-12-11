@@ -42,7 +42,34 @@
         "expenses": "खर्च",
         "weeklySalesProfit": "साप्ताहिक बिक्री और लाभ",
         "lowStockAlerts": "कम स्टॉक अलर्ट",
-        "allProductsInStock": "सभी प्रोडक्ट्स में पर्याप्त स्टॉक है"
+        "allProductsInStock": "सभी प्रोडक्ट्स में पर्याप्त स्टॉक है",
+        "lowStock": "कम स्टॉक अलर्ट",
+        "lowStockMessage": "{{count}} उत्पाद कम हो रहे हैं",
+        "viewAll": "सभी देखें"
+    },
+    "customers": {
+        "title": "ग्राहक",
+        "customer": "ग्राहक",
+        "customers_count": "{{count}} ग्राहक",
+        "searchPlaceholder": "नाम या फोन से खोजें...",
+        "outstanding": "बकाया",
+        "call": "कॉल करें",
+        "noCustomers": "कोई ग्राहक नहीं है। नया ग्राहक जोड़ें।",
+        "noCustomersFound": "कोई ग्राहक नहीं मिला",
+        "addCustomer": "ग्राहक जोड़ें",
+        "addFirst": "अपना पहला ग्राहक जोड़ें",
+        "deleteConfirm": "ग्राहक हटाएं?",
+        "deleteMessage": "यह कार्रवाई पूर्ववत नहीं की जा सकती",
+        "name": "नाम",
+        "phone": "फ़ोन",
+        "enterName": "ग्राहक का नाम दर्ज करें",
+        "enterPhone": "फोन नंबर दर्ज करें",
+        "customerAdded": "ग्राहक जोड़ दिया गया",
+        "customerUpdated": "ग्राहक अपडेट किया गया",
+        "deleteCustomer": "ग्राहक हटाएं",
+        "deleteCustomerConfirm": "क्या आप \"{{name}}\" को हटाना चाहते हैं?",
+        "customerDeleted": "ग्राहक हटा दिया गया",
+        "collectPayment": "बकाया लें"
     },
     "inventory": {
         "title": "इन्वेंटरी",
@@ -70,20 +97,6 @@
         "household": "घरेलू सामान",
         "other": "अन्य"
     },
-    "customers": {
-        "title": "ग्राहक",
-        "customer": "ग्राहक",
-        "customers_count": "{{count}} ग्राहक",
-        "searchPlaceholder": "नाम या फोन से खोजें...",
-        "outstanding": "बकाया",
-        "call": "कॉल करें",
-        "noCustomers": "कोई ग्राहक नहीं है। नया ग्राहक जोड़ें।",
-        "noCustomersFound": "कोई ग्राहक नहीं मिला",
-        "addCustomer": "ग्राहक जोड़ें",
-        "deleteCustomer": "ग्राहक हटाएं",
-        "deleteCustomerConfirm": "क्या आप \"{{name}}\" को हटाना चाहते हैं?",
-        "customerDeleted": "ग्राहक हटा दिया गया"
-    },
     "reports": {
         "title": "रिपोर्ट्स",
         "sales": "बिक्री",
@@ -102,7 +115,9 @@
         "emptyCategory": "प्रोडक्ट्स जोड़ें श्रेणी रिपोर्ट देखने के लिए",
         "periodDays": "(7 दिन)",
         "periodWeeks": "(4 सप्ताह)",
-        "periodMonths": "(12 माह)"
+        "periodMonths": "(12 माह)",
+        "totalExpenses": "कुल खर्च",
+        "netProfit": "शुद्ध लाभ"
     },
     "more": {
         "title": "अधिक",

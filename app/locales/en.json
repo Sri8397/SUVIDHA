@@ -43,7 +43,10 @@
         "expenses": "Expenses",
         "weeklySalesProfit": "Weekly Sales & Profit",
         "lowStockAlerts": "Low Stock Alerts",
-        "allProductsInStock": "All products have sufficient stock"
+        "allProductsInStock": "All products have sufficient stock",
+        "lowStock": "Low Stock Alert",
+        "lowStockMessage": "{{count}} products are running low",
+        "viewAll": "View All"
     },
     "inventory": {
         "title": "Inventory",
@@ -83,7 +86,17 @@
         "addCustomer": "Add Customer",
         "deleteCustomer": "Delete Customer",
         "deleteCustomerConfirm": "Do you want to delete \"{{name}}\"?",
-        "customerDeleted": "Customer deleted"
+        "customerDeleted": "Customer deleted",
+        "addFirst": "Add your first customer",
+        "deleteConfirm": "Delete customer?",
+        "deleteMessage": "This action cannot be undone",
+        "name": "Name",
+        "phone": "Phone",
+        "enterName": "Enter customer name",
+        "enterPhone": "Enter phone number",
+        "customerAdded": "Customer added successfully",
+        "customerUpdated": "Customer updated successfully",
+        "collectPayment": "Collect Payment"
     },
     "reports": {
         "title": "Reports",
@@ -103,7 +116,9 @@
         "emptyCategory": "Add products to view category report",
         "periodDays": "(7 Days)",
         "periodWeeks": "(4 Weeks)",
-        "periodMonths": "(12 Months)"
+        "periodMonths": "(12 Months)",
+        "totalExpenses": "Total Expenses",
+        "netProfit": "Net Profit"
     },
     "more": {
         "title": "More",
@@ -150,7 +165,10 @@
         "amountRequired": "Please enter valid amount",
         "saveError": "Error saving data",
         "expenseAdded": "Expense added successfully",
-        "stockUpdated": "Stock updated successfully"
+        "stockUpdated": "Stock updated successfully",
+        "receipt": "Receipt",
+        "selectCategory": "Select Category",
+        "descriptionPlaceholder": "Description (Optional)"
     },
     "auth": {
         "yourStore": "Your Store",

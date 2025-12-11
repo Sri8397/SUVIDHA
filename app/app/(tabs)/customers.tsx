@@ -171,7 +171,7 @@ export default function CustomersScreen() {
                                     onPress={() => handleReceivePayment(customer)}
                                 >
                                     <FontAwesome name="money" size={14} color="#E65100" />
-                                    <Text style={styles.clearBakayaButtonText}>बकाया लें</Text>
+                                    <Text style={styles.clearBakayaButtonText}>{t('customers.collectPayment')}</Text>
                                 </TouchableOpacity>
                             )}
                         </View>

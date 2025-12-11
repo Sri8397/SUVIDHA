@@ -19,6 +19,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
+
 import { Category } from '@/types';
 
 interface AddProductFormProps {

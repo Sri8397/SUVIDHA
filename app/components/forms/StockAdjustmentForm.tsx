@@ -19,6 +19,7 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Product, ExpenseCategory } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 type AdjustmentType = 'ADD' | 'REMOVE';
 
@@ -28,13 +29,14 @@ interface StockAdjustmentFormProps {
     preSelectedProduct?: Product;
 }
 
-const ADJUSTMENT_TYPES: { key: AdjustmentType; label: string; icon: 'plus-circle' | 'minus-circle'; color: string }[] = [
-    { key: 'ADD', label: 'माल आया', icon: 'plus-circle', color: '#2E7D32' },
-    { key: 'REMOVE', label: 'बर्बादी/नुकसान', icon: 'minus-circle', color: '#D32F2F' },
-];
-
 export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: StockAdjustmentFormProps) {
+    const { t } = useTranslation();
     const { products, updateProduct, addExpense } = useData();
+
+    const ADJUSTMENT_TYPES: { key: AdjustmentType; label: string; icon: 'plus-circle' | 'minus-circle'; color: string }[] = [
+        { key: 'ADD', label: t('stockAdjustment.add'), icon: 'plus-circle', color: '#2E7D32' },
+        { key: 'REMOVE', label: t('stockAdjustment.remove'), icon: 'minus-circle', color: '#D32F2F' },
+    ];
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
@@ -80,19 +82,19 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
 
     const handleSubmit = async () => {
         if (!selectedProduct) {
-            Alert.alert('त्रुटि', 'प्रोडक्ट चुनें');
+            Alert.alert(t('common.error'), t('stockAdjustment.selectProduct'));
             return;
         }
 
         const qty = parseInt(quantity);
         if (isNaN(qty) || qty <= 0) {
-            Alert.alert('त्रुटि', 'सही मात्रा दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.stockRequired'));
             return;
         }
 
         // For REMOVE, check if we have enough stock
         if (adjustmentType === 'REMOVE' && qty > selectedProduct.stock) {
-            Alert.alert('त्रुटि', `केवल ${selectedProduct.stock} स्टॉक उपलब्ध है`);
+            Alert.alert(t('common.error'), `${t('stockAdjustment.currentStock', { stock: selectedProduct.stock })}`);
             return;
         }
 
@@ -131,14 +133,14 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
             const newStock = selectedProduct.stock + stockDelta;
             await updateProduct(selectedProduct.id, { stock: newStock });
 
-            const actionText = adjustmentType === 'ADD' ? 'जोड़ा गया' : 'हटाया गया';
-            Alert.alert('सफलता', `स्टॉक ${actionText}। नया स्टॉक: ${newStock}`);
+            const actionText = adjustmentType === 'ADD' ? t('stockAdjustment.added') : t('stockAdjustment.removed');
+            Alert.alert(t('common.success'), t('stockAdjustment.success', { action: actionText, stock: newStock }));
 
             resetForm();
             onClose();
         } catch (error) {
             console.error('Stock adjustment error:', error);
-            Alert.alert('त्रुटि', 'स्टॉक अपडेट करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('stockAdjustment.updateError'));
         } finally {
             setIsLoading(false);
         }
@@ -162,7 +164,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>स्टॉक समायोजन</Text>
+                    <Text style={styles.title}>{t('stockAdjustment.title')}</Text>
                     <View style={styles.closeButton} />
                 </View>
 
@@ -176,13 +178,13 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                             <FontAwesome name="cube" size={20} color="#2E7D32" />
                         </View>
                         <View style={styles.productInfo}>
-                            <Text style={styles.productLabel}>प्रोडक्ट</Text>
+                            <Text style={styles.productLabel}>{t('stockAdjustment.product')}</Text>
                             <Text style={styles.productName}>
-                                {selectedProduct ? selectedProduct.name : 'प्रोडक्ट चुनें'}
+                                {selectedProduct ? selectedProduct.name : t('stockAdjustment.selectProduct')}
                             </Text>
                             {selectedProduct && (
                                 <Text style={styles.currentStock}>
-                                    मौजूदा स्टॉक: {selectedProduct.stock}
+                                    {t('stockAdjustment.currentStock', { stock: selectedProduct.stock })}
                                 </Text>
                             )}
                         </View>
@@ -191,7 +193,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
 
                     {/* Adjustment Type */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>समायोजन का प्रकार</Text>
+                        <Text style={styles.sectionTitle}>{t('stockAdjustment.adjustmentType')}</Text>
                         <View style={styles.typeGrid}>
                             {ADJUSTMENT_TYPES.map((type) => (
                                 <TouchableOpacity
@@ -220,12 +222,12 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
 
                     {/* Quantity Input */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>मात्रा</Text>
+                        <Text style={styles.label}>{t('stockAdjustment.quantity')}</Text>
                         <TextInput
                             style={styles.input}
                             value={quantity}
                             onChangeText={setQuantity}
-                            placeholder="कितने आइटम?"
+                            placeholder={t('stockAdjustment.howMany')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
                         />
@@ -234,12 +236,12 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                     {/* Cost Per Unit (for ADD only) */}
                     {adjustmentType === 'ADD' && (
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>प्रति यूनिट लागत (₹)</Text>
+                            <Text style={styles.label}>{t('stockAdjustment.costPerUnit')}</Text>
                             <TextInput
                                 style={styles.input}
                                 value={costPerUnit}
                                 onChangeText={setCostPerUnit}
-                                placeholder="लागत"
+                                placeholder={t('stockAdjustment.cost')}
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
                             />
@@ -248,12 +250,12 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
 
                     {/* Reason */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>कारण (वैकल्पिक)</Text>
+                        <Text style={styles.label}>{t('stockAdjustment.reason')}</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             value={reason}
                             onChangeText={setReason}
-                            placeholder="जैसे: सप्लायर से माल आया, खराब माल..."
+                            placeholder={t('stockAdjustment.reasonPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             multiline
                             numberOfLines={2}
@@ -269,7 +271,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                         {isLoading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.submitButtonText}>स्टॉक अपडेट करें</Text>
+                            <Text style={styles.submitButtonText}>{t('stockAdjustment.submit')}</Text>
                         )}
                     </TouchableOpacity>
                 </ScrollView>
@@ -283,7 +285,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                 >
                     <View style={styles.pickerContainer}>
                         <View style={styles.pickerHeader}>
-                            <Text style={styles.pickerTitle}>प्रोडक्ट चुनें</Text>
+                            <Text style={styles.pickerTitle}>{t('stockAdjustment.selectProduct')}</Text>
                             <TouchableOpacity onPress={() => setShowProductPicker(false)}>
                                 <FontAwesome name="times" size={20} color="#757575" />
                             </TouchableOpacity>
@@ -300,13 +302,13 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                                 >
                                     <View>
                                         <Text style={styles.pickerItemName}>{product.name}</Text>
-                                        <Text style={styles.pickerItemStock}>स्टॉक: {product.stock}</Text>
+                                        <Text style={styles.pickerItemStock}>{t('inventory.stock')}: {product.stock}</Text>
                                     </View>
                                     <Text style={styles.pickerItemPrice}>₹{product.price}</Text>
                                 </TouchableOpacity>
                             ))}
                             {products.length === 0 && (
-                                <Text style={styles.emptyPicker}>कोई प्रोडक्ट नहीं है।</Text>
+                                <Text style={styles.emptyPicker}>{t('stockAdjustment.noProducts')}</Text>
                             )}
                         </ScrollView>
                     </View>
@@ -433,7 +435,7 @@ const styles = StyleSheet.create({
         minHeight: 80,
         textAlignVertical: 'top',
     },
-    
+
     submitButton: {
         backgroundColor: '#2E7D32',
         borderRadius: 12,
