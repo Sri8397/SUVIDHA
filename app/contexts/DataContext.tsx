@@ -4,6 +4,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Product, Customer, Sale, Expense, Category, DashboardStats, WeeklyData, CategoryBreakdown, Transaction } from '@/types';
+import { useTranslation } from 'react-i18next';
 import * as productService from '@/services/productService';
 import * as customerService from '@/services/customerService';
 import * as saleService from '@/services/saleService';
@@ -175,10 +176,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
     }, [refreshTransactions, refreshProducts, refreshCustomers, refreshSales, refreshExpenses, refreshStats]);
 
+    const { i18n } = useTranslation();
+
     // Initial load
     useEffect(() => {
         refreshAll();
     }, []);
+
+    // Refresh localized data when language changes
+    useEffect(() => {
+        refreshTransactions();
+        refreshStats();
+    }, [i18n.language, refreshTransactions, refreshStats]);
 
     // Note: Transactions are now derived from Sales + Expenses, not stored separately
     // The transactionService.getTransactions() computes them on-the-fly
