@@ -15,6 +15,8 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import * as employeeService from '@/services/employeeService';
 
 // Predefined roles for employees
 const getEmployeeRoles = (t: any) => [

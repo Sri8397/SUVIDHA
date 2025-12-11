@@ -126,7 +126,7 @@ export default function StoreSettingsScreen() {
 
     const handleClearData = async () => {
         if (!anySelected) {
-            Alert.alert('चेतावनी', 'कृपया कम से कम एक विकल्प चुनें।');
+            Alert.alert(t('common.warning'), t('storeSettings.selectAtLeastOne'));
             return;
         }
 
@@ -326,7 +326,7 @@ export default function StoreSettingsScreen() {
 
                     {/* Clear Data - Danger Zone */}
                     <View style={styles.dangerSection}>
-                        <Text style={styles.dangerSectionTitle}>डेटा प्रबंधन</Text>
+                        <Text style={styles.dangerSectionTitle}>{t('storeSettings.dataManagement')}</Text>
                         <TouchableOpacity
                             style={styles.dangerCard}
                             onPress={() => setShowClearDataModal(true)}

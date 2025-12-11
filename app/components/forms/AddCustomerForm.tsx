@@ -64,7 +64,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
     const handleSubmit = async () => {
         // Validation
         if (!name.trim()) {
-            Alert.alert(t('common.error'), t('customers.enterName'));
+            Alert.alert(t('common.error'), t('forms.customer.enterName'));
             return;
         }
         if (!phone.trim() || phone.length < 10) {
@@ -82,17 +82,17 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
 
             if (editCustomer) {
                 await updateCustomer(editCustomer.id, customerData);
-                Alert.alert('सफलता', 'ग्राहक अपडेट हो गया');
+                Alert.alert(t('common.success'), t('forms.customer.updated'));
             } else {
                 await addCustomer(customerData);
-                Alert.alert('सफलता', 'नया ग्राहक जोड़ दिया गया');
+                Alert.alert(t('common.success'), t('forms.customer.added'));
             }
 
             resetForm();
             onClose();
         } catch (error) {
             console.error('Save customer error:', error);
-            Alert.alert('त्रुटि', 'ग्राहक सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.customer.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -117,7 +117,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
                     <Text style={styles.title}>
-                        {editCustomer ? 'ग्राहक एडिट करें' : 'नया ग्राहक जोड़ें'}
+                        {editCustomer ? t('forms.customer.editTitle') : t('forms.customer.addTitle')}
                     </Text>
                     <View style={styles.closeButton} />
                 </View>
@@ -132,24 +132,24 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
 
                     {/* Customer Name */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>ग्राहक का नाम *</Text>
+                        <Text style={styles.label}>{t('forms.customer.name')} *</Text>
                         <TextInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}
-                            placeholder="जैसे: रमेश कुमार"
+                            placeholder={t('forms.customer.namePlaceholder')}
                             placeholderTextColor="#9E9E9E"
                         />
                     </View>
 
                     {/* Phone */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>फोन नंबर *</Text>
+                        <Text style={styles.label}>{t('forms.customer.phone')} *</Text>
                         <TextInput
                             style={styles.input}
                             value={phone}
                             onChangeText={setPhone}
-                            placeholder="10 अंकों का मोबाइल नंबर"
+                            placeholder={t('forms.customer.phonePlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="phone-pad"
                             maxLength={10}
@@ -158,14 +158,15 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
 
                     {/* Address */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>पता (वैकल्पिक)</Text>
+                        <Text style={styles.label}>{t('forms.customer.address')}</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             value={address}
                             onChangeText={setAddress}
-                            placeholder="पूरा पता दर्ज करें"
+                            placeholder={t('forms.customer.addressPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             multiline
+
                             numberOfLines={3}
                             textAlignVertical="top"
                         />
