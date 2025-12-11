@@ -8,6 +8,7 @@ import { Transaction, Sale, Expense } from '@/types';
 import { getSales } from './saleService';
 import { getExpenses } from './expenseService';
 import { getCustomers } from './customerService';
+import i18n from '@/utils/i18n';
 
 /**
  * Get all transactions - DERIVED from Sales and Expenses
@@ -29,15 +30,15 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         // Derive transactions from Sales
         for (const sale of sales) {
             const customerName = sale.customerId
-                ? (customerMap.get(sale.customerId) || 'अनजान ग्राहक')
-                : 'वॉक-इन ग्राहक';
+                ? (customerMap.get(sale.customerId) || i18n.t('transactions.unknownCustomer', { defaultValue: 'Unknown Customer' }))
+                : i18n.t('transactions.walkInCustomer', { defaultValue: 'Walk-in Customer' });
 
             if (sale.saleType === 'PRODUCT_SALE') {
                 transactions.push({
                     id: `sale_${sale.id}`,
                     type: 'SALE',
                     amount: sale.amountPaid,
-                    description: `बिक्री: ${customerName}`,
+                    description: `${i18n.t('transactions.sale')}: ${customerName}`,
                     date: sale.date,
                     timestamp: new Date(sale.createdAt).getTime(),
                     referenceId: sale.id
@@ -47,7 +48,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
                     id: `payment_${sale.id}`,
                     type: 'PAYMENT_RECEIVED',
                     amount: sale.amountPaid,
-                    description: `बकाया भुगतान: ${customerName}`,
+                    description: `${i18n.t('transactions.paymentReceived')}: ${customerName}`,
                     date: sale.date,
                     timestamp: new Date(sale.createdAt).getTime(),
                     referenceId: sale.id
@@ -58,7 +59,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
                     id: `sale_${sale.id}`,
                     type: 'SALE',
                     amount: sale.amountPaid,
-                    description: `बिक्री: ${customerName}`,
+                    description: `${i18n.t('transactions.sale')}: ${customerName}`,
                     date: sale.date,
                     timestamp: new Date(sale.createdAt).getTime(),
                     referenceId: sale.id
@@ -75,16 +76,16 @@ export const getTransactions = async (): Promise<Transaction[]> => {
             // Determine transaction type and description based on expense category
             if (category === 'inventory') {
                 type = 'PRODUCT_ADD';
-                description = `स्टॉक खरीद: ${expense.description}`;
+                description = `${i18n.t('transactions.stockPurchase')}: ${expense.description}`;
             } else if (category === 'stock_received') {
                 type = 'PRODUCT_ADD';
-                description = `माल आया: ${expense.description}`;
+                description = `${i18n.t('transactions.stockReceived')}: ${expense.description}`;
             } else if (category === 'stock_wastage') {
                 type = 'EXPENSE';
-                description = `बर्बादी: ${expense.description}`;
+                description = `${i18n.t('transactions.wastage')}: ${expense.description}`;
             } else {
                 type = 'EXPENSE';
-                description = `खर्च: ${expense.description}`;
+                description = `${i18n.t('transactions.expense')}: ${expense.description}`;
             }
 
             transactions.push({

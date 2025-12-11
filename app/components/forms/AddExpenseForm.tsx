@@ -64,16 +64,16 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
             await addExpense({
                 category,
                 amount: Number(amount),
-                description: description.trim() || EXPENSE_CATEGORY_LABELS[category],
+                description: description.trim() || t(`expenseCategories.${category}`),
                 date: today,
             });
 
-            Alert.alert('सफलता', 'खर्च दर्ज हो गया');
+            Alert.alert(t('common.success'), t('forms.expense.added'));
             resetForm();
             onClose();
         } catch (error) {
             console.error('Save expense error:', error);
-            Alert.alert('त्रुटि', 'खर्च सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.expense.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -97,14 +97,14 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>नया खर्च जोड़ें</Text>
+                    <Text style={styles.title}>{t('forms.expense.addTitle')}</Text>
                     <View style={styles.closeButton} />
                 </View>
 
                 <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
                     {/* Category Selection */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>खर्च की श्रेणी</Text>
+                        <Text style={styles.label}>{t('forms.expense.category')}</Text>
                         <View style={styles.categoryGrid}>
                             {EXPENSE_CATEGORIES.map((cat) => (
                                 <TouchableOpacity
@@ -126,7 +126,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                             category === cat.id && styles.categoryCardTextActive,
                                         ]}
                                     >
-                                        {EXPENSE_CATEGORY_LABELS[cat.id]}
+                                        {t(`expenseCategories.${cat.id}`)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -135,7 +135,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
 
                     {/* Amount */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>राशि (₹) *</Text>
+                        <Text style={styles.label}>{t('forms.expense.amount')} *</Text>
                         <View style={styles.amountInputContainer}>
                             <Text style={styles.currencySymbol}>₹</Text>
                             <TextInput
@@ -151,12 +151,12 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
 
                     {/* Description */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>विवरण (वैकल्पिक)</Text>
+                        <Text style={styles.label}>{t('forms.expense.description')}</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             value={description}
                             onChangeText={setDescription}
-                            placeholder="खर्च का विवरण लिखें"
+                            placeholder={t('forms.expense.descriptionPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             multiline
                             numberOfLines={3}

@@ -122,7 +122,12 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
 
     } else if (period === 'weekly') {
         // Last 4 weeks (Week 1, Week 2, Week 3, Week 4)
-        const weekLabels = ['सप्ताह 1', 'सप्ताह 2', 'सप्ताह 3', 'सप्ताह 4'];
+        const weekLabels = [
+            i18n.t('charts.week1'),
+            i18n.t('charts.week2'),
+            i18n.t('charts.week3'),
+            i18n.t('charts.week4')
+        ];
 
         for (let week = 3; week >= 0; week--) {
             labels.push(weekLabels[3 - week]);
@@ -157,7 +162,11 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
 
     } else if (period === 'monthly') {
         // Last 12 months including current month
-        const monthLabels = ['जन', 'फर', 'मार्च', 'अप्रै', 'मई', 'जून', 'जुला', 'अग', 'सित', 'अक्टू', 'नव', 'दिस'];
+        const monthLabels = [
+            i18n.t('charts.jan'), i18n.t('charts.feb'), i18n.t('charts.mar'), i18n.t('charts.apr'),
+            i18n.t('charts.may'), i18n.t('charts.jun'), i18n.t('charts.jul'), i18n.t('charts.aug'),
+            i18n.t('charts.sep'), i18n.t('charts.oct'), i18n.t('charts.nov'), i18n.t('charts.dec')
+        ];
 
         for (let monthOffset = 11; monthOffset >= 0; monthOffset--) {
             const date = new Date(today);

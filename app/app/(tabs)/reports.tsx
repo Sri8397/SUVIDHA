@@ -23,7 +23,7 @@ const timePeriods = [
 type PeriodType = 'daily' | 'weekly' | 'monthly';
 
 export default function ReportsScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { period } = useLocalSearchParams<{ period?: string }>();
     const router = useRouter();
     const { isLoading, dashboardStats, weeklyData, categoryBreakdown, getChartDataByPeriod } = useData();
@@ -62,7 +62,7 @@ export default function ReportsScreen() {
             }
         };
         loadChartData();
-    }, [selectedPeriod, getChartDataByPeriod]);
+    }, [selectedPeriod, getChartDataByPeriod, i18n.language]);
 
     // Also update when weeklyData changes (initial load)
     useEffect(() => {

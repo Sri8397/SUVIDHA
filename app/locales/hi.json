@@ -15,7 +15,41 @@
         "online": "ऑनलाइन",
         "offline": "ऑफलाइन",
         "permission": "अनुमति आवश्यक",
-        "today": "आज"
+        "today": "आज",
+        "warning": "चेतावनी"
+    },
+    "storeSettings": {
+        "title": "स्टोर की सेटिंग",
+        "storeName": "दुकान का नाम",
+        "enterStoreName": "दुकान का नाम दर्ज करें",
+        "storeAddress": "दुकान का पता",
+        "businessType": "व्यवसाय का प्रकार",
+        "enterBusinessType": "व्यवसाय का प्रकार दर्ज करें",
+        "gstDetails": "जीएसटी विवरण",
+        "enterGst": "जीएसटी नंबर दर्ज करें",
+        "canvasingRate": "कानवासिंग सेट",
+        "defaultSetting": "डिफ़ॉल्ट सेटिंग",
+        "storeRate": "स्टोर की दर",
+        "language": "भाषा",
+        "profitCalculation": "लाभ की गणना",
+        "basedOnSales": "बिक्री पर आधारित",
+        "basedOnSalesDesc": "पूरी बिक्री राशि गिनें (भले ही भुगतान न मिला हो)",
+        "basedOnReceived": "प्राप्त राशि पर आधारित",
+        "basedOnReceivedDesc": "केवल प्राप्त राशि गिनें",
+        "dataManagement": "डेटा प्रबंधन",
+        "clearAllData": "सभी डेटा साफ करें",
+        "clearDataDesc": "प्रोडक्ट, ग्राहक, बिक्री और खर्च का पूरा डेटा मिटाएं",
+        "changeStoreName": "दुकान का नाम बदलें",
+        "changeStoreAddress": "दुकान का पता बदलें",
+        "changeBusinessType": "व्यवसाय का प्रकार बदलें",
+        "changeGst": "जीएसटी विवरण बदलें",
+        "clearDataTitle": "डेटा साफ करें",
+        "clearDataSubtitle": "जो डेटा आप मिटाना चाहते हैं उसे चुनें:",
+        "selectAll": "सभी चुनें",
+        "warningUndo": "⚠️ यह क्रिया पूर्ववत नहीं की जा सकती!",
+        "clear": "साफ करें",
+        "clearSuccess": "{{data}} डेटा सफलतापूर्वक साफ कर दिया गया है।",
+        "selectAtLeastOne": "कृपया कम से कम एक विकल्प चुनें।"
     },
     "languages": {
         "selectLanguage": "भाषा चुनें",
@@ -229,6 +263,29 @@
                 "card": "कार्ड"
             }
         },
+        "expense": {
+            "addTitle": "नया खर्च जोड़ें",
+            "category": "खर्च की श्रेणी",
+            "amount": "राशि (₹)",
+            "description": "विवरण (वैकल्पिक)",
+            "descriptionPlaceholder": "खर्च का विवरण लिखें",
+            "added": "खर्च दर्ज हो गया",
+            "saveError": "खर्च सेव करने में समस्या हुई"
+        },
+        "customer": {
+            "addTitle": "नया ग्राहक जोड़ें",
+            "editTitle": "ग्राहक एडिट करें",
+            "name": "ग्राहक का नाम",
+            "phone": "फोन नंबर",
+            "address": "पता (वैकल्पिक)",
+            "namePlaceholder": "जैसे: रमेश कुमार",
+            "phonePlaceholder": "10 अंकों का मोबाइल नंबर",
+            "addressPlaceholder": "पूरा पता दर्ज करें",
+            "enterName": "ग्राहक का नाम दर्ज करें",
+            "updated": "ग्राहक अपडेट हो गया",
+            "added": "नया ग्राहक जोड़ दिया गया",
+            "saveError": "ग्राहक सेव करने में समस्या हुई"
+        },
         "imageError": "फोटो चुनने में समस्या हुई",
         "productNameRequired": "प्रोडक्ट का नाम दर्ज करें",
         "priceRequired": "सही कीमत दर्ज करें",
@@ -296,6 +353,7 @@
     },
     "notifications": {
         "title": "सूचनाएं",
+        "clearAll": "सभी साफ करें",
         "lowStockAlert": "कम स्टॉक अलर्ट: पारले-जी बिस्कुट केवल 5 बचे हैं।",
         "newOrder": "नया ऑर्डर प्राप्त हुआ: रमेश कुमार से ₹ 500 का ऑर्डर।",
         "paymentReceived": "भुगतान प्राप्त: विक्रम सिंह से ₹ 2,500 प्राप्त हुए।",
@@ -356,38 +414,6 @@
         "photoUpdateSuccess": "प्रोफाइल फोटो अपडेट हो गई।",
         "photoError": "फोटो चुनने में समस्या हुई"
     },
-    "storeSettings": {
-        "title": "स्टोर की सेटिंग",
-        "storeName": "दुकान का नाम",
-        "enterStoreName": "दुकान का नाम दर्ज करें",
-        "storeAddress": "दुकान का पता",
-        "businessType": "व्यवसाय का प्रकार",
-        "enterBusinessType": "व्यवसाय का प्रकार दर्ज करें",
-        "gstDetails": "जीएसटी विवरण",
-        "enterGst": "जीएसटी नंबर दर्ज करें",
-        "canvasingRate": "कानवासिंग सेट",
-        "defaultSetting": "डिफ़ॉल्ट सेटिंग",
-        "storeRate": "स्टोर की दर",
-        "language": "भाषा",
-        "profitCalculation": "लाभ की गणना",
-        "basedOnSales": "बिक्री पर आधारित",
-        "basedOnSalesDesc": "पूरी बिक्री राशि गिनें (भले ही भुगतान न मिला हो)",
-        "basedOnReceived": "प्राप्त राशि पर आधारित",
-        "basedOnReceivedDesc": "केवल प्राप्त राशि गिनें",
-        "dataManagement": "डेटा प्रबंधन",
-        "clearAllData": "सभी डेटा साफ करें",
-        "clearDataDesc": "प्रोडक्ट, ग्राहक, बिक्री और खर्च का पूरा डेटा मिटाएं",
-        "changeStoreName": "दुकान का नाम बदलें",
-        "changeStoreAddress": "दुकान का पता बदलें",
-        "changeBusinessType": "व्यवसाय का प्रकार बदलें",
-        "changeGst": "जीएसटी विवरण बदलें",
-        "clearDataTitle": "डेटा साफ करें",
-        "clearDataSubtitle": "जो डेटा आप मिटाना चाहते हैं उसे चुनें:",
-        "selectAll": "सभी चुनें",
-        "warningUndo": "⚠️ यह क्रिया पूर्ववत नहीं की जा सकती!",
-        "clear": "साफ करें",
-        "clearSuccess": "{{data}} डेटा सफलतापूर्वक साफ कर दिया गया है।"
-    },
     "support": {
         "title": "सहायता और समर्थन",
         "contactUs": "हमसे संपर्क करें",
@@ -407,21 +433,28 @@
         "privacyPolicy": "गोपनीयता नीति"
     },
     "transactions": {
-        "title": "लेन-देन इतिहास",
-        "noTransactionsFilter": "इस फिल्टर में कोई लेनदेन नहीं",
+        "title": "लेनदेन",
+        "sale": "बिक्री",
+        "paymentReceived": "भुगतान प्राप्त",
+        "stockPurchase": "स्टॉक खरीद",
+        "stockReceived": "माल आया",
+        "wastage": "बर्बादी/नुकसान",
+        "expense": "खर्च",
+        "walkInCustomer": "वॉक-इन ग्राहक",
+        "unknownCustomer": "अनजान ग्राहक",
         "empty": {
-            "title": "कोई लेनदेन नहीं मिला",
-            "subtitle": "बिक्री या खर्च जोड़ें"
+            "title": "अभी तक कोई लेनदेन नहीं",
+            "subtitle": "आपकी हालिया बिक्री और खर्च यहाँ दिखाई देंगे"
         },
         "filter": {
             "all": "सभी",
-            "last10": "पिछले 10",
+            "last10": "अंतिम 10",
             "today": "आज",
-            "week": "सप्ताह"
+            "week": "इस सप्ताह"
         },
         "header": {
             "all": "सभी लेनदेन",
-            "last10": "पिछले 10 लेनदेन",
+            "last10": "अंतिम 10 लेनदेन",
             "today": "आज के लेनदेन",
             "week": "इस सप्ताह के लेनदेन"
         }
@@ -453,6 +486,17 @@
         "productAdd": "स्टॉक जोड़ा",
         "paymentReceived": "भुगतान प्राप्त",
         "paymentGiven": "भुगतान दिया",
+        "other": "अन्य"
+    },
+    "expenseCategories": {
+        "rent": "किराया",
+        "electricity": "बिजली",
+        "salary": "वेतन",
+        "inventory": "स्टॉक खरीद",
+        "transport": "ट्रांसपोर्ट",
+        "maintenance": "रखरखाव",
+        "stock_received": "माल आया",
+        "stock_wastage": "बर्बादी/नुकसान",
         "other": "अन्य"
     }
 }
