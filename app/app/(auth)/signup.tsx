@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function SignupScreen() {
+    const { t } = useTranslation();
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
@@ -52,12 +54,12 @@ export default function SignupScreen() {
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>अपना स्टोर</Text>
+                        <Text style={styles.headerTitle}>{t('auth.yourStore')}</Text>
                     </View>
 
                     {/* Title Section */}
                     <View style={styles.titleSection}>
-                        <Text style={styles.titleText}>साइन अप करें</Text>
+                        <Text style={styles.titleText}>{t('auth.signupTitle')}</Text>
                     </View>
 
                     {/* Signup Form */}
@@ -65,7 +67,7 @@ export default function SignupScreen() {
                         <View style={styles.inputContainer}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="नाम दर्ज करें"
+                                placeholder={t('auth.enterNamePlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={name}
                                 onChangeText={setName}
@@ -75,7 +77,7 @@ export default function SignupScreen() {
                         <View style={styles.inputContainer}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="फोन नंबर दर्ज करें"
+                                placeholder={t('auth.enterPhonePlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="phone-pad"
                                 maxLength={10}
@@ -87,7 +89,7 @@ export default function SignupScreen() {
                         <View style={styles.inputContainer}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="पासवर्ड बनाएं"
+                                placeholder={t('auth.createPasswordPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 secureTextEntry
                                 value={password}
@@ -100,18 +102,18 @@ export default function SignupScreen() {
                             onPress={handleSignup}
                             disabled={!isFormValid}
                         >
-                            <Text style={styles.signupButtonText}>साइन अप करें</Text>
+                            <Text style={styles.signupButtonText}>{t('auth.signupButton')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={handleLoginPress} style={styles.loginLink}>
                             <Text style={styles.loginLinkText}>
-                                पहले से खाता है? <Text style={styles.loginLinkHighlight}>लॉग इन करें</Text>
+                                {t('auth.existingUserLogin')} <Text style={styles.loginLinkHighlight}>{t('auth.loginLink')}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 

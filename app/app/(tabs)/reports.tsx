@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,14 +15,15 @@ import { WeeklyData } from '@/types';
 
 // Time periods
 const timePeriods = [
-    { id: 'daily', label: 'दैनिक' },
-    { id: 'weekly', label: 'साप्ताहिक' },
-    { id: 'monthly', label: 'मासिक' },
+    { id: 'daily' },
+    { id: 'weekly' },
+    { id: 'monthly' },
 ] as const;
 
 type PeriodType = 'daily' | 'weekly' | 'monthly';
 
 export default function ReportsScreen() {
+    const { t } = useTranslation();
     const { period } = useLocalSearchParams<{ period?: string }>();
     const router = useRouter();
     const { isLoading, dashboardStats, weeklyData, categoryBreakdown, getChartDataByPeriod } = useData();
@@ -82,11 +84,12 @@ export default function ReportsScreen() {
     const totalProfit = chartData.profit.reduce((a: number, b: number) => a + b, 0);
 
     // Get period label for display - matches what's actually being summed
+
     const getPeriodLabel = () => {
         switch (selectedPeriod) {
-            case 'daily': return '(7 दिन)';      // Chart shows 7 days
-            case 'weekly': return '(4 सप्ताह)';  // Chart shows 4 weeks
-            case 'monthly': return '(12 माह)';   // Chart shows 12 months
+            case 'daily': return t('reports.periodDays');      // Chart shows 7 days
+            case 'weekly': return t('reports.periodWeeks');  // Chart shows 4 weeks
+            case 'monthly': return t('reports.periodMonths');   // Chart shows 12 months
         }
     };
 
@@ -95,14 +98,14 @@ export default function ReportsScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title="रिपोर्ट" showLanguageToggle={true} />
+            <Header title={t('reports.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="खोजें..."
+                    placeholder={t('common.search')}
                     placeholderTextColor="#9E9E9E"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -130,7 +133,8 @@ export default function ReportsScreen() {
                                 styles.filterChipText,
                                 selectedPeriod === period.id && styles.filterChipTextActive
                             ]}>
-                                {period.label}
+
+                                {t(`reports.${period.id}`)}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -145,31 +149,31 @@ export default function ReportsScreen() {
                 {/* Summary Cards */}
                 <View style={styles.summaryRow}>
                     <View style={styles.summaryCard}>
-                        <Text style={styles.summaryLabel}>कुल बिक्री {getPeriodLabel()}</Text>
+                        <Text style={styles.summaryLabel}>{t('reports.totalSales')} {getPeriodLabel()}</Text>
                         <Text style={styles.summaryValue}>₹ {totalSales.toLocaleString('en-IN')}</Text>
                     </View>
                     <View style={styles.summaryCard}>
-                        <Text style={styles.summaryLabel}>कुल लाभ {getPeriodLabel()}</Text>
+                        <Text style={styles.summaryLabel}>{t('reports.totalProfit')} {getPeriodLabel()}</Text>
                         <Text style={[styles.summaryValue, { color: totalProfit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {totalProfit.toLocaleString('en-IN')}</Text>
                     </View>
                 </View>
 
                 {/* Today's Summary */}
                 <View style={styles.todayCard}>
-                    <Text style={styles.todayTitle}>आज का सारांश</Text>
+                    <Text style={styles.todayTitle}>{t('reports.todaysSummary')}</Text>
                     <View style={styles.todayStats}>
                         <View style={styles.todayStat}>
-                            <Text style={styles.todayStatLabel}>बिक्री</Text>
+                            <Text style={styles.todayStatLabel}>{t('reports.sales')}</Text>
                             <Text style={styles.todayStatValue}>₹{dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.todayDivider} />
                         <View style={styles.todayStat}>
-                            <Text style={styles.todayStatLabel}>खर्च</Text>
+                            <Text style={styles.todayStatLabel}>{t('reports.expenses')}</Text>
                             <Text style={[styles.todayStatValue, { color: '#F57C00' }]}>₹{dashboardStats.expenses.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.todayDivider} />
                         <View style={styles.todayStat}>
-                            <Text style={styles.todayStatLabel}>लाभ</Text>
+                            <Text style={styles.todayStatLabel}>{t('reports.profit')}</Text>
                             <Text style={[styles.todayStatValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹{dashboardStats.profit.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
@@ -178,7 +182,7 @@ export default function ReportsScreen() {
                         onPress={() => router.push('/transactions')}
                     >
                         <FontAwesome name="list" size={14} color="#2E7D32" />
-                        <Text style={styles.transactionsButtonText}>लेन-देन देखें</Text>
+                        <Text style={styles.transactionsButtonText}>{t('reports.viewTransactions')}</Text>
                         <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
                     </TouchableOpacity>
                 </View>
@@ -186,15 +190,15 @@ export default function ReportsScreen() {
                 {/* Sales & Profit Chart */}
                 <View style={styles.chartCard}>
                     <View style={styles.chartHeader}>
-                        <Text style={styles.chartTitle}>बिक्री और लाभ {getPeriodLabel()}</Text>
+                        <Text style={styles.chartTitle}>{t('reports.salesAndProfit')} {getPeriodLabel()}</Text>
                         <View style={styles.legendRow}>
                             <View style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
-                                <Text style={styles.legendText}>बिक्री</Text>
+                                <Text style={styles.legendText}>{t('reports.sales')}</Text>
                             </View>
                             <View style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: '#F57C00' }]} />
-                                <Text style={styles.legendText}>लाभ</Text>
+                                <Text style={styles.legendText}>{t('reports.profit')}</Text>
                             </View>
                         </View>
                     </View>
@@ -218,12 +222,12 @@ export default function ReportsScreen() {
 
                 {/* Category Breakdown */}
                 <View style={styles.pieChartCard}>
-                    <Text style={styles.chartTitle}>श्रेणी वार रिपोर्ट</Text>
+                    <Text style={styles.chartTitle}>{t('reports.categoryReport')}</Text>
 
                     {categoryBreakdown.length === 0 ? (
                         <View style={styles.emptyCategory}>
                             <FontAwesome name="pie-chart" size={32} color="#BDBDBD" />
-                            <Text style={styles.emptyCategoryText}>प्रोडक्ट्स जोड़ें श्रेणी रिपोर्ट देखने के लिए</Text>
+                            <Text style={styles.emptyCategoryText}>{t('reports.emptyCategory')}</Text>
                         </View>
                     ) : (
                         <View style={styles.pieChartContainer}>
@@ -321,7 +325,9 @@ export default function ReportsScreen() {
                                 {categoryBreakdown.map((item, index) => (
                                     <View key={item.name} style={styles.categoryLegendItem}>
                                         <View style={[styles.categoryLegendDot, { backgroundColor: item.color }]} />
-                                        <Text style={styles.categoryLegendText}>{item.name}</Text>
+                                        <Text style={styles.categoryLegendText}>
+                                            {t(`categories.${item.name}`, { defaultValue: item.name })}
+                                        </Text>
                                         <Text style={styles.categoryLegendPercent}>{item.percentage}%</Text>
                                     </View>
                                 ))}

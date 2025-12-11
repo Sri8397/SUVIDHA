@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
+import { useTranslation } from 'react-i18next';
 
 interface AddCustomerFormProps {
     visible: boolean;
@@ -29,6 +30,7 @@ interface AddCustomerFormProps {
 }
 
 export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerFormProps) {
+    const { t } = useTranslation();
     const { addCustomer, updateCustomer } = useData();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -62,11 +64,11 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
     const handleSubmit = async () => {
         // Validation
         if (!name.trim()) {
-            Alert.alert('त्रुटि', 'ग्राहक का नाम दर्ज करें');
+            Alert.alert(t('common.error'), t('customers.enterName'));
             return;
         }
         if (!phone.trim() || phone.length < 10) {
-            Alert.alert('त्रुटि', 'सही फोन नंबर दर्ज करें (10 अंक)');
+            Alert.alert(t('common.error'), t('forms.phoneValidation', 'Enter valid phone number (10 digits)'));
             return;
         }
 
@@ -179,7 +181,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             <Text style={styles.submitButtonText}>
-                                {editCustomer ? 'अपडेट करें' : 'ग्राहक जोड़ें'}
+                                {editCustomer ? t('common.save') : t('customers.addCustomer')}
                             </Text>
                         )}
                     </TouchableOpacity>

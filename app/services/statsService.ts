@@ -8,6 +8,7 @@ import { getTodayExpenses, calculateTotalExpenses } from './expenseService';
 import { getTotalOutstanding } from './customerService';
 import { getProducts } from './productService';
 import { getData } from './storage';
+import i18n from '@/utils/i18n';
 
 /**
  * Get the profit calculation method from settings
@@ -90,7 +91,7 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
 
     if (period === 'daily') {
         // Last 7 days (Sun, Mon, Tue, ... Sat)
-        const dayLabels = ['रवि', 'सोम', 'मंग', 'बुध', 'गुरु', 'शुक्र', 'शनि'];
+        const dayLabels = [i18n.t('charts.sun'), i18n.t('charts.mon'), i18n.t('charts.tue'), i18n.t('charts.wed'), i18n.t('charts.thu'), i18n.t('charts.fri'), i18n.t('charts.sat')];
 
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
@@ -227,19 +228,19 @@ export async function getCategoryBreakdown(): Promise<CategoryBreakdown[]> {
         other: '#757575',
     };
 
-    // Category labels in Hindi
+    // Category labels
     const labels: Record<string, string> = {
-        grocery: 'किराना',
-        snacks: 'स्नैक्स',
-        beverages: 'पेय',
-        dairy: 'डेयरी',
-        personal: 'पर्सनल केयर',
-        household: 'घरेलू सामान',
-        other: 'अन्य',
+        grocery: i18n.t('categories.grocery', 'किराना'),
+        snacks: i18n.t('categories.snacks', 'स्नैक्स'),
+        beverages: i18n.t('categories.beverages', 'पेय'),
+        dairy: i18n.t('categories.dairy', 'डेयरी'),
+        personal: i18n.t('categories.personal', 'पर्सनल केयर'),
+        household: i18n.t('categories.household', 'घरेलू सामान'),
+        other: i18n.t('categories.other', 'अन्य'),
     };
 
     const breakdown: CategoryBreakdown[] = Object.entries(categoryCount).map(([cat, count]) => ({
-        name: labels[cat] || cat,
+        name: cat,
         percentage: Math.round((count / total) * 100),
         amount: count,
         color: colors[cat] || '#757575',

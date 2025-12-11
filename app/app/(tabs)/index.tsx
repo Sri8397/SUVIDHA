@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet,
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 import { DualLineChart } from '@/components/ui/line-chart';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
@@ -16,6 +17,7 @@ import { TransactionList } from '@/components/ui/TransactionList';
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { isLoading, dashboardStats, weeklyData, lowStockProducts, refreshAll } = useData();
 
@@ -29,7 +31,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
-        <Text style={styles.loadingText}>लोड हो रहा है...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -48,8 +50,8 @@ export default function HomeScreen() {
       >
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>नमस्ते!</Text>
-          <Text style={styles.welcomeSubtitle}>आज के लिए आपका व्यवसाय सारांश यहाँ है।</Text>
+          <Text style={styles.welcomeTitle}>{t('dashboard.greeting')}</Text>
+          <Text style={styles.welcomeSubtitle}>{t('dashboard.greetingSummary')}</Text>
         </View>
 
         {/* Stats Grid */}
@@ -62,7 +64,7 @@ export default function HomeScreen() {
                   <Text style={styles.rupeeIcon}>₹</Text>
                 </View>
               </View>
-              <Text style={styles.statLabel}>आज की बिक्री</Text>
+              <Text style={styles.statLabel}>{t('dashboard.todaysSales')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -75,7 +77,7 @@ export default function HomeScreen() {
                   <FontAwesome name="shopping-bag" size={16} color="#D32F2F" />
                 </View>
               </View>
-              <Text style={styles.statLabel}>लंबित भुगतान</Text>
+              <Text style={styles.statLabel}>{t('dashboard.pendingPayments')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.pendingPayments.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -88,7 +90,7 @@ export default function HomeScreen() {
                   <MaterialIcons name="trending-up" size={18} color="#2E7D32" />
                 </View>
               </View>
-              <Text style={styles.statLabel}>लाभ</Text>
+              <Text style={styles.statLabel}>{t('dashboard.profit')}</Text>
               <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -101,7 +103,7 @@ export default function HomeScreen() {
                   <MaterialIcons name="trending-down" size={18} color="#F57C00" />
                 </View>
               </View>
-              <Text style={styles.statLabel}>खर्च</Text>
+              <Text style={styles.statLabel}>{t('dashboard.expenses')}</Text>
               <Text style={[styles.statValue, { color: '#F57C00' }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -110,12 +112,12 @@ export default function HomeScreen() {
         {/* Weekly Sales Chart */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>साप्ताहिक बिक्री और लाभ</Text>
+            <Text style={styles.chartTitle}>{t('dashboard.weeklySalesProfit')}</Text>
             <TouchableOpacity
               style={styles.viewReportBtn}
               onPress={() => router.push('/(tabs)/reports?period=weekly')}
             >
-              <Text style={styles.viewReportText}>सभी देखें</Text>
+              <Text style={styles.viewReportText}>{t('common.viewAll')}</Text>
               <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
             </TouchableOpacity>
           </View>
@@ -134,16 +136,16 @@ export default function HomeScreen() {
         {/* Low Stock Alerts */}
         <View style={styles.lowStockSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>कम स्टॉक अलर्ट</Text>
+            <Text style={styles.sectionTitle}>{t('dashboard.lowStockAlerts')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
-              <Text style={styles.viewAllText}>सभी देखें</Text>
+              <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
             </TouchableOpacity>
           </View>
 
           {lowStockProducts.length === 0 ? (
             <View style={styles.emptyLowStock}>
               <FontAwesome name="check-circle" size={32} color="#2E7D32" />
-              <Text style={styles.emptyLowStockText}>सभी प्रोडक्ट्स में पर्याप्त स्टॉक है</Text>
+              <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
             </View>
           ) : (
             lowStockProducts.slice(0, 3).map((item) => (
@@ -157,10 +159,10 @@ export default function HomeScreen() {
                 )}
                 <View style={styles.productInfo}>
                   <Text style={styles.productName}>{item.name}</Text>
-                  <Text style={styles.stockWarning}>केवल {item.stock} स्टॉक में बचे हैं</Text>
+                  <Text style={styles.stockWarning}>{t('inventory.lowStock', { count: item.stock })}</Text>
                 </View>
                 <TouchableOpacity style={styles.reorderButton}>
-                  <Text style={styles.reorderButtonText}>पुनः ऑर्डर करें</Text>
+                  <Text style={styles.reorderButtonText}>{t('inventory.reorder')}</Text>
                 </TouchableOpacity>
               </View>
             ))

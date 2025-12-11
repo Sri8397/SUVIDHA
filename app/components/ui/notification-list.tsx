@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Transaction } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationListProps {
     visible: boolean;
@@ -11,7 +12,7 @@ interface NotificationListProps {
 }
 
 // Helper to format time ago
-const formatTimeAgo = (timestamp: number): string => {
+const formatTimeAgo = (timestamp: number, t: any): string => {
     const now = Date.now();
     const diff = now - timestamp;
 
@@ -19,10 +20,10 @@ const formatTimeAgo = (timestamp: number): string => {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 1) return 'अभी';
-    if (minutes < 60) return `${minutes} मिनट पहले`;
-    if (hours < 24) return `${hours} घंटे पहले`;
-    return `${days} दिन पहले`;
+    if (minutes < 1) return t('notifications.justNow');
+    if (minutes < 60) return t('notifications.minutesAgo', { count: minutes });
+    if (hours < 24) return t('notifications.hoursAgo', { count: hours });
+    return t('notifications.daysAgo', { count: days });
 };
 
 // Get icon and colors based on transaction type
@@ -68,6 +69,7 @@ const getTransactionStyle = (type: Transaction['type']) => {
 };
 
 export function NotificationList({ visible, onClose }: NotificationListProps) {
+    const { t } = useTranslation();
     const { isLoading, getVisibleNotifications, dismissNotification, dismissAllNotifications } = useData();
 
     // Get visible notifications from context (shared across all pages)
@@ -87,11 +89,11 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
             >
                 <TouchableOpacity activeOpacity={1} style={styles.modalView}>
                     <View style={styles.header}>
-                        <Text style={styles.modalTitle}>सूचनाएँ</Text>
+                        <Text style={styles.modalTitle}>{t('notifications.title')}</Text>
                         <View style={styles.headerActions}>
                             {visibleTransactions.length > 0 && (
                                 <TouchableOpacity onPress={dismissAllNotifications} style={styles.clearAllButton}>
-                                    <Text style={styles.clearAllText}>सभी हटाएं</Text>
+                                    <Text style={styles.clearAllText}>{t('notifications.clearAll')}</Text>
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity onPress={onClose}>
@@ -108,8 +110,8 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
                         ) : visibleTransactions.length === 0 ? (
                             <View style={styles.emptyState}>
                                 <FontAwesome name="bell-o" size={48} color="#BDBDBD" />
-                                <Text style={styles.emptyTitle}>कोई सूचना नहीं</Text>
-                                <Text style={styles.emptySubtitle}>नई सूचनाएं यहाँ दिखाई देंगी</Text>
+                                <Text style={styles.emptyTitle}>{t('notifications.noNotifications')}</Text>
+                                <Text style={styles.emptySubtitle}>{t('notifications.emptySubtitle')}</Text>
                             </View>
                         ) : (
                             visibleTransactions.map((item, index) => {
@@ -129,7 +131,7 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
                                             <Text style={styles.title} numberOfLines={2}>{item.description}</Text>
                                             <View style={styles.metaRow}>
                                                 <Text style={styles.amount}>₹{item.amount.toLocaleString('en-IN')}</Text>
-                                                <Text style={styles.time}>{formatTimeAgo(item.timestamp)}</Text>
+                                                <Text style={styles.time}>{formatTimeAgo(item.timestamp, t)}</Text>
                                             </View>
                                         </View>
                                         <TouchableOpacity

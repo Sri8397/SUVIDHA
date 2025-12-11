@@ -17,6 +17,7 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { ExpenseCategory, EXPENSE_CATEGORY_LABELS } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface AddExpenseFormProps {
     visible: boolean;
@@ -34,6 +35,7 @@ const EXPENSE_CATEGORIES: { id: ExpenseCategory; icon: string }[] = [
 ];
 
 export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
+    const { t } = useTranslation();
     const { addExpense } = useData();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -51,7 +53,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
     const handleSubmit = async () => {
         // Validation
         if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-            Alert.alert('त्रुटि', 'सही राशि दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.amountRequired'));
             return;
         }
 
@@ -171,7 +173,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                         {isLoading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.submitButtonText}>खर्च जोड़ें</Text>
+                            <Text style={styles.submitButtonText}>{t('forms.addExpense')}</Text>
                         )}
                     </TouchableOpacity>
                 </ScrollView>

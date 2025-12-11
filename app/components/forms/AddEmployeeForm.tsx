@@ -14,19 +14,18 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import * as employeeService from '@/services/employeeService';
+import { useTranslation } from 'react-i18next';
 
 // Predefined roles for employees
-const EMPLOYEE_ROLES = [
-    { id: 'salesman', label: 'सेल्समैन' },
-    { id: 'cashier', label: 'कैशियर' },
-    { id: 'stock_manager', label: 'स्टॉक मैनेजर' },
-    { id: 'helper', label: 'हेल्पर' },
-    { id: 'delivery', label: 'डिलीवरी' },
-    { id: 'accountant', label: 'अकाउंटेंट' },
-    { id: 'manager', label: 'मैनेजर' },
-    { id: 'other', label: 'अन्य' },
+const getEmployeeRoles = (t: any) => [
+    { id: 'salesman', label: t('forms.employee.roles.salesman') },
+    { id: 'cashier', label: t('forms.employee.roles.cashier') },
+    { id: 'stock_manager', label: t('forms.employee.roles.stock_manager') },
+    { id: 'helper', label: t('forms.employee.roles.helper') },
+    { id: 'delivery', label: t('forms.employee.roles.delivery') },
+    { id: 'accountant', label: t('forms.employee.roles.accountant') },
+    { id: 'manager', label: t('forms.employee.roles.manager') },
+    { id: 'other', label: t('forms.employee.roles.other') },
 ];
 
 interface AddEmployeeFormProps {
@@ -43,7 +42,11 @@ interface AddEmployeeFormProps {
 }
 
 export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: AddEmployeeFormProps) {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
+
+    // Get roles with translations
+    const EMPLOYEE_ROLES = getEmployeeRoles(t);
     const [showRolePicker, setShowRolePicker] = useState(false);
 
     // Form state
@@ -82,15 +85,15 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
     const handleSubmit = async () => {
         // Validation
         if (!name.trim()) {
-            Alert.alert('त्रुटि', 'कर्मचारी का नाम दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.employee.enterName'));
             return;
         }
         if (!role.trim()) {
-            Alert.alert('त्रुटि', 'पद/भूमिका चुनें');
+            Alert.alert(t('common.error'), t('forms.employee.selectRoleError'));
             return;
         }
         if (!phone.trim() || phone.length < 10) {
-            Alert.alert('त्रुटि', 'सही फोन नंबर दर्ज करें (10 अंक)');
+            Alert.alert(t('common.error'), t('forms.employee.enterPhone'));
             return;
         }
 
@@ -105,10 +108,10 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
 
             if (editEmployee) {
                 await employeeService.updateEmployee(editEmployee.id, employeeData);
-                Alert.alert('सफलता', 'कर्मचारी अपडेट हो गया');
+                Alert.alert(t('common.success'), t('forms.employee.updated'));
             } else {
                 await employeeService.addEmployee(employeeData);
-                Alert.alert('सफलता', 'नया कर्मचारी जोड़ दिया गया');
+                Alert.alert(t('common.success'), t('forms.employee.added'));
             }
 
             resetForm();
@@ -116,7 +119,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
             onClose();
         } catch (error) {
             console.error('Save employee error:', error);
-            Alert.alert('त्रुटि', 'कर्मचारी सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.employee.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -141,7 +144,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
                     <Text style={styles.title}>
-                        {editEmployee ? 'कर्मचारी एडिट करें' : 'नया कर्मचारी जोड़ें'}
+                        {editEmployee ? t('forms.employee.editTitle') : t('forms.employee.addTitle')}
                     </Text>
                     <View style={styles.closeButton} />
                 </View>
@@ -156,25 +159,25 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
 
                     {/* Employee Name */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>कर्मचारी का नाम *</Text>
+                        <Text style={styles.label}>{t('forms.employee.name')} *</Text>
                         <TextInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}
-                            placeholder="जैसे: राजेश शर्मा"
+                            placeholder={t('forms.employee.namePlaceholder')}
                             placeholderTextColor="#9E9E9E"
                         />
                     </View>
 
                     {/* Role - Select Option */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>पद/भूमिका *</Text>
+                        <Text style={styles.label}>{t('forms.employee.role')} *</Text>
                         <TouchableOpacity
                             style={styles.selectButton}
                             onPress={() => setShowRolePicker(true)}
                         >
                             <Text style={[styles.selectButtonText, !role && styles.selectPlaceholder]}>
-                                {role || 'भूमिका चुनें'}
+                                {role || t('forms.employee.selectRole')}
                             </Text>
                             <FontAwesome name="chevron-down" size={14} color="#757575" />
                         </TouchableOpacity>
@@ -182,12 +185,12 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
 
                     {/* Phone */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>फोन नंबर *</Text>
+                        <Text style={styles.label}>{t('forms.employee.phone')} *</Text>
                         <TextInput
                             style={styles.input}
                             value={phone}
                             onChangeText={setPhone}
-                            placeholder="10 अंकों का मोबाइल नंबर"
+                            placeholder={t('forms.employee.phonePlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="phone-pad"
                             maxLength={10}
@@ -196,12 +199,12 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
 
                     {/* Salary */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>मासिक वेतन (वैकल्पिक)</Text>
+                        <Text style={styles.label}>{t('forms.employee.salaryOptional')}</Text>
                         <TextInput
                             style={styles.input}
                             value={salary}
                             onChangeText={setSalary}
-                            placeholder="जैसे: 15000"
+                            placeholder={t('forms.employee.salaryPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
                         />
@@ -217,7 +220,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             <Text style={styles.submitButtonText}>
-                                {editEmployee ? 'अपडेट करें' : 'कर्मचारी जोड़ें'}
+                                {editEmployee ? t('common.update') : t('forms.employee.addTitle')}
                             </Text>
                         )}
                     </TouchableOpacity>
@@ -234,7 +237,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                 <View style={styles.pickerOverlay}>
                     <View style={styles.pickerContainer}>
                         <View style={styles.pickerHeader}>
-                            <Text style={styles.pickerTitle}>भूमिका चुनें</Text>
+                            <Text style={styles.pickerTitle}>{t('forms.employee.selectRole')}</Text>
                             <TouchableOpacity onPress={() => setShowRolePicker(false)}>
                                 <FontAwesome name="times" size={20} color="#757575" />
                             </TouchableOpacity>

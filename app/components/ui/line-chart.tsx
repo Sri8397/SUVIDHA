@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle, Line, Text as SvgText, G, Rect } from 'react-native-svg';
 
+import { useTranslation } from 'react-i18next';
+
 interface DualLineChartProps {
     data1: number[];
     data2: number[];
@@ -19,6 +21,7 @@ export function DualLineChart({
     color2 = '#F57C00',
     height = 120,
 }: DualLineChartProps) {
+    const { t } = useTranslation();
     const [selectedIndex, setSelectedIndex] = useState<number | null>(labels.length > 0 ? labels.length - 1 : null);
 
     useEffect(() => {
@@ -219,14 +222,14 @@ export function DualLineChart({
                     <View style={styles.summaryRow}>
                         <View style={styles.summaryItem}>
                             <View style={[styles.summaryDot, { backgroundColor: color1 }]} />
-                            <Text style={styles.summaryLabel}>बिक्री:</Text>
+                            <Text style={styles.summaryLabel}>{t('charts.sales')}:</Text>
                             <Text style={[styles.summaryValue, { color: color1 }]}>
                                 ₹{data1[selectedIndex]?.toLocaleString('en-IN') || 0}
                             </Text>
                         </View>
                         <View style={styles.summaryItem}>
                             <View style={[styles.summaryDot, { backgroundColor: color2 }]} />
-                            <Text style={styles.summaryLabel}>लाभ:</Text>
+                            <Text style={styles.summaryLabel}>{t('charts.profit')}:</Text>
                             <Text style={[styles.summaryValue, { color: data2[selectedIndex] >= 0 ? color2 : '#D32F2F' }]}>
                                 ₹{data2[selectedIndex]?.toLocaleString('en-IN') || 0}
                             </Text>

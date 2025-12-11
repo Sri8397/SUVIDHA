@@ -17,6 +17,7 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { SaleItem, Sale } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface AddSaleFormProps {
     visible: boolean;
@@ -24,12 +25,13 @@ interface AddSaleFormProps {
 }
 
 export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
+    const { t } = useTranslation();
     const { products, customers, createSale } = useData();
     const [isLoading, setIsLoading] = useState(false);
 
     // Form state
     const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
-    const [customerName, setCustomerName] = useState('वॉक-इन ग्राहक');
+    const [customerName, setCustomerName] = useState(t('forms.sale.walkInCustomer'));
     const [items, setItems] = useState<SaleItem[]>([]);
     const [discount, setDiscount] = useState('0');
     const [amountPaid, setAmountPaid] = useState('');
@@ -61,7 +63,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 
     const resetForm = () => {
         setSelectedCustomerId(undefined);
-        setCustomerName('वॉक-इन ग्राहक');
+        setCustomerName(t('forms.sale.walkInCustomer'));
         setItems([]);
         setDiscount('0');
         setAmountPaid('');
@@ -73,7 +75,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
         if (!product) return;
 
         if (product.stock <= 0) {
-            Alert.alert('स्टॉक खत्म', 'यह प्रोडक्ट स्टॉक में नहीं है');
+            Alert.alert(t('forms.sale.outOfStock'), t('forms.sale.productOutOfStock'));
             return;
         }
 
@@ -82,7 +84,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
         if (existingIndex >= 0) {
             // Check stock limit
             if (items[existingIndex].quantity >= product.stock) {
-                Alert.alert('स्टॉक सीमा', `केवल ${product.stock} आइटम उपलब्ध हैं`);
+                Alert.alert(t('forms.sale.stockLimit'), t('forms.sale.itemAvailable', { count: product.stock }));
                 return;
             }
 
@@ -114,7 +116,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
             const product = products.find(p => p.id === item.productId);
 
             if (product && qty > product.stock) {
-                Alert.alert('स्टॉक सीमा', `केवल ${product.stock} आइटम उपलब्ध हैं`);
+                Alert.alert(t('forms.sale.stockLimit'), t('forms.sale.itemAvailable', { count: product.stock }));
                 return;
             }
 
@@ -136,7 +138,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 
     const handleSubmit = async () => {
         if (items.length === 0) {
-            Alert.alert('त्रुटि', 'कम से कम एक प्रोडक्ट जोड़ें');
+            Alert.alert(t('common.error'), t('forms.sale.addAtLeastOne'));
             return;
         }
 
@@ -166,12 +168,12 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                 date: today,
             });
 
-            Alert.alert('सफलता', 'बिक्री दर्ज हो गई');
+            Alert.alert(t('common.success'), t('forms.sale.saleRecorded'));
             resetForm();
             onClose();
         } catch (error) {
             console.error('Save sale error:', error);
-            Alert.alert('त्रुटि', 'बिक्री सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.sale.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -195,7 +197,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>नई बिक्री</Text>
+                    <Text style={styles.title}>{t('forms.sale.title')}</Text>
                     <View style={styles.closeButton} />
                 </View>
 
@@ -209,7 +211,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                             <FontAwesome name="user" size={20} color="#2E7D32" />
                         </View>
                         <View style={styles.customerInfo}>
-                            <Text style={styles.customerLabel}>ग्राहक</Text>
+                            <Text style={styles.customerLabel}>{t('forms.sale.selectCustomer')}</Text>
                             <Text style={styles.customerName}>{customerName}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#9E9E9E" />
@@ -218,20 +220,20 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     {/* Items List */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>प्रोडक्ट्स</Text>
+                            <Text style={styles.sectionTitle}>{t('forms.sale.products')}</Text>
                             <TouchableOpacity
                                 style={styles.addButton}
                                 onPress={() => setShowProductPicker(true)}
                             >
                                 <FontAwesome name="plus" size={14} color="#FFFFFF" />
-                                <Text style={styles.addButtonText}>जोड़ें</Text>
+                                <Text style={styles.addButtonText}>{t('forms.sale.addProduct')}</Text>
                             </TouchableOpacity>
                         </View>
 
                         {items.length === 0 ? (
                             <View style={styles.emptyItems}>
                                 <FontAwesome name="shopping-cart" size={32} color="#BDBDBD" />
-                                <Text style={styles.emptyText}>प्रोडक्ट जोड़ने के लिए "जोड़ें" बटन दबाएं</Text>
+                                <Text style={styles.emptyText}>{t('forms.sale.addProductInstruction')}</Text>
                             </View>
                         ) : (
                             items.map((item, index) => (
@@ -263,7 +265,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 
                     {/* Discount */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>छूट (₹)</Text>
+                        <Text style={styles.label}>{t('forms.sale.discount')} (₹)</Text>
                         <TextInput
                             style={styles.input}
                             value={discount}
@@ -289,7 +291,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 
                     {/* Payment Method */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>भुगतान का तरीका</Text>
+                        <Text style={styles.label}>{t('forms.sale.paymentMethod')}</Text>
                         <View style={styles.paymentMethods}>
                             {(['cash', 'upi', 'card'] as const).map((method) => (
                                 <TouchableOpacity
@@ -304,8 +306,8 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                         styles.paymentChipText,
                                         paymentMethod === method && styles.paymentChipTextActive,
                                     ]}>
-                                        {method === 'cash' ? 'Cash' :
-                                            method === 'upi' ? 'UPI' : 'Card'}
+                                        {method === 'cash' ? t('forms.payment.methods.cash') :
+                                            method === 'upi' ? t('forms.payment.methods.upi') : t('forms.payment.methods.card')}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -314,7 +316,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 
                     {/* Amount Paid */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>भुगतान राशि (₹)</Text>
+                        <Text style={styles.label}>{t('forms.sale.amountPaid')} (₹)</Text>
                         <TextInput
                             style={[
                                 styles.input,
@@ -348,15 +350,15 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     {/* Total Summary */}
                     <View style={styles.totalCard}>
                         <View style={styles.totalRow}>
-                            <Text style={styles.totalLabel}>उप-योग</Text>
+                            <Text style={styles.totalLabel}>{t('forms.sale.subtotal')}</Text>
                             <Text style={styles.totalValue}>₹{subtotal.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.totalRow}>
-                            <Text style={styles.totalLabel}>छूट</Text>
+                            <Text style={styles.totalLabel}>{t('forms.sale.discount')}</Text>
                             <Text style={styles.discountValue}>-₹{discountAmount.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={[styles.totalRow, styles.grandTotalRow]}>
-                            <Text style={styles.grandTotalLabel}>कुल</Text>
+                            <Text style={styles.grandTotalLabel}>{t('forms.sale.total')}</Text>
                             <Text style={styles.grandTotalValue}>₹{total.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
@@ -370,7 +372,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         {isLoading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.submitButtonText}>बिक्री पूरी करें</Text>
+                            <Text style={styles.submitButtonText}>{t('forms.sale.completeSale')}</Text>
                         )}
                     </TouchableOpacity>
                 </ScrollView>
@@ -384,7 +386,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                 >
                     <View style={styles.pickerContainer}>
                         <View style={styles.pickerHeader}>
-                            <Text style={styles.pickerTitle}>प्रोडक्ट चुनें</Text>
+                            <Text style={styles.pickerTitle}>{t('forms.sale.selectProduct')}</Text>
                             <TouchableOpacity onPress={() => setShowProductPicker(false)}>
                                 <FontAwesome name="times" size={20} color="#757575" />
                             </TouchableOpacity>
@@ -401,7 +403,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                 </TouchableOpacity>
                             ))}
                             {products.length === 0 && (
-                                <Text style={styles.emptyPicker}>कोई प्रोडक्ट नहीं है। पहले प्रोडक्ट जोड़ें।</Text>
+                                <Text style={styles.emptyPicker}>{t('forms.sale.noProducts')}</Text>
                             )}
                         </ScrollView>
                     </View>
@@ -416,7 +418,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                 >
                     <View style={styles.pickerContainer}>
                         <View style={styles.pickerHeader}>
-                            <Text style={styles.pickerTitle}>ग्राहक चुनें</Text>
+                            <Text style={styles.pickerTitle}>{t('forms.sale.selectCustomer')}</Text>
                             <TouchableOpacity onPress={() => setShowCustomerPicker(false)}>
                                 <FontAwesome name="times" size={20} color="#757575" />
                             </TouchableOpacity>
@@ -426,11 +428,11 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                 style={styles.pickerItem}
                                 onPress={() => {
                                     setSelectedCustomerId(undefined);
-                                    setCustomerName('वॉक-इन ग्राहक');
+                                    setCustomerName(t('forms.sale.walkInCustomer'));
                                     setShowCustomerPicker(false);
                                 }}
                             >
-                                <Text style={styles.pickerItemName}>वॉक-इन ग्राहक</Text>
+                                <Text style={styles.pickerItemName}>{t('forms.sale.walkInCustomer')}</Text>
                             </TouchableOpacity>
                             {customers.map((customer) => (
                                 <TouchableOpacity

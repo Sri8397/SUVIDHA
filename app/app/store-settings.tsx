@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -30,6 +31,7 @@ interface EditModalProps {
 }
 
 function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'default', placeholder }: EditModalProps) {
+    const { t } = useTranslation();
     const [inputValue, setInputValue] = useState(value);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -69,7 +71,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             onPress={onClose}
                             disabled={isSaving}
                         >
-                            <Text style={styles.editCancelButtonText}>रद्द करें</Text>
+                            <Text style={styles.editCancelButtonText}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.editSaveButton}
@@ -79,7 +81,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             {isSaving ? (
                                 <ActivityIndicator size="small" color="#FFFFFF" />
                             ) : (
-                                <Text style={styles.editSaveButtonText}>सेव करें</Text>
+                                <Text style={styles.editSaveButtonText}>{t('common.save')}</Text>
                             )}
                         </TouchableOpacity>
                     </View>
@@ -90,6 +92,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
 }
 
 export default function StoreSettingsScreen() {
+    const { t } = useTranslation();
     const { refreshAll } = useData();
     const { storeSettings, updateStoreSettings, isLoading: settingsLoading } = useSettings();
     const [showClearDataModal, setShowClearDataModal] = useState(false);
@@ -164,16 +167,16 @@ export default function StoreSettingsScreen() {
 
             // Build success message
             const cleared: string[] = [];
-            if (clearOptions.products) cleared.push('प्रोडक्ट');
-            if (clearOptions.customers) cleared.push('ग्राहक');
-            if (clearOptions.sales) cleared.push('बिक्री');
-            if (clearOptions.expenses) cleared.push('खर्च');
-            if (clearOptions.bakaya && !clearOptions.customers) cleared.push('बकाया');
+            if (clearOptions.products) cleared.push(t('inventory.product'));
+            if (clearOptions.customers) cleared.push(t('customers.customer'));
+            if (clearOptions.sales) cleared.push(t('reports.sales'));
+            if (clearOptions.expenses) cleared.push(t('reports.expenses'));
+            if (clearOptions.bakaya && !clearOptions.customers) cleared.push(t('customers.outstanding'));
 
-            Alert.alert('सफलता', `${cleared.join(', ')} का डेटा सफलतापूर्वक साफ कर दिया गया है।`);
+            Alert.alert(t('common.success'), t('storeSettings.clearSuccess', { data: cleared.join(', ') }));
         } catch (error) {
             console.error('Clear data error:', error);
-            Alert.alert('त्रुटि', 'कुछ गलत हो गया।');
+            Alert.alert(t('common.error'), t('profile.updateError'));
         } finally {
             setIsClearing(false);
         }
@@ -182,17 +185,17 @@ export default function StoreSettingsScreen() {
     const handleFieldSave = async (field: keyof typeof storeSettings, value: string) => {
         const success = await updateStoreSettings({ [field]: value });
         if (success) {
-            Alert.alert('सफलता', 'जानकारी सफलतापूर्वक अपडेट हो गई।');
+            Alert.alert(t('common.success'), t('profile.updateSuccess'));
         } else {
-            Alert.alert('त्रुटि', 'कुछ गलत हो गया।');
+            Alert.alert(t('common.error'), t('profile.updateError'));
         }
     };
 
     // Helper functions for display values
-    const getStoreName = () => storeSettings.name || 'सेट नहीं है';
-    const getStoreAddress = () => storeSettings.address || 'सेट नहीं है';
-    const getBusinessType = () => storeSettings.businessType || 'सेट नहीं है';
-    const getGstin = () => storeSettings.gstin || 'सेट नहीं है';
+    const getStoreName = () => storeSettings.name || t('profile.notSet');
+    const getStoreAddress = () => storeSettings.address || t('profile.notSet');
+    const getBusinessType = () => storeSettings.businessType || t('profile.notSet');
+    const getGstin = () => storeSettings.gstin || t('profile.notSet');
 
     if (settingsLoading) {
         return (
@@ -212,7 +215,7 @@ export default function StoreSettingsScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>स्टोर की सेटिंग</Text>
+                    <Text style={styles.headerTitle}>{t('storeSettings.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -227,7 +230,7 @@ export default function StoreSettingsScreen() {
                     {/* Store Name */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('name')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>दुकान का नाम</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.storeName')}</Text>
                             <Text style={styles.fieldValue}>{getStoreName()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -235,7 +238,7 @@ export default function StoreSettingsScreen() {
                     {/* Store Address */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>दुकान का पता</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.storeAddress')}</Text>
                             <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -243,7 +246,7 @@ export default function StoreSettingsScreen() {
                     {/* Business Type */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('businessType')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>व्यवसाय का प्रकार</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.businessType')}</Text>
                             <Text style={styles.fieldValue}>{getBusinessType()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -251,7 +254,7 @@ export default function StoreSettingsScreen() {
                     {/* GST Details */}
                     <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('gstin')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>जीएसटी विवरण</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.gstDetails')}</Text>
                             <Text style={styles.fieldValue}>{getGstin()}</Text>
                         </View>
                     </TouchableOpacity>
@@ -259,15 +262,15 @@ export default function StoreSettingsScreen() {
                     {/* Canvasing Settings */}
                     <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>कानवासिंग सेट</Text>
-                            <Text style={styles.fieldValue}>डिफ़ॉल्ट सेटिंग</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.canvasingRate')}</Text>
+                            <Text style={styles.fieldValue}>{t('storeSettings.defaultSetting')}</Text>
                         </View>
                     </TouchableOpacity>
 
                     {/* Store Rate */}
                     <TouchableOpacity style={styles.navigationCard}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>स्टोर की दुला</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.storeRate')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={18} color="#757575" />
                     </TouchableOpacity>
@@ -275,14 +278,14 @@ export default function StoreSettingsScreen() {
                     {/* Language */}
                     <TouchableOpacity style={styles.navigationCard}>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>भाषा</Text>
+                            <Text style={styles.fieldLabel}>{t('storeSettings.language')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={18} color="#757575" />
                     </TouchableOpacity>
 
                     {/* Profit Calculation Method */}
                     <View style={styles.settingSection}>
-                        <Text style={styles.settingSectionTitle}>लाभ की गणना</Text>
+                        <Text style={styles.settingSectionTitle}>{t('storeSettings.profitCalculation')}</Text>
                         <View style={styles.radioGroup}>
                             <TouchableOpacity
                                 style={styles.radioOption}
@@ -297,8 +300,8 @@ export default function StoreSettingsScreen() {
                                     )}
                                 </View>
                                 <View style={styles.radioContent}>
-                                    <Text style={styles.radioLabel}>बिक्री पर आधारित</Text>
-                                    <Text style={styles.radioDesc}>पूरी बिक्री राशि गिनें (भले ही अभी पूरा भुगतान न मिला हो)</Text>
+                                    <Text style={styles.radioLabel}>{t('storeSettings.basedOnSales')}</Text>
+                                    <Text style={styles.radioDesc}>{t('storeSettings.basedOnSalesDesc')}</Text>
                                 </View>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -314,8 +317,8 @@ export default function StoreSettingsScreen() {
                                     )}
                                 </View>
                                 <View style={styles.radioContent}>
-                                    <Text style={styles.radioLabel}>प्राप्त राशि पर आधारित</Text>
-                                    <Text style={styles.radioDesc}>केवल जो पैसा मिला है वही गिनें</Text>
+                                    <Text style={styles.radioLabel}>{t('storeSettings.basedOnReceived')}</Text>
+                                    <Text style={styles.radioDesc}>{t('storeSettings.basedOnReceivedDesc')}</Text>
                                 </View>
                             </TouchableOpacity>
                         </View>
@@ -332,9 +335,9 @@ export default function StoreSettingsScreen() {
                                 <FontAwesome name="trash" size={20} color="#D32F2F" />
                             </View>
                             <View style={styles.fieldContent}>
-                                <Text style={styles.dangerLabel}>सभी डेटा साफ करें</Text>
+                                <Text style={styles.dangerLabel}>{t('storeSettings.clearAllData')}</Text>
                                 <Text style={styles.dangerDescription}>
-                                    प्रोडक्ट, ग्राहक, बिक्री और खर्च का पूरा डेटा मिटाएं
+                                    {t('storeSettings.clearDataDesc')}
                                 </Text>
                             </View>
                             <FontAwesome name="chevron-right" size={18} color="#D32F2F" />
@@ -346,35 +349,35 @@ export default function StoreSettingsScreen() {
             {/* Edit Modals */}
             <EditModal
                 visible={editField === 'name'}
-                title="दुकान का नाम बदलें"
+                title={t('storeSettings.changeStoreName')}
                 value={storeSettings.name || ''}
                 onSave={(value) => handleFieldSave('name', value)}
                 onClose={() => setEditField(null)}
-                placeholder="दुकान का नाम दर्ज करें"
+                placeholder={t('storeSettings.enterStoreName')}
             />
             <EditModal
                 visible={editField === 'address'}
-                title="दुकान का पता बदलें"
+                title={t('storeSettings.changeStoreAddress')}
                 value={storeSettings.address || ''}
                 onSave={(value) => handleFieldSave('address', value)}
                 onClose={() => setEditField(null)}
-                placeholder="पता दर्ज करें"
+                placeholder={t('storeSettings.enterAddress', { defaultValue: 'Enter address' })}
             />
             <EditModal
                 visible={editField === 'businessType'}
-                title="व्यवसाय का प्रकार बदलें"
+                title={t('storeSettings.changeBusinessType')}
                 value={storeSettings.businessType || ''}
                 onSave={(value) => handleFieldSave('businessType', value)}
                 onClose={() => setEditField(null)}
-                placeholder="व्यवसाय का प्रकार दर्ज करें"
+                placeholder={t('storeSettings.enterBusinessType')}
             />
             <EditModal
                 visible={editField === 'gstin'}
-                title="जीएसटी विवरण बदलें"
+                title={t('storeSettings.changeGst')}
                 value={storeSettings.gstin || ''}
                 onSave={(value) => handleFieldSave('gstin', value)}
                 onClose={() => setEditField(null)}
-                placeholder="जीएसटी नंबर दर्ज करें"
+                placeholder={t('storeSettings.enterGst')}
             />
 
             {/* Clear Data Confirmation Modal */}
@@ -389,9 +392,9 @@ export default function StoreSettingsScreen() {
                         <View style={styles.modalIconContainer}>
                             <FontAwesome name="trash" size={40} color="#D32F2F" />
                         </View>
-                        <Text style={styles.modalTitle}>डेटा साफ करें</Text>
+                        <Text style={styles.modalTitle}>{t('storeSettings.clearDataTitle')}</Text>
                         <Text style={styles.modalSubtitle}>
-                            जो डेटा आप मिटाना चाहते हैं उसे चुनें:
+                            {t('storeSettings.clearDataSubtitle')}
                         </Text>
 
                         {/* Checkbox Options */}
@@ -404,7 +407,7 @@ export default function StoreSettingsScreen() {
                                 <View style={[styles.checkbox, allSelected && styles.checkboxChecked]}>
                                     {allSelected && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
-                                <Text style={styles.checkboxLabelBold}>सभी चुनें</Text>
+                                <Text style={styles.checkboxLabelBold}>{t('storeSettings.selectAll')}</Text>
                             </TouchableOpacity>
 
                             <View style={styles.checkboxDivider} />
@@ -418,8 +421,8 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.products && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>प्रोडक्ट</Text>
-                                    <Text style={styles.checkboxDesc}>सभी उत्पाद और श्रेणियां</Text>
+                                    <Text style={styles.checkboxLabel}>{t('inventory.product')}</Text>
+                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[0]}...</Text>
                                 </View>
                             </TouchableOpacity>
 
@@ -432,8 +435,8 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.customers && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>ग्राहक</Text>
-                                    <Text style={styles.checkboxDesc}>सभी ग्राहक जानकारी</Text>
+                                    <Text style={styles.checkboxLabel}>{t('customers.customer')}</Text>
+                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[1]}...</Text>
                                 </View>
                             </TouchableOpacity>
 
@@ -446,8 +449,8 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.sales && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>बिक्री</Text>
-                                    <Text style={styles.checkboxDesc}>सभी बिक्री रिकॉर्ड</Text>
+                                    <Text style={styles.checkboxLabel}>{t('reports.sales')}</Text>
+                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[2]}...</Text>
                                 </View>
                             </TouchableOpacity>
 
@@ -460,8 +463,8 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.expenses && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>खर्च</Text>
-                                    <Text style={styles.checkboxDesc}>सभी खर्च रिकॉर्ड</Text>
+                                    <Text style={styles.checkboxLabel}>{t('reports.expenses')}</Text>
+                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[3]}...</Text>
                                 </View>
                             </TouchableOpacity>
 
@@ -474,14 +477,14 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.bakaya && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>बकाया</Text>
-                                    <Text style={styles.checkboxDesc}>सभी ग्राहकों की बकाया राशि शून्य करें</Text>
+                                    <Text style={styles.checkboxLabel}>{t('customers.outstanding')}</Text>
+                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearAllData')}</Text>
                                 </View>
                             </TouchableOpacity>
                         </View>
 
                         <Text style={styles.warningText}>
-                            ⚠️ यह क्रिया पूर्ववत नहीं की जा सकती!
+                            {t('storeSettings.warningUndo')}
                         </Text>
 
                         <View style={styles.modalButtons}>
@@ -490,7 +493,7 @@ export default function StoreSettingsScreen() {
                                 onPress={() => setShowClearDataModal(false)}
                                 disabled={isClearing}
                             >
-                                <Text style={styles.modalCancelButtonText}>रद्द करें</Text>
+                                <Text style={styles.modalCancelButtonText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[
@@ -504,7 +507,7 @@ export default function StoreSettingsScreen() {
                                 {isClearing ? (
                                     <ActivityIndicator size="small" color="#FFFFFF" />
                                 ) : (
-                                    <Text style={styles.modalConfirmButtonText}>साफ करें</Text>
+                                    <Text style={styles.modalConfirmButtonText}>{t('storeSettings.clear')}</Text>
                                 )}
                             </TouchableOpacity>
                         </View>

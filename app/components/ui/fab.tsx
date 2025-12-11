@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, View, Text, Animated, Pressable, Dimensions } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 interface FABMenuItem {
     id: string;
@@ -20,14 +21,15 @@ interface FABProps {
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export function FAB({ onNewSale, onNewExpense, onAddProduct, onAddCustomer }: FABProps) {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [animation] = useState(new Animated.Value(0));
 
     const menuItems: FABMenuItem[] = [
-        { id: 'sale', label: 'नई बिक्री', icon: 'sell', onPress: onNewSale || (() => { }) },
-        { id: 'expense', label: 'नया खर्च', icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
-        { id: 'product', label: 'उत्पाद जोड़ें', icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
-        { id: 'customer', label: 'ग्राहक जोड़ें', icon: 'person-add', onPress: onAddCustomer || (() => { }) },
+        { id: 'sale', label: t('forms.newSale'), icon: 'sell', onPress: onNewSale || (() => { }) },
+        { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
+        { id: 'product', label: t('inventory.addProduct'), icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
+        { id: 'customer', label: t('customers.addCustomer'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
     ];
 
     const toggleMenu = () => {

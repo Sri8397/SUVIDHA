@@ -17,6 +17,7 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Customer } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 interface ReceivePaymentFormProps {
     visible: boolean;
@@ -25,6 +26,7 @@ interface ReceivePaymentFormProps {
 }
 
 export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymentFormProps) {
+    const { t } = useTranslation();
     const { updateCustomer, createSale } = useData();
     const [isLoading, setIsLoading] = useState(false);
     const [amount, setAmount] = useState('');
@@ -44,12 +46,12 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
 
         const paymentAmount = parseFloat(amount);
         if (isNaN(paymentAmount) || paymentAmount <= 0) {
-            Alert.alert('त्रुटि', 'सही राशि दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.payment.enterValidAmount'));
             return;
         }
 
         if (paymentAmount > customer.outstanding) {
-            Alert.alert('त्रुटि', 'राशि बकाया से अधिक नहीं हो सकती');
+            Alert.alert(t('common.error'), t('forms.payment.exceedsOutstanding'));
             return;
         }
 
@@ -75,11 +77,11 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
             // Update customer's outstanding balance
             await updateCustomer(customer.id, { outstanding: newOutstanding });
 
-            Alert.alert('सफलता', `₹${paymentAmount} प्राप्त हुए। शेष बकाया: ₹${newOutstanding}`);
+            Alert.alert(t('common.success'), t('forms.payment.receivedSuccess', { amount: paymentAmount, remaining: newOutstanding }));
             onClose();
         } catch (error) {
             console.error('Payment error:', error);
-            Alert.alert('त्रुटि', 'पेमेंट सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.payment.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -98,7 +100,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>बकाया भुगतान लें</Text>
+                    <Text style={styles.title}>{t('forms.payment.title')}</Text>
                     <View style={styles.closeButton} />
                 </View>
 
@@ -109,23 +111,23 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                             <FontAwesome name="user" size={20} color="#2E7D32" />
                         </View>
                         <View style={styles.customerInfo}>
-                            <Text style={styles.customerLabel}>ग्राहक</Text>
+                            <Text style={styles.customerLabel}>{t('forms.payment.customer')}</Text>
                             <Text style={styles.customerName}>{customer?.name}</Text>
                         </View>
                         <View style={styles.outstandingBadge}>
-                            <Text style={styles.outstandingLabel}>बकाया</Text>
+                            <Text style={styles.outstandingLabel}>{t('forms.payment.outstanding')}</Text>
                             <Text style={styles.outstandingValue}>₹{customer?.outstanding.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
 
                     {/* Received Amount Input */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>प्राप्त राशि (₹)</Text>
+                        <Text style={styles.label}>{t('forms.payment.receivedAmount')} (₹)</Text>
                         <TextInput
                             style={styles.input}
                             value={amount}
                             onChangeText={setAmount}
-                            placeholder="राशि दर्ज करें"
+                            placeholder={t('forms.payment.enterAmount')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
                             autoFocus
@@ -134,7 +136,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
 
                     {/* Payment Method */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>भुगतान का तरीका</Text>
+                        <Text style={styles.label}>{t('forms.payment.paymentMethod')}</Text>
                         <View style={styles.paymentMethods}>
                             {(['cash', 'upi', 'card'] as const).map((method) => (
                                 <TouchableOpacity
@@ -149,8 +151,8 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                                         styles.paymentChipText,
                                         paymentMethod === method && styles.paymentChipTextActive,
                                     ]}>
-                                        {method === 'cash' ? 'Cash' :
-                                            method === 'upi' ? 'UPI' : 'Card'}
+                                        {method === 'cash' ? t('forms.payment.methods.cash') :
+                                            method === 'upi' ? t('forms.payment.methods.upi') : t('forms.payment.methods.card')}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -166,7 +168,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                         {isLoading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.submitButtonText}>भुगतान प्राप्त करें</Text>
+                            <Text style={styles.submitButtonText}>{t('forms.payment.receivePayment')}</Text>
                         )}
                     </TouchableOpacity>
                 </ScrollView>

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Transaction } from '@/types';
 import { useData } from '@/contexts/DataContext';
+import { useTranslation } from 'react-i18next';
 
 type FilterType = 'all' | 'last10' | 'today' | 'week';
 
@@ -38,21 +39,23 @@ const getTransactionColor = (type: Transaction['type']) => {
     }
 };
 
-const getTransactionLabel = (type: Transaction['type']) => {
+
+
+const getTransactionLabel = (type: Transaction['type'], t: any) => {
     switch (type) {
-        case 'SALE': return 'बिक्री';
-        case 'EXPENSE': return 'खर्च';
-        case 'PRODUCT_ADD': return 'स्टॉक';
-        case 'PAYMENT_RECEIVED': return 'भुगतान';
-        case 'PAYMENT_GIVEN': return 'दिया गया';
-        default: return 'अन्य';
+        case 'SALE': return t('transactionType.sale');
+        case 'EXPENSE': return t('transactionType.expense');
+        case 'PRODUCT_ADD': return t('transactionType.productAdd');
+        case 'PAYMENT_RECEIVED': return t('transactionType.paymentReceived');
+        case 'PAYMENT_GIVEN': return t('transactionType.paymentGiven');
+        default: return t('transactionType.other');
     }
 };
 
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string, t: any): string => {
     const today = new Date().toISOString().split('T')[0];
     if (dateString === today) {
-        return 'आज';
+        return t('common.today');
     }
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
     return new Date(dateString).toLocaleDateString('hi-IN', options);
@@ -60,10 +63,13 @@ const formatDate = (dateString: string): string => {
 
 interface TransactionListProps {
     showFilters?: boolean;
+    refreshing?: boolean;
+    onRefresh?: () => void;
 }
 
-export const TransactionList = ({ showFilters = true }: TransactionListProps) => {
-    const { transactions } = useData();
+export const TransactionList = ({ showFilters = true, refreshing, onRefresh }: TransactionListProps) => {
+    const { t } = useTranslation();
+    const { transactions, isLoading } = useData();
     const [filter, setFilter] = useState<FilterType>('all');
 
     const filteredTransactions = useMemo(() => {
@@ -89,7 +95,7 @@ export const TransactionList = ({ showFilters = true }: TransactionListProps) =>
         const isPositive = item.type === 'SALE' || item.type === 'PAYMENT_RECEIVED';
         const amountPrefix = isPositive ? '+' : item.type === 'PRODUCT_ADD' ? '' : '-';
         const color = getTransactionColor(item.type);
-        const label = getTransactionLabel(item.type);
+        const label = getTransactionLabel(item.type, t);
 
         return (
             <View key={item.id} style={styles.row}>
@@ -102,7 +108,7 @@ export const TransactionList = ({ showFilters = true }: TransactionListProps) =>
                         <Text style={styles.separator}> - </Text>
                         <Text style={styles.description} numberOfLines={1}>{item.description}</Text>
                     </View>
-                    <Text style={styles.date}>{formatDate(item.date)}</Text>
+                    <Text style={styles.date}>{formatDate(item.date, t)}</Text>
                 </View>
                 <View style={styles.amountContainer}>
                     {item.amount > 0 && (
@@ -119,8 +125,8 @@ export const TransactionList = ({ showFilters = true }: TransactionListProps) =>
         return (
             <View style={styles.emptyContainer}>
                 <FontAwesome name="exchange" size={48} color="#BDBDBD" />
-                <Text style={styles.emptyText}>कोई लेन-देन नहीं मिला</Text>
-                <Text style={styles.emptySubtext}>बिक्री या खर्च जोड़ें</Text>
+                <Text style={styles.emptyText}>{t('transactions.empty.title')}</Text>
+                <Text style={styles.emptySubtext}>{t('transactions.empty.subtitle')}</Text>
             </View>
         );
     }
@@ -130,10 +136,10 @@ export const TransactionList = ({ showFilters = true }: TransactionListProps) =>
             {showFilters && (
                 <View style={styles.filterRow}>
                     {[
-                        { key: 'all', label: 'सभी' },
-                        { key: 'last10', label: 'पिछले 10' },
-                        { key: 'today', label: 'आज' },
-                        { key: 'week', label: 'हफ्ता' },
+                        { key: 'all', label: t('transactions.filter.all') },
+                        { key: 'last10', label: t('transactions.filter.last10') },
+                        { key: 'today', label: t('transactions.filter.today') },
+                        { key: 'week', label: t('transactions.filter.week') },
                     ].map(f => (
                         <TouchableOpacity
                             key={f.key}
@@ -149,15 +155,15 @@ export const TransactionList = ({ showFilters = true }: TransactionListProps) =>
             )}
 
             <Text style={styles.headerTitle}>
-                {filter === 'all' ? 'सभी लेन-देन' :
-                    filter === 'last10' ? 'पिछले 10 लेन-देन' :
-                        filter === 'today' ? 'आज के लेन-देन' : 'इस हफ्ते के लेन-देन'}
+                {filter === 'all' ? t('transactions.header.all') :
+                    filter === 'last10' ? t('transactions.header.last10') :
+                        filter === 'today' ? t('transactions.header.today') : t('transactions.header.week')}
                 {' '}({filteredTransactions.length})
             </Text>
 
             {filteredTransactions.length === 0 ? (
                 <View style={styles.noResults}>
-                    <Text style={styles.noResultsText}>इस फ़िल्टर में कोई लेन-देन नहीं</Text>
+                    <Text style={styles.noResultsText}>{t('transactions.noTransactionsFilter')}</Text>
                 </View>
             ) : (
                 filteredTransactions.map(item => (
