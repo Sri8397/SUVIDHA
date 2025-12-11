@@ -10,6 +10,20 @@ import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
 import { useData } from '@/contexts/DataContext';
 
+const languageLabels: Record<string, string> = {
+    'hi': 'अ',
+    'en': 'En',
+    'mr': 'म',
+    'gu': 'ગ',
+    'bn': 'ব',
+    'ta': 'த',
+    'te': 'తె',
+    'kn': 'ಕ',
+    'ml': 'മ',
+    'pa': 'ਪ',
+    'or': 'ଓ',
+};
+
 interface HeaderProps {
     title: string;
     showOnlineStatus?: boolean;
@@ -80,12 +94,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                             onPress={() => setLanguageModalVisible(true)}
                         >
                             <Text style={styles.langText}>
-                                {selectedLanguage === 'hi' ? 'हि' : selectedLanguage === 'en' ? 'En' :
-                                    selectedLanguage === 'mr' ? 'मर' : selectedLanguage === 'gu' ? 'ગુ' :
-                                        selectedLanguage === 'bn' ? 'বা' : selectedLanguage === 'ta' ? 'த' :
-                                            selectedLanguage === 'te' ? 'తె' : selectedLanguage === 'kn' ? 'ಕ' :
-                                                selectedLanguage === 'ml' ? 'മ' : selectedLanguage === 'pa' ? 'ਪੰ' :
-                                                    selectedLanguage === 'or' ? 'ଓ' : 'हि'}
+                                {languageLabels[selectedLanguage] || selectedLanguage?.substring(0, 2).toUpperCase()}
                             </Text>
                         </TouchableOpacity>
                     )}
@@ -109,7 +118,10 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                 visible={languageModalVisible}
                 onClose={() => setLanguageModalVisible(false)}
                 selectedLanguage={selectedLanguage}
-                onSelectLanguage={setSelectedLanguage}
+                onSelectLanguage={(lang) => {
+                    i18n.changeLanguage(lang);
+                    setSelectedLanguage(lang);
+                }}
             />
 
             <NotificationList

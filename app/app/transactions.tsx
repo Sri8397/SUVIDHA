@@ -1,13 +1,15 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, StyleSheet, StatusBar, ScrollView } from 'react-native';
 import { Header } from '@/components/ui/header';
 import { TransactionList } from '@/components/ui/TransactionList';
 
 export default function TransactionsScreen() {
+    const { t } = useTranslation();
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-            <Header title="लेन-देन इतिहास" showLanguageToggle={true} showBackButton={true} />
+            <Header title={t('transactions.title')} showLanguageToggle={true} showBackButton={true} />
 
             <ScrollView
                 style={styles.scrollView}

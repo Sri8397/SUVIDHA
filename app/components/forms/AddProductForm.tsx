@@ -16,6 +16,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
 import { Category } from '@/types';
@@ -36,6 +37,7 @@ interface AddProductFormProps {
 }
 
 export function AddProductForm({ visible, onClose, editProduct }: AddProductFormProps) {
+    const { t } = useTranslation();
     const { addProduct, updateProduct, categories } = useData();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -88,13 +90,13 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
             if (useCamera) {
                 const permission = await ImagePicker.requestCameraPermissionsAsync();
                 if (!permission.granted) {
-                    Alert.alert('अनुमति आवश्यक', 'कैमरा उपयोग करने के लिए अनुमति दें');
+                    Alert.alert(t('common.permission'), t('forms.cameraPermission'));
                     return;
                 }
             } else {
                 const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
                 if (!permission.granted) {
-                    Alert.alert('अनुमति आवश्यक', 'गैलरी एक्सेस करने के लिए अनुमति दें');
+                    Alert.alert(t('common.permission'), t('forms.galleryPermission'));
                     return;
                 }
             }
@@ -118,22 +120,22 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
             }
         } catch (error) {
             console.error('Image picker error:', error);
-            Alert.alert('त्रुटि', 'फोटो चुनने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.imageError'));
         }
     };
 
     const handleSubmit = async () => {
         // Validation
         if (!name.trim()) {
-            Alert.alert('त्रुटि', 'प्रोडक्ट का नाम दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.productNameRequired'));
             return;
         }
         if (!price || isNaN(Number(price)) || Number(price) <= 0) {
-            Alert.alert('त्रुटि', 'सही कीमत दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.priceRequired'));
             return;
         }
         if (!stock || isNaN(Number(stock)) || Number(stock) < 0) {
-            Alert.alert('त्रुटि', 'सही स्टॉक मात्रा दर्ज करें');
+            Alert.alert(t('common.error'), t('forms.stockRequired'));
             return;
         }
 
@@ -150,7 +152,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     image,
                 };
                 await updateProduct(editProduct.id, updateData);
-                Alert.alert('सफलता', 'प्रोडक्ट अपडेट हो गया');
+                Alert.alert(t('common.success'), t('inventory.productUpdated'));
             } else {
                 // New product - include stock
                 const productData = {
@@ -163,14 +165,14 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     image,
                 };
                 await addProduct(productData);
-                Alert.alert('सफलता', 'प्रोडक्ट जोड़ दिया गया');
+                Alert.alert(t('common.success'), t('inventory.productAdded'));
             }
 
             resetForm();
             onClose();
         } catch (error) {
             console.error('Save product error:', error);
-            Alert.alert('त्रुटि', 'प्रोडक्ट सेव करने में समस्या हुई');
+            Alert.alert(t('common.error'), t('forms.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -195,7 +197,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                         <FontAwesome name="times" size={20} color="#757575" />
                     </TouchableOpacity>
                     <Text style={styles.title}>
-                        {editProduct ? 'प्रोडक्ट एडिट करें' : 'नया प्रोडक्ट जोड़ें'}
+                        {editProduct ? t('common.edit') + ' ' + t('inventory.product') : t('inventory.addProduct')}
                     </Text>
                     <View style={styles.closeButton} />
                 </View>
@@ -203,7 +205,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                 <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
                     {/* Product Image */}
                     <View style={styles.imageSection}>
-                        <Text style={styles.label}>प्रोडक्ट फोटो</Text>
+                        <Text style={styles.label}>{t('forms.productImage')}</Text>
                         <View style={styles.imageContainer}>
                             {image ? (
                                 <Image source={{ uri: image }} style={styles.productImage} />
@@ -219,26 +221,26 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                 onPress={() => pickImage(true)}
                             >
                                 <FontAwesome name="camera" size={16} color="#2E7D32" />
-                                <Text style={styles.imageButtonText}>कैमरा</Text>
+                                <Text style={styles.imageButtonText}>{t('forms.camera')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.imageButton}
                                 onPress={() => pickImage(false)}
                             >
                                 <FontAwesome name="photo" size={16} color="#2E7D32" />
-                                <Text style={styles.imageButtonText}>गैलरी</Text>
+                                <Text style={styles.imageButtonText}>{t('forms.gallery')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
                     {/* Product Name */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>प्रोडक्ट का नाम *</Text>
+                        <Text style={styles.label}>{t('forms.productName')} *</Text>
                         <TextInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}
-                            placeholder="जैसे: पारले-जी बिस्कुट"
+                            placeholder={t('forms.productName')}
                             placeholderTextColor="#9E9E9E"
                         />
                     </View>
@@ -246,7 +248,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     {/* Price */}
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>खरीद मूल्य (₹) *</Text>
+                            <Text style={styles.label}>{t('forms.costPrice')} (₹) *</Text>
                             <TextInput
                                 style={styles.input}
                                 value={costPrice}
@@ -257,7 +259,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             />
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>बिक्री मूल्य (₹) *</Text>
+                            <Text style={styles.label}>{t('forms.sellingPrice')} (₹) *</Text>
                             <TextInput
                                 style={styles.input}
                                 value={price}
@@ -272,7 +274,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     {/* Stock */}
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>वर्तमान स्टॉक {editProduct ? '' : '*'}</Text>
+                            <Text style={styles.label}>{t('forms.currentStock')} {editProduct ? '' : '*'}</Text>
                             <TextInput
                                 style={[styles.input, editProduct && styles.inputDisabled]}
                                 value={stock}
@@ -284,12 +286,12 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             />
                             {editProduct && (
                                 <Text style={styles.helperText}>
-                                    स्टॉक बदलने के लिए 'स्टॉक समायोजन' करें
+                                    {t('forms.stockAdjustmentHelper', "Use 'Stock Adjustment' to change stock")}
                                 </Text>
                             )}
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>न्यूनतम स्टॉक</Text>
+                            <Text style={styles.label}>{t('forms.minStock')}</Text>
                             <TextInput
                                 style={styles.input}
                                 value={minStock}
@@ -303,7 +305,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
 
                     {/* Category */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>श्रेणी</Text>
+                        <Text style={styles.label}>{t('forms.category')}</Text>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -324,7 +326,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                             category === cat.id && styles.categoryChipTextActive,
                                         ]}
                                     >
-                                        {cat.name}
+                                        {t(`categories.${cat.id}`, { defaultValue: cat.name })}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -341,7 +343,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             <Text style={styles.submitButtonText}>
-                                {editProduct ? 'अपडेट करें' : 'प्रोडक्ट जोड़ें'}
+                                {editProduct ? t('common.save') : t('inventory.addProduct')}
                             </Text>
                         )}
                     </TouchableOpacity>

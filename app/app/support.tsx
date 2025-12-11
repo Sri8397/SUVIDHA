@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -6,6 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 
 export default function SupportScreen() {
+    const { t } = useTranslation();
     const handleCall = () => {
         Linking.openURL('tel:+911800123456');
     };
@@ -28,7 +30,7 @@ export default function SupportScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>सहायता और समर्थन</Text>
+                    <Text style={styles.headerTitle}>{t('support.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -40,15 +42,15 @@ export default function SupportScreen() {
             >
                 {/* Contact Support Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>हमसे संपर्क करें</Text>
+                    <Text style={styles.sectionTitle}>{t('support.contactUs')}</Text>
 
                     <TouchableOpacity style={styles.fieldCard} onPress={handleCall}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="phone" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>फोन सपोर्ट</Text>
-                            <Text style={styles.fieldValue}>1800-123-456 (टोल फ्री)</Text>
+                            <Text style={styles.fieldLabel}>{t('support.phoneSupport')}</Text>
+                            <Text style={styles.fieldValue}>1800-123-456 {t('support.tollFree')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -58,7 +60,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="email" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>ईमेल सपोर्ट</Text>
+                            <Text style={styles.fieldLabel}>{t('support.emailSupport')}</Text>
                             <Text style={styles.fieldValue}>support@suvidha.app</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
@@ -69,8 +71,8 @@ export default function SupportScreen() {
                             <FontAwesome name="whatsapp" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>व्हाट्सएप सपोर्ट</Text>
-                            <Text style={styles.fieldValue}>चैट शुरू करें</Text>
+                            <Text style={styles.fieldLabel}>{t('support.whatsappSupport')}</Text>
+                            <Text style={styles.fieldValue}>{t('support.startChat')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -78,14 +80,14 @@ export default function SupportScreen() {
 
                 {/* FAQ Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>अक्सर पूछे जाने वाले प्रश्न</Text>
+                    <Text style={styles.sectionTitle}>{t('support.faq')}</Text>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>ऐप का उपयोग कैसे करें?</Text>
+                            <Text style={styles.fieldLabel}>{t('support.faq1')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -95,7 +97,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>बिल कैसे बनाएं?</Text>
+                            <Text style={styles.fieldLabel}>{t('support.faq2')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -105,7 +107,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>प्रोडक्ट कैसे जोड़ें?</Text>
+                            <Text style={styles.fieldLabel}>{t('support.faq3')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -115,7 +117,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>रिपोर्ट कैसे देखें?</Text>
+                            <Text style={styles.fieldLabel}>{t('support.faq4')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -123,14 +125,14 @@ export default function SupportScreen() {
 
                 {/* App Info Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>ऐप जानकारी</Text>
+                    <Text style={styles.sectionTitle}>{t('support.appInfo')}</Text>
 
                     <View style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="info-outline" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>ऐप वर्जन</Text>
+                            <Text style={styles.fieldLabel}>{t('support.appVersion')}</Text>
                             <Text style={styles.fieldValue}>1.0.0</Text>
                         </View>
                     </View>
@@ -140,7 +142,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="description" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>नियम और शर्तें</Text>
+                            <Text style={styles.fieldLabel}>{t('support.termsAndConditions')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -150,7 +152,7 @@ export default function SupportScreen() {
                             <MaterialIcons name="privacy-tip" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>गोपनीयता नीति</Text>
+                            <Text style={styles.fieldLabel}>{t('support.privacyPolicy')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>

@@ -7,15 +7,9 @@ import { useSettings } from '@/contexts/settings-context';
 import { useData } from '@/contexts/DataContext';
 import { router } from 'expo-router';
 import { Header } from '@/components/ui/header';
+import { useTranslation } from 'react-i18next';
 
-const menuItems = [
-    { id: 'profile', icon: 'user', label: 'प्रोफाइल संपादित करें', type: 'fontawesome' },
-    { id: 'store', icon: 'settings', label: 'स्टोर की सेटिंग', type: 'material' },
-    { id: 'employees', icon: 'people', label: 'कर्मचारी प्रबंधन', type: 'material' },
-    { id: 'billing', icon: 'folder', label: 'बिलिंग और भुगतान', type: 'material' },
-    { id: 'support', icon: 'help-outline', label: 'सहायता और समर्थन', type: 'material' },
-    { id: 'logout', icon: 'logout', label: 'लॉग आउट', type: 'material', danger: true },
-];
+
 
 // Format large numbers with K, L suffixes
 const formatValue = (value: number): string => {
@@ -28,10 +22,20 @@ const formatValue = (value: number): string => {
 };
 
 export default function MoreScreen() {
+    const { t } = useTranslation();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const { logout, user } = useAuth();
     const { userProfile, storeSettings, isLoading } = useSettings();
     const { products, sales, dashboardStats } = useData();
+
+    const menuItems = useMemo(() => [
+        { id: 'profile', icon: 'user', label: t('profile.title'), type: 'fontawesome' },
+        { id: 'store', icon: 'settings', label: t('storeSettings.title'), type: 'material' },
+        { id: 'employees', icon: 'people', label: t('employees.title'), type: 'material' },
+        { id: 'billing', icon: 'folder', label: t('billing.title'), type: 'material' },
+        { id: 'support', icon: 'help-outline', label: t('support.title'), type: 'material' },
+        { id: 'logout', icon: 'logout', label: t('more.logout'), type: 'material', danger: true },
+    ], [t]);
 
     // Calculate stats
     const stats = useMemo(() => {
@@ -73,11 +77,11 @@ export default function MoreScreen() {
     };
 
     const getDisplayName = () => {
-        return userProfile?.name || user?.name || 'नाम सेट करें';
+        return userProfile?.name || user?.name || t('profile.setName');
     };
 
     const getStoreName = () => {
-        return storeSettings?.name || 'स्टोर का नाम सेट करें';
+        return storeSettings?.name || t('profile.setStoreName');
     };
 
     const getProfileImage = () => {
@@ -99,7 +103,7 @@ export default function MoreScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title="अधिक" showLanguageToggle={true} />
+            <Header title={t('more.title')} showLanguageToggle={true} />
 
             <ScrollView
                 style={styles.scrollView}
@@ -125,22 +129,22 @@ export default function MoreScreen() {
                 {/* Stats Row */}
                 <View style={styles.statsRow}>
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>उत्पाद:</Text>
+                        <Text style={styles.statLabel}>{t('more.products')}:</Text>
                         <Text style={styles.statValue}>{stats.products.toLocaleString('en-IN')}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>ऑर्डर:</Text>
+                        <Text style={styles.statLabel}>{t('more.orders')}:</Text>
                         <Text style={styles.statValue}>{stats.orders.toLocaleString('en-IN')}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>बिक्री:</Text>
+                        <Text style={styles.statLabel}>{t('reports.sales')}:</Text>
                         <Text style={styles.statValue}>{formatValue(stats.sales)}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>लाभ:</Text>
+                        <Text style={styles.statLabel}>{t('reports.profit')}:</Text>
                         <Text style={[styles.statValue, stats.profit < 0 && styles.negativeValue]}>
                             {formatValue(stats.profit)}
                         </Text>
@@ -193,22 +197,22 @@ export default function MoreScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>लॉग आउट</Text>
+                        <Text style={styles.modalTitle}>{t('more.logout')}</Text>
                         <Text style={styles.modalMessage}>
-                            क्या आप अपना स्टोर से लॉग{'\n'}आउट करना चाहते हैं?
+                            {t('more.logoutConfirm')}
                         </Text>
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={styles.cancelButton}
                                 onPress={() => setShowLogoutModal(false)}
                             >
-                                <Text style={styles.cancelButtonText}>रद्द करें</Text>
+                                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.logoutButton}
                                 onPress={handleLogout}
                             >
-                                <Text style={styles.logoutButtonText}>लॉग आउट</Text>
+                                <Text style={styles.logoutButtonText}>{t('more.logout')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

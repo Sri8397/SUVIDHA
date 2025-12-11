@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -9,6 +10,7 @@ import * as employeeService from '@/services/employeeService';
 import { AddEmployeeForm } from '@/components/forms/AddEmployeeForm';
 
 export default function EmployeesScreen() {
+    const { t } = useTranslation();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
@@ -43,19 +45,19 @@ export default function EmployeesScreen() {
 
     const handleDeleteEmployee = (employee: Employee) => {
         Alert.alert(
-            'कर्मचारी हटाएं',
-            `क्या आप "${employee.name}" को हटाना चाहते हैं?`,
+            t('employees.deleteEmployee'),
+            t('employees.deleteEmployeeConfirm', { name: employee.name }),
             [
-                { text: 'रद्द करें', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'हटाएं',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
                             await employeeService.deleteEmployee(employee.id);
                             loadEmployees();
                         } catch (error) {
-                            Alert.alert('त्रुटि', 'कर्मचारी हटाने में समस्या हुई');
+                            Alert.alert(t('common.error'), t('employees.deleteError'));
                         }
                     },
                 },
@@ -90,7 +92,7 @@ export default function EmployeesScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>कर्मचारी प्रबंधन</Text>
+                    <Text style={styles.headerTitle}>{t('employees.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -103,18 +105,18 @@ export default function EmployeesScreen() {
                 {/* Add Employee Button */}
                 <TouchableOpacity style={styles.addButton} onPress={handleAddEmployee}>
                     <MaterialIcons name="person-add" size={24} color="#FFFFFF" />
-                    <Text style={styles.addButtonText}>नया कर्मचारी जोड़ें</Text>
+                    <Text style={styles.addButtonText}>{t('employees.addEmployee')}</Text>
                 </TouchableOpacity>
 
                 {/* Employee List */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>कर्मचारी सूची ({employees.length})</Text>
+                    <Text style={styles.sectionTitle}>{t('employees.employeeList')} ({employees.length})</Text>
 
                     {employees.length === 0 ? (
                         <View style={styles.emptyState}>
                             <FontAwesome name="users" size={48} color="#BDBDBD" />
-                            <Text style={styles.emptyStateText}>अभी कोई कर्मचारी नहीं है</Text>
-                            <Text style={styles.emptyStateSubtext}>नया कर्मचारी जोड़ने के लिए ऊपर बटन दबाएं</Text>
+                            <Text style={styles.emptyStateText}>{t('employees.noEmployees')}</Text>
+                            <Text style={styles.emptyStateSubtext}>{t('employees.addEmployeeHint')}</Text>
                         </View>
                     ) : (
                         employees.map((employee) => (

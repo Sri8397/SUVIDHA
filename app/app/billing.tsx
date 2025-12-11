@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -6,6 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 
 export default function BillingScreen() {
+    const { t } = useTranslation();
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -16,7 +18,7 @@ export default function BillingScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>बिलिंग और भुगतान</Text>
+                    <Text style={styles.headerTitle}>{t('billing.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -28,14 +30,14 @@ export default function BillingScreen() {
             >
                 {/* Payment Methods Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>भुगतान के तरीके</Text>
+                    <Text style={styles.sectionTitle}>{t('billing.paymentMethods')}</Text>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="account-balance" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>बैंक खाता</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.bankAccount')}</Text>
                             <Text style={styles.fieldValue}>HDFC Bank - ****1234</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
@@ -57,8 +59,8 @@ export default function BillingScreen() {
                             <MaterialIcons name="qr-code" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>QR कोड</Text>
-                            <Text style={styles.fieldValue}>सक्रिय</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.qrCode')}</Text>
+                            <Text style={styles.fieldValue}>{t('billing.active')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -66,15 +68,15 @@ export default function BillingScreen() {
 
                 {/* Invoice Settings Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>इनवॉइस सेटिंग</Text>
+                    <Text style={styles.sectionTitle}>{t('billing.invoiceSettings')}</Text>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="receipt" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>इनवॉइस टेम्पलेट</Text>
-                            <Text style={styles.fieldValue}>डिफ़ॉल्ट टेम्पलेट</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.invoiceTemplate')}</Text>
+                            <Text style={styles.fieldValue}>{t('billing.defaultTemplate')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -84,7 +86,7 @@ export default function BillingScreen() {
                             <MaterialIcons name="format-list-numbered" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>इनवॉइस नंबर सीरीज</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.invoiceNumberSeries')}</Text>
                             <Text style={styles.fieldValue}>INV-2024-</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
@@ -93,14 +95,14 @@ export default function BillingScreen() {
 
                 {/* Billing History Section */}
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>बिलिंग इतिहास</Text>
+                    <Text style={styles.sectionTitle}>{t('billing.billingHistory')}</Text>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
                             <MaterialIcons name="history" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>पिछले भुगतान देखें</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.viewPastPayments')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>
@@ -110,7 +112,7 @@ export default function BillingScreen() {
                             <MaterialIcons name="download" size={24} color="#2E7D32" />
                         </View>
                         <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>रिपोर्ट डाउनलोड करें</Text>
+                            <Text style={styles.fieldLabel}>{t('billing.downloadReports')}</Text>
                         </View>
                         <FontAwesome name="chevron-right" size={16} color="#757575" />
                     </TouchableOpacity>

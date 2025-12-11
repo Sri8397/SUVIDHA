@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
 import { useData } from '@/contexts/DataContext';
@@ -12,6 +13,7 @@ import { ReceivePaymentForm } from '@/components/forms/ReceivePaymentForm';
 import { Customer } from '@/types';
 
 export default function CustomersScreen() {
+    const { t } = useTranslation();
     const { isLoading, customers, deleteCustomer, updateCustomer } = useData();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -47,17 +49,17 @@ export default function CustomersScreen() {
 
     const handleDelete = (customer: Customer) => {
         Alert.alert(
-            'ग्राहक हटाएं',
-            `क्या आप "${customer.name}" को हटाना चाहते हैं?`,
+            t('customers.deleteCustomer'),
+            t('customers.deleteCustomerConfirm', { name: customer.name }),
             [
-                { text: 'रद्द करें', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'हटाएं',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         const success = await deleteCustomer(customer.id);
                         if (success) {
-                            Alert.alert('सफल', 'ग्राहक हटा दिया गया');
+                            Alert.alert(t('common.success'), t('customers.customerDeleted'));
                         }
                     }
                 }
@@ -93,14 +95,14 @@ export default function CustomersScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title="ग्राहक" showLanguageToggle={true} />
+            <Header title={t('customers.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="नाम या फोन से खोजें..."
+                    placeholder={t('customers.searchPlaceholder')}
                     placeholderTextColor="#9E9E9E"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -110,7 +112,7 @@ export default function CustomersScreen() {
             {/* Customer Count */}
             <View style={styles.countContainer}>
                 <Text style={styles.countText}>
-                    {filteredCustomers.length} ग्राहक
+                    {t('customers.customers_count', { count: filteredCustomers.length })}
                 </Text>
             </View>
 
@@ -154,7 +156,7 @@ export default function CustomersScreen() {
                                 onPress={() => handleCall(customer.phone)}
                             >
                                 <FontAwesome name="phone" size={14} color="#2E7D32" />
-                                <Text style={styles.callButtonText}>कॉल</Text>
+                                <Text style={styles.callButtonText}>{t('customers.call')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.messageButton}
@@ -180,8 +182,8 @@ export default function CustomersScreen() {
                         <FontAwesome name="users" size={48} color="#BDBDBD" />
                         <Text style={styles.emptyStateText}>
                             {customers.length === 0
-                                ? 'कोई ग्राहक नहीं है। नया ग्राहक जोड़ें।'
-                                : 'कोई ग्राहक नहीं मिला'}
+                                ? t('customers.noCustomers')
+                                : t('customers.noCustomersFound')}
                         </Text>
                         {customers.length === 0 && (
                             <TouchableOpacity
@@ -189,7 +191,7 @@ export default function CustomersScreen() {
                                 onPress={() => setShowCustomerForm(true)}
                             >
                                 <FontAwesome name="plus" size={14} color="#FFFFFF" />
-                                <Text style={styles.addFirstButtonText}>ग्राहक जोड़ें</Text>
+                                <Text style={styles.addFirstButtonText}>{t('customers.addCustomer')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
