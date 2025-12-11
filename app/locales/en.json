@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} minute ago",
         "hourAgo": "{{count}} hour ago",
         "hoursAgo": "{{count}} hours ago",
-        "dayAgo": "{{count}} day ago"
+        "dayAgo": "{{count}} day ago",
+        "noNotifications": "No notifications",
+        "emptySubtitle": "Your notifications will appear here"
     },
     "billing": {
         "title": "Billing & Payments",

@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} ਮਿੰਟ ਪਹਿਲਾਂ",
         "hourAgo": "{{count}} ਘੰਟਾ ਪਹਿਲਾਂ",
         "hoursAgo": "{{count}} ਘੰਟੇ ਪਹਿਲਾਂ",
-        "dayAgo": "{{count}} ਦਿਨ ਪਹਿਲਾਂ"
+        "dayAgo": "{{count}} ਦਿਨ ਪਹਿਲਾਂ",
+        "noNotifications": "ਕੋਈ ਸੂਚਨਾ ਨਹੀਂ",
+        "emptySubtitle": "ਤੁਹਾਡੇ ਕੋਲ ਅਜੇ ਕੋਈ ਸੂਚਨਾਵਾਂ ਨਹੀਂ ਹਨ।"
     },
     "billing": {
         "title": "ਬਿਲਿੰਗ ਅਤੇ ਭੁਗਤਾਨ",

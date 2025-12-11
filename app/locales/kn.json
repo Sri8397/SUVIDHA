@@ -361,7 +361,9 @@
         "minutesAgo": "{{count}} ನಿಮಿಷಗಳ ಹಿಂದೆ",
         "hourAgo": "{{count}} ಗಂಟೆ ಹಿಂದೆ",
         "hoursAgo": "{{count}} ಗಂಟೆಗಳ ಹಿಂದೆ",
-        "dayAgo": "{{count}} ದಿನಗಳ ಹಿಂದೆ"
+        "dayAgo": "{{count}} ದಿನಗಳ ಹಿಂದೆ",
+        "noNotifications": "ಕೋಈ ನೋಟಿಫಿಕೇಶನ್",
+        "emptySubtitle": "ನೀವು ನೋಟಿಫಿಕೇಶನ್ ಅಳಿಸಲು ಬಯಸುವ ನೋಟಿಫಿಕೇಶನ್ ಅಳಿಸಲಾಯಿತು."
     },
     "billing": {
         "title": "ಬಿಲ್ಲಿಂಗ್ ಮತ್ತು ಪಾವತಿಗಳು",
