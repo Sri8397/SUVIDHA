@@ -61,6 +61,15 @@
         "productUpdated": "Product updated",
         "productAdded": "Product added"
     },
+    "categories": {
+        "grocery": "Grocery",
+        "snacks": "Snacks",
+        "beverages": "Beverages",
+        "dairy": "Dairy",
+        "personal": "Personal Care",
+        "household": "Household",
+        "other": "Other"
+    },
     "customers": {
         "title": "Customers",
         "customer": "Customer",
@@ -103,7 +112,9 @@
         "billingPayments": "Billing & Payments",
         "helpSupport": "Help & Support",
         "logout": "Log Out",
-        "logoutConfirm": "Do you want to log out from your store?"
+        "logoutConfirm": "Do you want to log out from your store?",
+        "products": "Products",
+        "orders": "Orders"
     },
     "forms": {
         "newSale": "New Sale",

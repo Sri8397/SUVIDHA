@@ -55,7 +55,10 @@ export default function InventoryScreen() {
     const categoryList = useMemo(() => [
         { id: 'all', name: t('inventory.all') },
         { id: 'low-stock', name: t('dashboard.lowStockAlerts'), count: lowStockProducts.length },
-        ...categories
+        ...categories.map(cat => ({
+            ...cat,
+            name: t(`categories.${cat.id}`, { defaultValue: cat.name })
+        }))
     ], [categories, lowStockProducts.length, t]);
 
     const handleEdit = (product: Product) => {

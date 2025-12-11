@@ -325,7 +325,9 @@ export default function ReportsScreen() {
                                 {categoryBreakdown.map((item, index) => (
                                     <View key={item.name} style={styles.categoryLegendItem}>
                                         <View style={[styles.categoryLegendDot, { backgroundColor: item.color }]} />
-                                        <Text style={styles.categoryLegendText}>{item.name}</Text>
+                                        <Text style={styles.categoryLegendText}>
+                                            {t(`categories.${item.name}`, { defaultValue: item.name })}
+                                        </Text>
                                         <Text style={styles.categoryLegendPercent}>{item.percentage}%</Text>
                                     </View>
                                 ))}

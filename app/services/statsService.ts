@@ -227,19 +227,8 @@ export async function getCategoryBreakdown(): Promise<CategoryBreakdown[]> {
         other: '#757575',
     };
 
-    // Category labels in Hindi
-    const labels: Record<string, string> = {
-        grocery: 'किराना',
-        snacks: 'स्नैक्स',
-        beverages: 'पेय',
-        dairy: 'डेयरी',
-        personal: 'पर्सनल केयर',
-        household: 'घरेलू सामान',
-        other: 'अन्य',
-    };
-
     const breakdown: CategoryBreakdown[] = Object.entries(categoryCount).map(([cat, count]) => ({
-        name: labels[cat] || cat,
+        name: cat,
         percentage: Math.round((count / total) * 100),
         amount: count,
         color: colors[cat] || '#757575',

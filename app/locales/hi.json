@@ -61,6 +61,15 @@
         "productUpdated": "प्रोडक्ट अपडेट हो गया",
         "productAdded": "प्रोडक्ट जोड़ दिया गया"
     },
+    "categories": {
+        "grocery": "किराना",
+        "snacks": "स्नैक्स",
+        "beverages": "पेय",
+        "dairy": "डेयरी",
+        "personal": "पर्सनल केयर",
+        "household": "घरेलू सामान",
+        "other": "अन्य"
+    },
     "customers": {
         "title": "ग्राहक",
         "customer": "ग्राहक",
@@ -103,7 +112,9 @@
         "billingPayments": "बिलिंग और भुगतान",
         "helpSupport": "सहायता और समर्थन",
         "logout": "लॉग आउट",
-        "logoutConfirm": "क्या आप अपना स्टोर से लॉग आउट करना चाहते हैं?"
+        "logoutConfirm": "क्या आप अपना स्टोर से लॉग आउट करना चाहते हैं?",
+        "products": "उत्पाद",
+        "orders": "ऑर्डर"
     },
     "forms": {
         "newSale": "नई बिक्री",

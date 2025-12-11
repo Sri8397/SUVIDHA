@@ -326,7 +326,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                             category === cat.id && styles.categoryChipTextActive,
                                         ]}
                                     >
-                                        {cat.name}
+                                        {t(`categories.${cat.id}`, { defaultValue: cat.name })}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
