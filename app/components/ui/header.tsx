@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
+import { useData } from '@/contexts/DataContext';
 
 interface HeaderProps {
     title: string;
@@ -16,9 +17,15 @@ interface HeaderProps {
 
 export function Header({ title, showOnlineStatus = false, showLanguageToggle = true, showBackButton = false }: HeaderProps) {
     const router = useRouter();
+    const { getVisibleNotifications } = useData();
     const [languageModalVisible, setLanguageModalVisible] = useState(false);
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('hi');
+
+    // Get notification count from context (consistent across all pages)
+    const visibleNotifications = getVisibleNotifications();
+    const notificationCount = Math.min(visibleNotifications.length, 99);
+    const hasNotifications = visibleNotifications.length > 0;
 
     return (
         <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
@@ -62,8 +69,14 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                         style={styles.bellButton}
                         onPress={() => setNotificationVisible(true)}
                     >
-                        <FontAwesome name="bell" size={22} color="#D32F2F" />
-                        <View style={styles.notificationBadge} />
+                        <FontAwesome name="bell-o" size={24} color="#212121" />
+                        {hasNotifications && (
+                            <View style={styles.notificationBadge}>
+                                <Text style={styles.badgeText}>
+                                    {notificationCount > 9 ? '9+' : notificationCount}
+                                </Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -154,12 +167,22 @@ const styles = StyleSheet.create({
     },
     notificationBadge: {
         position: 'absolute',
-        top: 2,
-        right: 2,
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        top: -4,
+        right: -6,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
         backgroundColor: '#D32F2F',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+    },
+    badgeText: {
+        fontSize: 10,
+        fontWeight: '700',
+        color: '#FFFFFF',
     },
     backButton: {
         width: 40,

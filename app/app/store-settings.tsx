@@ -213,9 +213,7 @@ export default function StoreSettingsScreen() {
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>स्टोर की सेटिंग</Text>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <FontAwesome name="bell" size={20} color="#212121" />
-                    </TouchableOpacity>
+                    <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
 
@@ -227,59 +225,44 @@ export default function StoreSettingsScreen() {
                 {/* Editable Fields */}
                 <View style={styles.fieldsContainer}>
                     {/* Store Name */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('name')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का नाम</Text>
                             <Text style={styles.fieldValue}>{getStoreName()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('name')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Store Address */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>दुकान का पता</Text>
                             <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('address')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Business Type */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('businessType')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>व्यवसाय का प्रकार</Text>
                             <Text style={styles.fieldValue}>{getBusinessType()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('businessType')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* GST Details */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('gstin')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>जीएसटी विवरण</Text>
                             <Text style={styles.fieldValue}>{getGstin()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('gstin')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Canvasing Settings */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>कानवासिंग सेट</Text>
                             <Text style={styles.fieldValue}>डिफ़ॉल्ट सेटिंग</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Store Rate */}
                     <TouchableOpacity style={styles.navigationCard}>
@@ -508,7 +491,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        gap: 16,
         paddingHorizontal: 16,
         paddingVertical: 16,
         backgroundColor: '#FFFFFF',
@@ -522,9 +505,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: '#212121',
-    },
-    notificationButton: {
-        padding: 8,
     },
     scrollView: {
         flex: 1,
@@ -714,7 +694,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         textAlign: 'center',
     },
-    
+
     modalButtons: {
         flexDirection: 'row',
         gap: 12,

@@ -62,6 +62,17 @@ export interface Category {
     icon?: string;
 }
 
+// Employee Entity
+export interface Employee {
+    id: string;
+    name: string;
+    role: string;  // e.g., 'सेल्समैन', 'कैशियर', 'स्टॉक मैनेजर'
+    phone: string;
+    salary?: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
 // Customer Entity
 export interface Customer {
     id: string;
@@ -174,6 +185,7 @@ export const STORAGE_KEYS = {
     CUSTOMERS: '@suvidha/customers',
     SALES: '@suvidha/sales',
     EXPENSES: '@suvidha/expenses',  // Added for clarity
+    EMPLOYEES: '@suvidha/employees',
     STORE_SETTINGS: '@suvidha/store_settings',
     USER_PROFILE: '@suvidha/user_profile',
     FIRST_LAUNCH: '@suvidha/first_launch',

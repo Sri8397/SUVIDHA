@@ -113,9 +113,9 @@ export default function HomeScreen() {
             <Text style={styles.chartTitle}>साप्ताहिक बिक्री और लाभ</Text>
             <TouchableOpacity
               style={styles.viewReportBtn}
-              onPress={() => router.push('/transactions')}
+              onPress={() => router.push('/(tabs)/reports?period=weekly')}
             >
-              <Text style={styles.viewReportText}>View Transactions</Text>
+              <Text style={styles.viewReportText}>सभी देखें</Text>
               <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
             </TouchableOpacity>
           </View>
@@ -135,8 +135,8 @@ export default function HomeScreen() {
         <View style={styles.lowStockSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>कम स्टॉक अलर्ट</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View All</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
+              <Text style={styles.viewAllText}>सभी देखें</Text>
             </TouchableOpacity>
           </View>
 
@@ -201,20 +201,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#757575',
   },
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   scrollView: {
     flex: 1,
   },
@@ -318,13 +318,13 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontWeight: '500',
   },
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
   lowStockSection: {
     marginHorizontal: 16,
     marginTop: 16,

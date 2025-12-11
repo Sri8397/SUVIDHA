@@ -177,10 +177,8 @@ export default function ProfileScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>मेरी प्रोफाइल</Text>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <FontAwesome name="bell" size={20} color="#212121" />
-                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>प्रोफाइल संपादित करें</Text>
+                    <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
 
@@ -207,9 +205,8 @@ export default function ProfileScreen() {
                             <FontAwesome name="camera" size={16} color="#FFFFFF" />
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setEditField('name')}>
+                    <TouchableOpacity onPress={() => setEditField('name')} style={styles.nameContainer}>
                         <Text style={styles.userName}>{getDisplayName()}</Text>
-                        <FontAwesome name="pencil" size={14} color="#2E7D32" style={styles.nameEditIcon} />
                     </TouchableOpacity>
                     <Text style={styles.storeName}>{getStoreName()}</Text>
                 </View>
@@ -217,37 +214,28 @@ export default function ProfileScreen() {
                 {/* Editable Fields */}
                 <View style={styles.fieldsContainer}>
                     {/* Phone Number */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('phone')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>फ़ोन नंबर:</Text>
                             <Text style={styles.fieldValue}>{getDisplayPhone()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('phone')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Email */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('email')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>ईमेल:</Text>
                             <Text style={styles.fieldValue}>{getDisplayEmail()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('email')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Address */}
-                    <View style={styles.fieldCard}>
+                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>पता:</Text>
                             <Text style={styles.fieldValue}>{getDisplayAddress()}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editIcon} onPress={() => setEditField('address')}>
-                            <FontAwesome name="pencil" size={18} color="#2E7D32" />
-                        </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Account Settings Section */}
@@ -376,9 +364,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#212121',
     },
-    notificationButton: {
-        padding: 8,
-    },
     scrollView: {
         flex: 1,
     },
@@ -421,17 +406,16 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         alignItems: 'center',
     },
+    nameContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
     userName: {
         fontSize: 24,
         fontWeight: '700',
         color: '#212121',
         marginBottom: 4,
         textAlign: 'center',
-    },
-    nameEditIcon: {
-        position: 'absolute',
-        right: -24,
-        top: 4,
     },
     storeName: {
         fontSize: 16,

@@ -17,9 +17,7 @@ export default function BillingScreen() {
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>बिलिंग और भुगतान</Text>
-                    <TouchableOpacity style={styles.notificationButton}>
-                        <FontAwesome name="bell" size={20} color="#212121" />
-                    </TouchableOpacity>
+                    <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
 
@@ -147,9 +145,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: '#212121',
-    },
-    notificationButton: {
-        padding: 8,
     },
     scrollView: {
         flex: 1,

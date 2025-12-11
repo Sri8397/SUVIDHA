@@ -16,9 +16,13 @@ interface DataContextType {
     // Loading state
     isLoading: boolean;
 
-    // Transactions
+    // Transactions & Notifications
     transactions: Transaction[];
     refreshTransactions: () => Promise<void>;
+    dismissedNotificationIds: Set<string>;
+    dismissNotification: (id: string) => void;
+    dismissAllNotifications: () => void;
+    getVisibleNotifications: () => Transaction[];
 
     // Products
     products: Product[];
@@ -82,6 +86,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // Data state
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [dismissedNotificationIds, setDismissedNotificationIds] = useState<Set<string>>(new Set());
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
@@ -98,6 +103,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const trans = await transactionService.getTransactions();
         setTransactions(trans);
     }, []);
+
+    // Notification dismiss functions
+    const dismissNotification = useCallback((id: string) => {
+        setDismissedNotificationIds(prev => new Set([...prev, id]));
+    }, []);
+
+    const dismissAllNotifications = useCallback(() => {
+        const allIds = transactions.map(t => t.id);
+        setDismissedNotificationIds(new Set(allIds));
+    }, [transactions]);
+
+    const getVisibleNotifications = useCallback(() => {
+        return transactions.filter(t => !dismissedNotificationIds.has(t.id)).slice(0, 20);
+    }, [transactions, dismissedNotificationIds]);
 
     const refreshProducts = useCallback(async () => {
         const [prods, cats, lowStock] = await Promise.all([
@@ -269,6 +288,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         isLoading,
         transactions,
         refreshTransactions,
+        dismissedNotificationIds,
+        dismissNotification,
+        dismissAllNotifications,
+        getVisibleNotifications,
         products,
         categories,
         lowStockProducts,

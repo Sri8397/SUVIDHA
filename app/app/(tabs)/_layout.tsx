@@ -13,8 +13,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: 70,
-          paddingBottom: 0,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
           ...Platform.select({
@@ -31,13 +31,13 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           paddingVertical: 8,
-          height: 70,
+          height: Platform.OS === 'ios' ? 65 : 70,
         },
         tabBarLabelStyle: {
           fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
           fontSize: 11,
           fontWeight: '600',
-          paddingBottom: 10,
+          paddingBottom: Platform.OS === 'ios' ? 0 : 10,
         },
       }}>
       <Tabs.Screen
