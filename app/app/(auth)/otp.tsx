@@ -12,10 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function OTPScreen() {
+    const { t } = useTranslation();
     const { phone, name } = useLocalSearchParams<{ phone: string; name: string }>();
     const { signup } = useAuth();
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -88,14 +90,14 @@ export default function OTPScreen() {
                         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                             <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>अपना स्टोर</Text>
+                        <Text style={styles.headerTitle}>{t('auth.yourStore')}</Text>
                     </View>
 
                     {/* Title Section */}
                     <View style={styles.titleSection}>
-                        <Text style={styles.titleText}>OTP सत्यापन</Text>
+                        <Text style={styles.titleText}>{t('auth.otpVerification')}</Text>
                         <Text style={styles.subtitleText}>
-                            कृपया +91 {phone} पर भेजा गया{'\n'}6-अंकीय OTP दर्ज करें।
+                            {t('auth.otpSentMessage', { phone: phone })}
                         </Text>
                     </View>
 
@@ -122,7 +124,7 @@ export default function OTPScreen() {
                             onPress={handleVerify}
                             disabled={!isOtpComplete}
                         >
-                            <Text style={styles.verifyButtonText}>सत्यापित करें</Text>
+                            <Text style={styles.verifyButtonText}>{t('auth.verifyButton')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -131,9 +133,9 @@ export default function OTPScreen() {
                             disabled={resendTimer > 0}
                         >
                             <Text style={styles.resendLinkText}>
-                                OTP प्राप्त नहीं हुआ?{' '}
+                                {t('auth.otpNotReceived')}{' '}
                                 <Text style={[styles.resendLinkHighlight, resendTimer > 0 && styles.resendDisabled]}>
-                                    पुनः भेजें {resendTimer > 0 ? `(${resendTimer}s)` : ''}
+                                    {t('auth.resend')} {resendTimer > 0 ? `(${resendTimer}s)` : ''}
                                 </Text>
                             </Text>
                         </TouchableOpacity>

@@ -15,9 +15,9 @@ import { WeeklyData } from '@/types';
 
 // Time periods
 const timePeriods = [
-    { id: 'daily', label: 'दैनिक' },
-    { id: 'weekly', label: 'साप्ताहिक' },
-    { id: 'monthly', label: 'मासिक' },
+    { id: 'daily' },
+    { id: 'weekly' },
+    { id: 'monthly' },
 ] as const;
 
 type PeriodType = 'daily' | 'weekly' | 'monthly';

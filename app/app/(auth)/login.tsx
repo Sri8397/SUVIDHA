@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/auth-context';
 
 export default function LoginScreen() {
+    const { t } = useTranslation();
     const [phone, setPhone] = useState('');
     const { login } = useAuth();
 
@@ -43,19 +45,19 @@ export default function LoginScreen() {
                 >
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>अपना स्टोर</Text>
+                        <Text style={styles.headerTitle}>{t('auth.yourStore')}</Text>
                     </View>
 
                     {/* Welcome Section */}
                     <View style={styles.welcomeSection}>
                         <Text style={styles.welcomeText}>
-                            नमस्ते, अपना स्टोर में{'\n'}आपका स्वागत है!
+                            {t('auth.welcomeMessage')}
                         </Text>
                     </View>
 
                     {/* Login Form */}
                     <View style={styles.formContainer}>
-                        <Text style={styles.inputLabel}>फोन नंबर दर्ज करें</Text>
+                        <Text style={styles.inputLabel}>{t('auth.enterPhoneLabel')}</Text>
                         <View style={styles.phoneInputContainer}>
                             <View style={styles.countryCode}>
                                 <Text style={styles.countryCodeText}>+91</Text>
@@ -77,18 +79,18 @@ export default function LoginScreen() {
                             onPress={handleLogin}
                             disabled={phone.length < 10}
                         >
-                            <Text style={styles.loginButtonText}>लॉग इन करें</Text>
+                            <Text style={styles.loginButtonText}>{t('auth.loginButton')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={handleSignupPress} style={styles.signupLink}>
                             <Text style={styles.signupLinkText}>
-                                नया उपयोगकर्ता? <Text style={styles.signupLinkHighlight}>रजिस्टर करें</Text>
+                                {t('auth.newUserRegister')} <Text style={styles.signupLinkHighlight}>{t('auth.register')}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 
