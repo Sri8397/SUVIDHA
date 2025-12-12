@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliteratingTextInput } from '../../components/ui/TransliteratingTextInput';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
@@ -119,7 +120,7 @@ export default function InventoryScreen() {
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
-                <TextInput
+                <TransliteratingTextInput
                     style={styles.searchInput}
                     placeholder={t('common.search')}
                     placeholderTextColor="#9E9E9E"

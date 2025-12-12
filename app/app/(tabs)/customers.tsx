@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliteratingTextInput } from '../../components/ui/TransliteratingTextInput';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
@@ -100,7 +101,7 @@ export default function CustomersScreen() {
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
-                <TextInput
+                <TransliteratingTextInput
                     style={styles.searchInput}
                     placeholder={t('customers.searchPlaceholder')}
                     placeholderTextColor="#9E9E9E"
