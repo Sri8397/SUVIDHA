@@ -11,6 +11,9 @@ import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
+import { AddLoanForm } from '@/components/forms/AddLoanForm';
+import { useAppMode } from '@/contexts/ModeContext';
 import { WeeklyData } from '@/types';
 
 // Time periods
@@ -27,6 +30,8 @@ export default function ReportsScreen() {
     const { period } = useLocalSearchParams<{ period?: string }>();
     const router = useRouter();
     const { isLoading, dashboardStats, weeklyData, categoryBreakdown, getChartDataByPeriod } = useData();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('weekly');
     const [chartData, setChartData] = useState<WeeklyData>(weeklyData);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
@@ -43,6 +48,8 @@ export default function ReportsScreen() {
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [showProductForm, setShowProductForm] = useState(false);
     const [showCustomerForm, setShowCustomerForm] = useState(false);
+    const [showIncomeForm, setShowIncomeForm] = useState(false);
+    const [showLoanForm, setShowLoanForm] = useState(false);
 
     // Category colors for pie chart
     const categoryColors = ['#1976D2', '#2E7D32', '#FBC02D', '#F57C00', '#7B1FA2', '#00ACC1'];
@@ -136,11 +143,15 @@ export default function ReportsScreen() {
                 {/* Summary Cards */}
                 <View style={styles.summaryRow}>
                     <View style={styles.summaryCard}>
-                        <Text style={styles.summaryLabel}>{t('reports.totalSales')} {getPeriodLabel()}</Text>
+                        <Text style={styles.summaryLabel}>
+                            {isPersonalMode ? t('reports.totalIncome') : t('reports.totalSales')} {getPeriodLabel()}
+                        </Text>
                         <Text style={styles.summaryValue}>₹ {totalSales.toLocaleString('en-IN')}</Text>
                     </View>
                     <View style={styles.summaryCard}>
-                        <Text style={styles.summaryLabel}>{t('reports.totalProfit')} {getPeriodLabel()}</Text>
+                        <Text style={styles.summaryLabel}>
+                            {isPersonalMode ? t('reports.totalSavings') : t('reports.totalProfit')} {getPeriodLabel()}
+                        </Text>
                         <Text style={[styles.summaryValue, { color: totalProfit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {totalProfit.toLocaleString('en-IN')}</Text>
                     </View>
                 </View>
@@ -150,7 +161,7 @@ export default function ReportsScreen() {
                     <Text style={styles.todayTitle}>{t('reports.todaysSummary')}</Text>
                     <View style={styles.todayStats}>
                         <View style={styles.todayStat}>
-                            <Text style={styles.todayStatLabel}>{t('reports.sales')}</Text>
+                            <Text style={styles.todayStatLabel}>{isPersonalMode ? t('reports.income') : t('reports.sales')}</Text>
                             <Text style={styles.todayStatValue}>₹{dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.todayDivider} />
@@ -160,7 +171,7 @@ export default function ReportsScreen() {
                         </View>
                         <View style={styles.todayDivider} />
                         <View style={styles.todayStat}>
-                            <Text style={styles.todayStatLabel}>{t('reports.profit')}</Text>
+                            <Text style={styles.todayStatLabel}>{isPersonalMode ? t('personal.savings') : t('reports.profit')}</Text>
                             <Text style={[styles.todayStatValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹{dashboardStats.profit.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
@@ -177,15 +188,15 @@ export default function ReportsScreen() {
                 {/* Sales & Profit Chart */}
                 <View style={styles.chartCard}>
                     <View style={styles.chartHeader}>
-                        <Text style={styles.chartTitle}>{t('reports.salesAndProfit')} {getPeriodLabel()}</Text>
+                        <Text style={styles.chartTitle}>{t(isPersonalMode ? 'reports.incomeAndSavings' : 'reports.salesAndProfit')} {getPeriodLabel()}</Text>
                         <View style={styles.legendRow}>
                             <View style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
-                                <Text style={styles.legendText}>{t('reports.sales')}</Text>
+                                <Text style={styles.legendText}>{t(isPersonalMode ? 'reports.income' : 'reports.sales')}</Text>
                             </View>
                             <View style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: '#F57C00' }]} />
-                                <Text style={styles.legendText}>{t('reports.profit')}</Text>
+                                <Text style={styles.legendText}>{t(isPersonalMode ? 'personal.savings' : 'reports.profit')}</Text>
                             </View>
                         </View>
                     </View>
@@ -203,66 +214,44 @@ export default function ReportsScreen() {
                             color1="#2E7D32"
                             color2="#F57C00"
                             height={140}
+                            isPersonalMode={isPersonalMode}
                         />
                     )}
                 </View>
 
                 {/* Category Breakdown */}
-                <View style={styles.pieChartCard}>
-                    <Text style={styles.chartTitle}>{t('reports.categoryReport')}</Text>
+                {!isPersonalMode && (
+                    <View style={styles.pieChartCard}>
+                        <Text style={styles.chartTitle}>{t('reports.categoryReport')}</Text>
 
-                    {categoryBreakdown.length === 0 ? (
-                        <View style={styles.emptyCategory}>
-                            <FontAwesome name="pie-chart" size={32} color="#BDBDBD" />
-                            <Text style={styles.emptyCategoryText}>{t('reports.emptyCategory')}</Text>
-                        </View>
-                    ) : (
-                        <View style={styles.pieChartContainer}>
-                            {/* Circular Pie Chart with proportional segments */}
-                            <View style={styles.pieChart}>
-                                {(() => {
-                                    let cumulativeAngle = 0;
-                                    return categoryBreakdown.map((item, index) => {
-                                        const percentage = item.percentage || 0;
-                                        const angle = (percentage / 100) * 360;
-                                        const startAngle = cumulativeAngle;
-                                        cumulativeAngle += angle;
+                        {categoryBreakdown.length === 0 ? (
+                            <View style={styles.emptyCategory}>
+                                <FontAwesome name="pie-chart" size={32} color="#BDBDBD" />
+                                <Text style={styles.emptyCategoryText}>{t('reports.emptyCategory')}</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.pieChartContainer}>
+                                {/* Circular Pie Chart with proportional segments */}
+                                <View style={styles.pieChart}>
+                                    {(() => {
+                                        let cumulativeAngle = 0;
+                                        return categoryBreakdown.map((item, index) => {
+                                            const percentage = item.percentage || 0;
+                                            const angle = (percentage / 100) * 360;
+                                            const startAngle = cumulativeAngle;
+                                            cumulativeAngle += angle;
 
-                                        // Create pie slice using rotation and clipping
-                                        const sliceRotation = startAngle - 90; // Start from top
-                                        const halfAngle = angle / 2;
+                                            // Create pie slice using rotation and clipping
+                                            const sliceRotation = startAngle - 90; // Start from top
+                                            const halfAngle = angle / 2;
 
-                                        if (percentage <= 0) return null;
+                                            if (percentage <= 0) return null;
 
-                                        // For segments <= 180 degrees
-                                        if (angle <= 180) {
-                                            return (
-                                                <View
-                                                    key={item.name}
-                                                    style={[
-                                                        styles.pieSlice,
-                                                        {
-                                                            backgroundColor: item.color,
-                                                            transform: [{ rotate: `${sliceRotation}deg` }],
-                                                        }
-                                                    ]}
-                                                >
+                                            // For segments <= 180 degrees
+                                            if (angle <= 180) {
+                                                return (
                                                     <View
-                                                        style={[
-                                                            styles.pieSliceInner,
-                                                            {
-                                                                backgroundColor: item.color,
-                                                                transform: [{ rotate: `${angle}deg` }],
-                                                            }
-                                                        ]}
-                                                    />
-                                                </View>
-                                            );
-                                        } else {
-                                            // For segments > 180 degrees, we need two halves
-                                            return (
-                                                <React.Fragment key={item.name}>
-                                                    <View
+                                                        key={item.name}
                                                         style={[
                                                             styles.pieSlice,
                                                             {
@@ -276,52 +265,77 @@ export default function ReportsScreen() {
                                                                 styles.pieSliceInner,
                                                                 {
                                                                     backgroundColor: item.color,
-                                                                    transform: [{ rotate: '180deg' }],
+                                                                    transform: [{ rotate: `${angle}deg` }],
                                                                 }
                                                             ]}
                                                         />
                                                     </View>
-                                                    <View
-                                                        style={[
-                                                            styles.pieSlice,
-                                                            {
-                                                                backgroundColor: item.color,
-                                                                transform: [{ rotate: `${sliceRotation + 180}deg` }],
-                                                            }
-                                                        ]}
-                                                    >
+                                                );
+                                            } else {
+                                                // For segments > 180 degrees, we need two halves
+                                                return (
+                                                    <React.Fragment key={item.name}>
                                                         <View
                                                             style={[
-                                                                styles.pieSliceInner,
+                                                                styles.pieSlice,
                                                                 {
                                                                     backgroundColor: item.color,
-                                                                    transform: [{ rotate: `${angle - 180}deg` }],
+                                                                    transform: [{ rotate: `${sliceRotation}deg` }],
                                                                 }
                                                             ]}
-                                                        />
-                                                    </View>
-                                                </React.Fragment>
-                                            );
-                                        }
-                                    });
-                                })()}
-                            </View>
+                                                        >
+                                                            <View
+                                                                style={[
+                                                                    styles.pieSliceInner,
+                                                                    {
+                                                                        backgroundColor: item.color,
+                                                                        transform: [{ rotate: '180deg' }],
+                                                                    }
+                                                                ]}
+                                                            />
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                styles.pieSlice,
+                                                                {
+                                                                    backgroundColor: item.color,
+                                                                    transform: [{ rotate: `${sliceRotation + 180}deg` }],
+                                                                }
+                                                            ]}
+                                                        >
+                                                            <View
+                                                                style={[
+                                                                    styles.pieSliceInner,
+                                                                    {
+                                                                        backgroundColor: item.color,
+                                                                        transform: [{ rotate: `${angle - 180}deg` }],
+                                                                    }
+                                                                ]}
+                                                            />
+                                                        </View>
+                                                    </React.Fragment>
+                                                );
+                                            }
+                                        });
+                                    })()}
+                                </View>
 
-                            {/* Legend */}
-                            <View style={styles.categoryLegendContainer}>
-                                {categoryBreakdown.map((item, index) => (
-                                    <View key={item.name} style={styles.categoryLegendItem}>
-                                        <View style={[styles.categoryLegendDot, { backgroundColor: item.color }]} />
-                                        <Text style={styles.categoryLegendText}>
-                                            {t(`categories.${item.name}`, { defaultValue: item.name })}
-                                        </Text>
-                                        <Text style={styles.categoryLegendPercent}>{item.percentage}%</Text>
-                                    </View>
-                                ))}
+                                {/* Legend */}
+                                <View style={styles.categoryLegendContainer}>
+                                    {categoryBreakdown.map((item, index) => (
+                                        <View key={item.name} style={styles.categoryLegendItem}>
+                                            <View style={[styles.categoryLegendDot, { backgroundColor: item.color }]} />
+                                            <Text style={styles.categoryLegendText}>
+                                                {t(`categories.${item.name}`, { defaultValue: item.name })}
+                                            </Text>
+                                            <Text style={styles.categoryLegendPercent}>{item.percentage}%</Text>
+                                        </View>
+                                    ))}
+                                </View>
                             </View>
-                        </View>
-                    )}
-                </View>
+                        )}
+                    </View>
+                )}
             </ScrollView>
 
             {/* FAB */}
@@ -330,6 +344,8 @@ export default function ReportsScreen() {
                 onNewExpense={() => setShowExpenseForm(true)}
                 onAddProduct={() => setShowProductForm(true)}
                 onAddCustomer={() => setShowCustomerForm(true)}
+                onAddIncome={() => setShowIncomeForm(true)}
+                onAddLoan={() => setShowLoanForm(true)}
             />
 
             {/* Forms */}
@@ -337,6 +353,15 @@ export default function ReportsScreen() {
             <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
             <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
             <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
+            <AddIncomeForm visible={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
+            <AddLoanForm
+                visible={showLoanForm}
+                onClose={() => setShowLoanForm(false)}
+                onAddPerson={() => {
+                    setShowLoanForm(false);
+                    setTimeout(() => setShowCustomerForm(true), 500);
+                }}
+            />
         </View>
     );
 }

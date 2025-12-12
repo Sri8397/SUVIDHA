@@ -26,8 +26,11 @@ export function useTransliteration() {
         if (!text || !currentScheme) return text;
 
         try {
+            // Normalize to lowercase to avoid ITRANS special character issues
+            // (e.g., uppercase 'H' means visarga 'ः' in ITRANS)
+            const normalizedText = text.toLowerCase();
             // Transliterate from ITRANS (phonetic English) to target script
-            return Sanscript.t(text, 'itrans', currentScheme);
+            return Sanscript.t(normalizedText, 'itrans', currentScheme);
         } catch (error) {
             console.error('Transliteration error:', error);
             return text;
@@ -42,27 +45,15 @@ export function useTransliteration() {
         // Option 1: Keep English
         suggestions.push(word);
 
-        // Option 2: Primary transliteration
+        // Option 2: Primary transliteration (normalized to lowercase)
         try {
-            const transliterated = Sanscript.t(word, 'itrans', currentScheme);
-            if (transliterated !== word) {
+            const normalizedWord = word.toLowerCase();
+            const transliterated = Sanscript.t(normalizedWord, 'itrans', currentScheme);
+            if (transliterated !== normalizedWord) {
                 suggestions.push(transliterated);
             }
         } catch (error) {
             console.error('Transliteration error:', error);
-        }
-
-        // Option 3: Alternative (capitalize first letter)
-        if (suggestions.length > 1 && word.length > 0) {
-            const capitalized = word.charAt(0).toUpperCase() + word.slice(1);
-            try {
-                const altTransliterated = Sanscript.t(capitalized, 'itrans', currentScheme);
-                if (altTransliterated !== suggestions[1]) {
-                    suggestions.push(altTransliterated);
-                }
-            } catch (error) {
-                // Ignore
-            }
         }
 
         return suggestions.slice(0, 3); // Max 3 suggestions

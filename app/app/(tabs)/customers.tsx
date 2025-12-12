@@ -10,12 +10,17 @@ import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
+import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
+import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { ReceivePaymentForm } from '@/components/forms/ReceivePaymentForm';
+import { useAppMode } from '@/contexts/ModeContext';
 import { Customer } from '@/types';
 
 export default function CustomersScreen() {
     const { t } = useTranslation();
     const { isLoading, customers, deleteCustomer, updateCustomer } = useData();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
     const [searchQuery, setSearchQuery] = useState('');
 
     // Form states
@@ -24,6 +29,8 @@ export default function CustomersScreen() {
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [showProductForm, setShowProductForm] = useState(false);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [showIncomeForm, setShowIncomeForm] = useState(false);
+    const [showLoanForm, setShowLoanForm] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>();
     const [paymentCustomer, setPaymentCustomer] = useState<Customer | undefined>();
 
@@ -50,8 +57,8 @@ export default function CustomersScreen() {
 
     const handleDelete = (customer: Customer) => {
         Alert.alert(
-            t('customers.deleteCustomer'),
-            t('customers.deleteCustomerConfirm', { name: customer.name }),
+            t(isPersonalMode ? 'personal.friend.deleteFriend' : 'customers.deleteCustomer'),
+            t(isPersonalMode ? 'personal.friend.deleteFriendConfirm' : 'customers.deleteCustomerConfirm', { name: customer.name }),
             [
                 { text: t('common.cancel'), style: 'cancel' },
                 {
@@ -60,7 +67,7 @@ export default function CustomersScreen() {
                     onPress: async () => {
                         const success = await deleteCustomer(customer.id);
                         if (success) {
-                            Alert.alert(t('common.success'), t('customers.customerDeleted'));
+                            Alert.alert(t('common.success'), t(isPersonalMode ? 'personal.friend.friendDeleted' : 'customers.customerDeleted'));
                         }
                     }
                 }
@@ -96,24 +103,24 @@ export default function CustomersScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title={t('customers.title')} showLanguageToggle={true} />
+            <Header title={t(isPersonalMode ? 'personal.people' : 'customers.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
                 <TransliterationInput
                     style={styles.searchInput}
-                    placeholder={t('customers.searchPlaceholder')}
+                    placeholder={t(isPersonalMode ? 'personal.friend.searchPlaceholder' : 'customers.searchPlaceholder')}
                     placeholderTextColor="#9E9E9E"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
             </View>
 
-            {/* Customer Count */}
+            {/* Customer/Friend Count */}
             <View style={styles.countContainer}>
                 <Text style={styles.countText}>
-                    {t('customers.customers_count', { count: filteredCustomers.length })}
+                    {t(isPersonalMode ? 'personal.friend.friends_count' : 'customers.customers_count', { count: filteredCustomers.length })}
                 </Text>
             </View>
 
@@ -183,8 +190,8 @@ export default function CustomersScreen() {
                         <FontAwesome name="users" size={48} color="#BDBDBD" />
                         <Text style={styles.emptyStateText}>
                             {customers.length === 0
-                                ? t('customers.noCustomers')
-                                : t('customers.noCustomersFound')}
+                                ? t(isPersonalMode ? 'personal.friend.noFriends' : 'customers.noCustomers')
+                                : t(isPersonalMode ? 'personal.friend.noFriendsFound' : 'customers.noCustomersFound')}
                         </Text>
                         {customers.length === 0 && (
                             <TouchableOpacity
@@ -192,7 +199,7 @@ export default function CustomersScreen() {
                                 onPress={() => setShowCustomerForm(true)}
                             >
                                 <FontAwesome name="plus" size={14} color="#FFFFFF" />
-                                <Text style={styles.addFirstButtonText}>{t('customers.addCustomer')}</Text>
+                                <Text style={styles.addFirstButtonText}>{t(isPersonalMode ? 'personal.friend.addFriend' : 'customers.addCustomer')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -206,6 +213,8 @@ export default function CustomersScreen() {
                 onNewExpense={() => setShowExpenseForm(true)}
                 onAddProduct={() => setShowProductForm(true)}
                 onAddCustomer={() => setShowCustomerForm(true)}
+                onAddIncome={() => setShowIncomeForm(true)}
+                onAddLoan={() => setShowLoanForm(true)}
             />
 
             {/* Forms */}
@@ -217,6 +226,15 @@ export default function CustomersScreen() {
             <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
             <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
             <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
+            <AddIncomeForm visible={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
+            <AddLoanForm
+                visible={showLoanForm}
+                onClose={() => setShowLoanForm(false)}
+                onAddPerson={() => {
+                    setShowLoanForm(false);
+                    setTimeout(() => setShowCustomerForm(true), 500);
+                }}
+            />
             <ReceivePaymentForm
                 visible={showPaymentForm}
                 onClose={handleClosePaymentForm}

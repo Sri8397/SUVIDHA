@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/utils/i18n';
+import i18n from '@/i18n';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';

@@ -8,7 +8,7 @@ import { Transaction, Sale, Expense } from '@/types';
 import { getSales } from './saleService';
 import { getExpenses } from './expenseService';
 import { getCustomers } from './customerService';
-import i18n from '@/utils/i18n';
+import i18n from '@/i18n';
 
 /**
  * Get all transactions - DERIVED from Sales and Expenses

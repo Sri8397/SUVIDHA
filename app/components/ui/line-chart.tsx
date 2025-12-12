@@ -11,6 +11,7 @@ interface DualLineChartProps {
     color1?: string;
     color2?: string;
     height?: number;
+    isPersonalMode?: boolean;
 }
 
 export function DualLineChart({
@@ -20,6 +21,7 @@ export function DualLineChart({
     color1 = '#2E7D32',
     color2 = '#F57C00',
     height = 120,
+    isPersonalMode = false,
 }: DualLineChartProps) {
     const { t } = useTranslation();
     const [selectedIndex, setSelectedIndex] = useState<number | null>(labels.length > 0 ? labels.length - 1 : null);
@@ -222,14 +224,14 @@ export function DualLineChart({
                     <View style={styles.summaryRow}>
                         <View style={styles.summaryItem}>
                             <View style={[styles.summaryDot, { backgroundColor: color1 }]} />
-                            <Text style={styles.summaryLabel}>{t('charts.sales')}:</Text>
+                            <Text style={styles.summaryLabel}>{isPersonalMode ? t('reports.income') : t('reports.sales')}:</Text>
                             <Text style={[styles.summaryValue, { color: color1 }]}>
                                 ₹{data1[selectedIndex]?.toLocaleString('en-IN') || 0}
                             </Text>
                         </View>
                         <View style={styles.summaryItem}>
                             <View style={[styles.summaryDot, { backgroundColor: color2 }]} />
-                            <Text style={styles.summaryLabel}>{t('charts.profit')}:</Text>
+                            <Text style={styles.summaryLabel}>{isPersonalMode ? t('personal.savings') : t('reports.profit')}:</Text>
                             <Text style={[styles.summaryValue, { color: data2[selectedIndex] >= 0 ? color2 : '#D32F2F' }]}>
                                 ₹{data2[selectedIndex]?.toLocaleString('en-IN') || 0}
                             </Text>

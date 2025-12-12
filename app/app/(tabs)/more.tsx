@@ -37,7 +37,7 @@ export default function MoreScreen() {
             { id: 'profile', icon: 'user', label: t('profile.title'), type: 'fontawesome' },
             { id: 'store', icon: 'settings', label: isPersonalMode ? t('personal.appSettings') : t('storeSettings.title'), type: 'material' },
             { id: 'employees', icon: 'people', label: t('employees.title'), type: 'material', hideInPersonal: true },
-            { id: 'billing', icon: 'folder', label: t('billing.title'), type: 'material' },
+            { id: 'billing', icon: 'folder', label: t('billing.title'), type: 'material', hideInPersonal: true },
             { id: 'support', icon: 'help-outline', label: t('support.title'), type: 'material' },
             { id: 'switchMode', icon: 'swap-horiz', label: t('more.switchMode'), type: 'material' },
             { id: 'logout', icon: 'logout', label: t('more.logout'), type: 'material', danger: true },
@@ -139,23 +139,27 @@ export default function MoreScreen() {
 
                 {/* Stats Row */}
                 <View style={styles.statsRow}>
+                    {!isPersonalMode && (
+                        <>
+                            <View style={styles.statItem}>
+                                <Text style={styles.statLabel}>{t('more.products')}:</Text>
+                                <Text style={styles.statValue}>{stats.products.toLocaleString('en-IN')}</Text>
+                            </View>
+                            <View style={styles.statDivider} />
+                            <View style={styles.statItem}>
+                                <Text style={styles.statLabel}>{t('more.orders')}:</Text>
+                                <Text style={styles.statValue}>{stats.orders.toLocaleString('en-IN')}</Text>
+                            </View>
+                            <View style={styles.statDivider} />
+                        </>
+                    )}
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>{t('more.products')}:</Text>
-                        <Text style={styles.statValue}>{stats.products.toLocaleString('en-IN')}</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>{t('more.orders')}:</Text>
-                        <Text style={styles.statValue}>{stats.orders.toLocaleString('en-IN')}</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>{t('reports.sales')}:</Text>
+                        <Text style={styles.statLabel}>{t(isPersonalMode ? 'reports.income' : 'reports.sales')}:</Text>
                         <Text style={styles.statValue}>{formatValue(stats.sales)}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>{t('reports.profit')}:</Text>
+                        <Text style={styles.statLabel}>{t(isPersonalMode ? 'personal.savings' : 'reports.profit')}:</Text>
                         <Text style={[styles.statValue, stats.profit < 0 && styles.negativeValue]}>
                             {formatValue(stats.profit)}
                         </Text>

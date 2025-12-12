@@ -120,20 +120,20 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                 <TouchableOpacity
                                     key={cat.id}
                                     style={[
-                                        styles.categoryCard,
-                                        category === cat.id && styles.categoryCardActive,
+                                        styles.categoryChip,
+                                        category === cat.id && styles.categoryChipActive,
                                     ]}
                                     onPress={() => setCategory(cat.id)}
                                 >
                                     <FontAwesome
                                         name={cat.icon as any}
-                                        size={24}
+                                        size={14}
                                         color={category === cat.id ? '#FFFFFF' : '#757575'}
                                     />
                                     <Text
                                         style={[
-                                            styles.categoryCardText,
-                                            category === cat.id && styles.categoryCardTextActive,
+                                            styles.categoryChipText,
+                                            category === cat.id && styles.categoryChipTextActive,
                                         ]}
                                     >
                                         {t(`expenseCategories.${cat.id}`)}
@@ -174,7 +174,10 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                         />
                     </View>
 
-                    {/* Submit Button */}
+                </ScrollView>
+
+                {/* Submit Button - Fixed at Bottom */}
+                <View style={styles.bottomButtonContainer}>
                     <TouchableOpacity
                         style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
                         onPress={handleSubmit}
@@ -186,7 +189,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                             <Text style={styles.submitButtonText}>{t('forms.addExpense')}</Text>
                         )}
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -233,29 +236,28 @@ const styles = StyleSheet.create({
     categoryGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 8,
     },
-    categoryCard: {
-        width: '30%',
-        aspectRatio: 1,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
+    categoryChip: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: 'transparent',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        gap: 6,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
     },
-    categoryCardActive: {
+    categoryChipActive: {
         backgroundColor: '#2E7D32',
         borderColor: '#2E7D32',
     },
-    categoryCardText: {
-        fontSize: 11,
+    categoryChipText: {
+        fontSize: 13,
         color: '#757575',
-        marginTop: 6,
-        textAlign: 'center',
     },
-    categoryCardTextActive: {
+    categoryChipTextActive: {
         color: '#FFFFFF',
         fontWeight: '600',
     },
@@ -264,22 +266,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        borderRadius: 12,
+        borderRadius: 10,
         backgroundColor: '#FAFAFA',
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
     },
     currencySymbol: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: '600',
         color: '#2E7D32',
-        marginRight: 8,
+        marginRight: 6,
     },
     amountInput: {
         flex: 1,
-        fontSize: 28,
-        fontWeight: '700',
+        fontSize: 20,
+        fontWeight: '600',
         color: '#212121',
-        paddingVertical: 16,
+        paddingVertical: 12,
     },
     input: {
         borderWidth: 1,
@@ -292,16 +294,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFAFA',
     },
     textArea: {
-        height: 100,
-        paddingTop: 14,
+        height: 80,
+        paddingTop: 12,
+    },
+    bottomButtonContainer: {
+        padding: 16,
+        paddingBottom: 32,
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
     },
     submitButton: {
-        backgroundColor: '#F57C00',
+        backgroundColor: '#2E7D32',
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
-        marginTop: 24,
-        marginBottom: 32,
     },
     submitButtonDisabled: {
         opacity: 0.7,

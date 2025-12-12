@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { removeData } from '@/services/storage';
 import { useData } from '@/contexts/DataContext';
 import { useSettings } from '@/contexts/settings-context';
+import { useAppMode } from '@/contexts/ModeContext';
 import { STORAGE_KEYS, Customer } from '@/types';
 import { getData, setData } from '@/services/storage';
 import { TransliterationInput } from '../components/ui/TransliterationInput';
@@ -110,11 +111,13 @@ export default function StoreSettingsScreen() {
     const { t } = useTranslation();
     const { refreshAll } = useData();
     const { storeSettings, updateStoreSettings, isLoading: settingsLoading } = useSettings();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
     const [showClearDataModal, setShowClearDataModal] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
     const [editField, setEditField] = useState<'name' | 'address' | 'businessType' | 'gstin' | null>(null);
     const [clearOptions, setClearOptions] = useState<ClearOptions>({
-        products: true,
+        products: !isPersonalMode, // Products not relevant for personal mode
         customers: true,
         sales: true,
         expenses: true,
@@ -128,7 +131,7 @@ export default function StoreSettingsScreen() {
     const toggleAll = () => {
         const allSelected = Object.values(clearOptions).every(v => v);
         setClearOptions({
-            products: !allSelected,
+            products: isPersonalMode ? false : !allSelected, // Products not relevant for personal mode
             customers: !allSelected,
             sales: !allSelected,
             expenses: !allSelected,
@@ -230,7 +233,7 @@ export default function StoreSettingsScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <FontAwesome name="arrow-left" size={20} color="#212121" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>{t('storeSettings.title')}</Text>
+                    <Text style={styles.headerTitle}>{t(isPersonalMode ? 'personal.appSettings' : 'storeSettings.title')}</Text>
                     <View style={styles.backButton} />
                 </View>
             </SafeAreaView>
@@ -242,55 +245,60 @@ export default function StoreSettingsScreen() {
             >
                 {/* Editable Fields */}
                 <View style={styles.fieldsContainer}>
-                    {/* Store Name */}
-                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('name')} activeOpacity={0.7}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.storeName')}</Text>
-                            <Text style={styles.fieldValue}>{getStoreName()}</Text>
-                        </View>
-                    </TouchableOpacity>
+                    {/* Store-specific settings - hidden in personal mode */}
+                    {!isPersonalMode && (
+                        <>
+                            {/* Store Name */}
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('name')} activeOpacity={0.7}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.storeName')}</Text>
+                                    <Text style={styles.fieldValue}>{getStoreName()}</Text>
+                                </View>
+                            </TouchableOpacity>
 
-                    {/* Store Address */}
-                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.storeAddress')}</Text>
-                            <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
-                        </View>
-                    </TouchableOpacity>
+                            {/* Store Address */}
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('address')} activeOpacity={0.7}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.storeAddress')}</Text>
+                                    <Text style={styles.fieldValue}>{getStoreAddress()}</Text>
+                                </View>
+                            </TouchableOpacity>
 
-                    {/* Business Type */}
-                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('businessType')} activeOpacity={0.7}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.businessType')}</Text>
-                            <Text style={styles.fieldValue}>{getBusinessType()}</Text>
-                        </View>
-                    </TouchableOpacity>
+                            {/* Business Type */}
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('businessType')} activeOpacity={0.7}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.businessType')}</Text>
+                                    <Text style={styles.fieldValue}>{getBusinessType()}</Text>
+                                </View>
+                            </TouchableOpacity>
 
-                    {/* GST Details */}
-                    <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('gstin')} activeOpacity={0.7}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.gstDetails')}</Text>
-                            <Text style={styles.fieldValue}>{getGstin()}</Text>
-                        </View>
-                    </TouchableOpacity>
+                            {/* GST Details */}
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('gstin')} activeOpacity={0.7}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.gstDetails')}</Text>
+                                    <Text style={styles.fieldValue}>{getGstin()}</Text>
+                                </View>
+                            </TouchableOpacity>
 
-                    {/* Canvasing Settings */}
-                    <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.canvasingRate')}</Text>
-                            <Text style={styles.fieldValue}>{t('storeSettings.defaultSetting')}</Text>
-                        </View>
-                    </TouchableOpacity>
+                            {/* Canvasing Settings */}
+                            <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.canvasingRate')}</Text>
+                                    <Text style={styles.fieldValue}>{t('storeSettings.defaultSetting')}</Text>
+                                </View>
+                            </TouchableOpacity>
 
-                    {/* Store Rate */}
-                    <TouchableOpacity style={styles.navigationCard}>
-                        <View style={styles.fieldContent}>
-                            <Text style={styles.fieldLabel}>{t('storeSettings.storeRate')}</Text>
-                        </View>
-                        <FontAwesome name="chevron-right" size={18} color="#757575" />
-                    </TouchableOpacity>
+                            {/* Store Rate */}
+                            <TouchableOpacity style={styles.navigationCard}>
+                                <View style={styles.fieldContent}>
+                                    <Text style={styles.fieldLabel}>{t('storeSettings.storeRate')}</Text>
+                                </View>
+                                <FontAwesome name="chevron-right" size={18} color="#757575" />
+                            </TouchableOpacity>
+                        </>
+                    )}
 
-                    {/* Language */}
+                    {/* Language - shown in both modes */}
                     <TouchableOpacity style={styles.navigationCard}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('storeSettings.language')}</Text>
@@ -298,46 +306,48 @@ export default function StoreSettingsScreen() {
                         <FontAwesome name="chevron-right" size={18} color="#757575" />
                     </TouchableOpacity>
 
-                    {/* Profit Calculation Method */}
-                    <View style={styles.settingSection}>
-                        <Text style={styles.settingSectionTitle}>{t('storeSettings.profitCalculation')}</Text>
-                        <View style={styles.radioGroup}>
-                            <TouchableOpacity
-                                style={styles.radioOption}
-                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'accrual' })}
-                            >
-                                <View style={[
-                                    styles.radioCircle,
-                                    storeSettings.profitCalculationMethod === 'accrual' && styles.radioCircleSelected
-                                ]}>
-                                    {storeSettings.profitCalculationMethod === 'accrual' && (
-                                        <View style={styles.radioInner} />
-                                    )}
-                                </View>
-                                <View style={styles.radioContent}>
-                                    <Text style={styles.radioLabel}>{t('storeSettings.basedOnSales')}</Text>
-                                    <Text style={styles.radioDesc}>{t('storeSettings.basedOnSalesDesc')}</Text>
-                                </View>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.radioOption}
-                                onPress={() => updateStoreSettings({ profitCalculationMethod: 'cash' })}
-                            >
-                                <View style={[
-                                    styles.radioCircle,
-                                    storeSettings.profitCalculationMethod === 'cash' && styles.radioCircleSelected
-                                ]}>
-                                    {storeSettings.profitCalculationMethod === 'cash' && (
-                                        <View style={styles.radioInner} />
-                                    )}
-                                </View>
-                                <View style={styles.radioContent}>
-                                    <Text style={styles.radioLabel}>{t('storeSettings.basedOnReceived')}</Text>
-                                    <Text style={styles.radioDesc}>{t('storeSettings.basedOnReceivedDesc')}</Text>
-                                </View>
-                            </TouchableOpacity>
+                    {/* Profit Calculation Method - only for business mode */}
+                    {!isPersonalMode && (
+                        <View style={styles.settingSection}>
+                            <Text style={styles.settingSectionTitle}>{t('storeSettings.profitCalculation')}</Text>
+                            <View style={styles.radioGroup}>
+                                <TouchableOpacity
+                                    style={styles.radioOption}
+                                    onPress={() => updateStoreSettings({ profitCalculationMethod: 'accrual' })}
+                                >
+                                    <View style={[
+                                        styles.radioCircle,
+                                        storeSettings.profitCalculationMethod === 'accrual' && styles.radioCircleSelected
+                                    ]}>
+                                        {storeSettings.profitCalculationMethod === 'accrual' && (
+                                            <View style={styles.radioInner} />
+                                        )}
+                                    </View>
+                                    <View style={styles.radioContent}>
+                                        <Text style={styles.radioLabel}>{t('storeSettings.basedOnSales')}</Text>
+                                        <Text style={styles.radioDesc}>{t('storeSettings.basedOnSalesDesc')}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.radioOption}
+                                    onPress={() => updateStoreSettings({ profitCalculationMethod: 'cash' })}
+                                >
+                                    <View style={[
+                                        styles.radioCircle,
+                                        storeSettings.profitCalculationMethod === 'cash' && styles.radioCircleSelected
+                                    ]}>
+                                        {storeSettings.profitCalculationMethod === 'cash' && (
+                                            <View style={styles.radioInner} />
+                                        )}
+                                    </View>
+                                    <View style={styles.radioContent}>
+                                        <Text style={styles.radioLabel}>{t('storeSettings.basedOnReceived')}</Text>
+                                        <Text style={styles.radioDesc}>{t('storeSettings.basedOnReceivedDesc')}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
+                    )}
 
                     {/* Clear Data - Danger Zone */}
                     <View style={styles.dangerSection}>
@@ -427,21 +437,23 @@ export default function StoreSettingsScreen() {
 
                             <View style={styles.checkboxDivider} />
 
-                            {/* Products */}
-                            <TouchableOpacity
-                                style={styles.checkboxRow}
-                                onPress={() => toggleOption('products')}
-                            >
-                                <View style={[styles.checkbox, clearOptions.products && styles.checkboxChecked]}>
-                                    {clearOptions.products && <FontAwesome name="check" size={12} color="#FFFFFF" />}
-                                </View>
-                                <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>{t('inventory.product')}</Text>
-                                    <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[0]}...</Text>
-                                </View>
-                            </TouchableOpacity>
+                            {/* Products - only for business mode */}
+                            {!isPersonalMode && (
+                                <TouchableOpacity
+                                    style={styles.checkboxRow}
+                                    onPress={() => toggleOption('products')}
+                                >
+                                    <View style={[styles.checkbox, clearOptions.products && styles.checkboxChecked]}>
+                                        {clearOptions.products && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    </View>
+                                    <View style={styles.checkboxContent}>
+                                        <Text style={styles.checkboxLabel}>{t('inventory.product')}</Text>
+                                        <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[0]}...</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            )}
 
-                            {/* Customers */}
+                            {/* Customers/Friends */}
                             <TouchableOpacity
                                 style={styles.checkboxRow}
                                 onPress={() => toggleOption('customers')}
@@ -450,12 +462,12 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.customers && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>{t('customers.customer')}</Text>
+                                    <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'personal.people' : 'customers.customer')}</Text>
                                     <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[1]}...</Text>
                                 </View>
                             </TouchableOpacity>
 
-                            {/* Sales */}
+                            {/* Sales/Income */}
                             <TouchableOpacity
                                 style={styles.checkboxRow}
                                 onPress={() => toggleOption('sales')}
@@ -464,7 +476,7 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.sales && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>{t('reports.sales')}</Text>
+                                    <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'reports.income' : 'reports.sales')}</Text>
                                     <Text style={styles.checkboxDesc}>{t('storeSettings.clearDataDesc').split(',')[2]}...</Text>
                                 </View>
                             </TouchableOpacity>
@@ -483,7 +495,7 @@ export default function StoreSettingsScreen() {
                                 </View>
                             </TouchableOpacity>
 
-                            {/* Bakaya (Outstanding Balance) */}
+                            {/* Bakaya (Outstanding Balance/Loans) */}
                             <TouchableOpacity
                                 style={styles.checkboxRow}
                                 onPress={() => toggleOption('bakaya')}
@@ -492,7 +504,7 @@ export default function StoreSettingsScreen() {
                                     {clearOptions.bakaya && <FontAwesome name="check" size={12} color="#FFFFFF" />}
                                 </View>
                                 <View style={styles.checkboxContent}>
-                                    <Text style={styles.checkboxLabel}>{t('customers.outstanding')}</Text>
+                                    <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'personal.loanGiven' : 'customers.outstanding')}</Text>
                                     <Text style={styles.checkboxDesc}>{t('storeSettings.clearAllData')}</Text>
                                 </View>
                             </TouchableOpacity>

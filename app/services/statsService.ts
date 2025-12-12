@@ -8,7 +8,7 @@ import { getTodayExpenses, calculateTotalExpenses } from './expenseService';
 import { getTotalOutstanding } from './customerService';
 import { getProducts } from './productService';
 import { getData } from './storage';
-import i18n from '@/utils/i18n';
+import i18n from '@/i18n';
 
 /**
  * Get the profit calculation method from settings

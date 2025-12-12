@@ -1,0 +1,85 @@
+{
+    "personal": {
+        "people": "People",
+        "todaysIncome": "Today's Income",
+        "loanGiven": "Loan Given",
+        "savings": "Savings",
+        "weeklyIncomeSavings": "Weekly Income and Savings",
+        "appSettings": "App Settings",
+        "incomeSource": "Income Source",
+        "income": {
+            "title": "Add Income",
+            "amount": "Amount",
+            "source": "Income Source",
+            "description": "Description",
+            "descriptionPlaceholder": "e.g.: Monthly Salary, Freelance Project...",
+            "added": "Income added successfully",
+            "saveError": "Problem saving income"
+        },
+        "incomeSources": {
+            "salary": "Salary",
+            "freelance": "Freelance",
+            "business": "Business",
+            "investment": "Investment",
+            "gift": "Gift",
+            "other": "Other"
+        },
+        "expense": {
+            "title": "Add Expense",
+            "amount": "Amount",
+            "category": "Category",
+            "description": "Description",
+            "descriptionPlaceholder": "e.g.: Groceries, Electricity...",
+            "added": "Expense added successfully",
+            "saveError": "Problem saving expense"
+        },
+        "expenseCategories": {
+            "food": "Food and Meals",
+            "transport": "Transport",
+            "utilities": "Bills",
+            "shopping": "Shopping",
+            "entertainment": "Entertainment",
+            "health": "Health",
+            "education": "Education",
+            "rent": "Rent",
+            "other": "Other"
+        },
+        "loan": {
+            "title": "Add Loan",
+            "selectFriend": "Select Friend",
+            "amount": "Amount",
+            "description": "Description",
+            "descriptionPlaceholder": "e.g.: Medical Loan, Personal Loan...",
+            "given": "Loan given successfully",
+            "received": "Loan received successfully",
+            "saveError": "Problem saving loan",
+            "type": {
+                "given": "Loan Given",
+                "taken": "Loan Taken"
+            },
+            "giveToFriend": "Give to Friend",
+            "receiveFromFriend": "Receive from Friend"
+        },
+        "friend": {
+            "title": "Add Friend",
+            "name": "Friend's Name",
+            "phone": "Phone Number",
+            "namePlaceholder": "e.g.: Rajesh Kumar",
+            "phonePlaceholder": "10 digit mobile number",
+            "added": "Friend added successfully",
+            "saveError": "Problem saving friend",
+            "deleteFriend": "Delete Friend",
+            "deleteFriendConfirm": "Do you want to delete \"{{name}}\"?",
+            "friendDeleted": "Friend deleted",
+            "noFriends": "No friends. Add a new friend.",
+            "noFriendsFound": "No friends found",
+            "addFriend": "Add Friend",
+            "searchPlaceholder": "Search by Name or Phone...",
+            "friends_count": "{{count}} Friends"
+        },
+        "dashboard": {
+            "greeting": "Hello!",
+            "greetingSummary": "Here is your financial summary for today."
+        }
+    }
+}

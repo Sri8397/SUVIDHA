@@ -13,6 +13,8 @@ import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
+import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { TransactionList } from '@/components/ui/TransactionList';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +31,8 @@ export default function HomeScreen() {
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
+  const [showLoanForm, setShowLoanForm] = useState(false);
 
   if (isLoading) {
     return (
@@ -133,6 +137,7 @@ export default function HomeScreen() {
             color1="#2E7D32"
             color2="#F57C00"
             height={140}
+            isPersonalMode={isPersonalMode}
           />
         </View>
 
@@ -181,6 +186,8 @@ export default function HomeScreen() {
         onNewExpense={() => setShowExpenseForm(true)}
         onAddProduct={() => setShowProductForm(true)}
         onAddCustomer={() => setShowCustomerForm(true)}
+        onAddIncome={() => setShowIncomeForm(true)}
+        onAddLoan={() => setShowLoanForm(true)}
       />
 
       {/* Forms */}
@@ -188,6 +195,15 @@ export default function HomeScreen() {
       <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
       <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
       <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
+      <AddIncomeForm visible={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
+      <AddLoanForm
+        visible={showLoanForm}
+        onClose={() => setShowLoanForm(false)}
+        onAddPerson={() => {
+          setShowLoanForm(false);
+          setTimeout(() => setShowCustomerForm(true), 500); // Small delay to allow modal to close
+        }}
+      />
     </View>
   );
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
-import { changeLanguage } from '@/utils/i18n';
+import { changeLanguage } from '@/i18n';
 
 interface LanguageModalProps {
     visible: boolean;
@@ -14,15 +14,15 @@ interface LanguageModalProps {
 const languages = [
     { id: 'hi', label: 'हिंदी' },
     { id: 'en', label: 'English' },
-    { id: 'mr', label: 'मराठी' },
-    { id: 'gu', label: 'ગુજરાતી' },
-    { id: 'bn', label: 'বাংলা' },
-    { id: 'ta', label: 'தமிழ்' },
-    { id: 'te', label: 'తెలుగు' },
-    { id: 'kn', label: 'ಕನ್ನಡ' },
-    { id: 'ml', label: 'മലയാളം' },
-    { id: 'pa', label: 'ਪੰਜਾਬੀ' },
-    { id: 'or', label: 'ଓଡ଼ିଆ' },
+    // { id: 'mr', label: 'मराठी' },
+    // { id: 'gu', label: 'ગુજરાતી' },
+    // { id: 'bn', label: 'বাংলা' },
+    // { id: 'ta', label: 'தமிழ்' },
+    // { id: 'te', label: 'తెలుగు' },
+    // { id: 'kn', label: 'ಕನ್ನಡ' },
+    // { id: 'ml', label: 'മലയാളം' },
+    // { id: 'pa', label: 'ਪੰਜਾਬੀ' },
+    // { id: 'or', label: 'ଓଡ଼ିଆ' },
 ];
 
 export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLanguage }: LanguageModalProps) {

@@ -3,6 +3,7 @@ import { TouchableOpacity, StyleSheet, View, Text, Animated, Pressable, Dimensio
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useAppMode } from '@/contexts/ModeContext';
 
 interface FABMenuItem {
     id: string;
@@ -16,16 +17,33 @@ interface FABProps {
     onNewExpense?: () => void;
     onAddProduct?: () => void;
     onAddCustomer?: () => void;
+    onAddIncome?: () => void;
+    onAddLoan?: () => void;
 }
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export function FAB({ onNewSale, onNewExpense, onAddProduct, onAddCustomer }: FABProps) {
+export function FAB({
+    onNewSale,
+    onNewExpense,
+    onAddProduct,
+    onAddCustomer,
+    onAddIncome,
+    onAddLoan
+}: FABProps) {
     const { t } = useTranslation();
+    const { appMode } = useAppMode();
     const [isOpen, setIsOpen] = useState(false);
     const [animation] = useState(new Animated.Value(0));
 
-    const menuItems: FABMenuItem[] = [
+    const isPersonalMode = appMode === 'personal';
+
+    const menuItems: FABMenuItem[] = isPersonalMode ? [
+        { id: 'income', label: t('personal.income.title', 'Add Income'), icon: 'attach-money', onPress: onAddIncome || (() => { }) },
+        { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
+        { id: 'loan', label: t('personal.loan.title', 'Add Loan'), icon: 'account-balance-wallet', onPress: onAddLoan || (() => { }) },
+        { id: 'friend', label: t('personal.friend.title'), icon: 'person-add', onPress: onAddCustomer || (() => { }) }, // Reusing AddCustomer for friends
+    ] : [
         { id: 'sale', label: t('forms.newSale'), icon: 'sell', onPress: onNewSale || (() => { }) },
         { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
         { id: 'product', label: t('inventory.addProduct'), icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
