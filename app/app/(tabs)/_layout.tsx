@@ -5,12 +5,17 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAppMode } from '@/contexts/ModeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const { appMode } = useAppMode();
   const isPersonalMode = appMode === 'personal';
-
+  const insets = useSafeAreaInsets();
+  
+  // Use the device's bottom safe area inset to properly account for home indicator
+  const bottomInset = insets.bottom;
+  
   return (
     <Tabs
       screenOptions={{
@@ -19,8 +24,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: Platform.OS === 'ios' ? 85 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset,
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
           ...Platform.select({
@@ -37,13 +42,13 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           paddingVertical: 8,
-          height: Platform.OS === 'ios' ? 65 : 70,
+          height: 60,
         },
         tabBarLabelStyle: {
           fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
           fontSize: 11,
           fontWeight: '600',
-          paddingBottom: Platform.OS === 'ios' ? 0 : 10,
+          paddingBottom: 4,
         },
       }}>
       <Tabs.Screen

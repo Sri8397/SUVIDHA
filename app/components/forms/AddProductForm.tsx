@@ -14,6 +14,8 @@ import {
     Image,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTranslation } from 'react-i18next';
@@ -191,7 +193,10 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -203,7 +208,11 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     <View style={styles.closeButton} />
                 </View>
 
-                <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={styles.form}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Product Image */}
                     <View style={styles.imageSection}>
                         <Text style={styles.label}>{t('forms.productImage')}</Text>
@@ -349,7 +358,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                         )}
                     </TouchableOpacity>
                 </ScrollView>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

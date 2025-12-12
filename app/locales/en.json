@@ -367,6 +367,7 @@
         "newOrder": "New Order Received: Order of ₹ 500 from Ramesh Kumar.",
         "paymentReceived": "Payment Received: ₹ 2,500 received from Vikram Singh.",
         "systemUpdate": "System Update: New version of the app is available.",
+        "justNow": "Just Now",
         "minutesAgo": "{{count}} minute ago",
         "hourAgo": "{{count}} hour ago",
         "hoursAgo": "{{count}} hours ago",

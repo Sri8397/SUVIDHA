@@ -13,6 +13,8 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
@@ -191,7 +193,10 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -201,7 +206,11 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                     <View style={styles.closeButton} />
                 </View>
 
-                <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={styles.form}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Customer Selection */}
                     <TouchableOpacity
                         style={styles.customerSelector}
@@ -447,7 +456,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         </ScrollView>
                     </View>
                 </Modal>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

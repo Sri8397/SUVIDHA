@@ -13,6 +13,8 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
@@ -110,7 +112,10 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -122,7 +127,11 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                     <View style={styles.closeButton} />
                 </View>
 
-                <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={styles.form}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Customer Icon */}
                     <View style={styles.iconSection}>
                         <View style={styles.customerIcon}>
@@ -187,7 +196,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                         )}
                     </TouchableOpacity>
                 </ScrollView>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
