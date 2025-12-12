@@ -8,6 +8,7 @@ import { DualLineChart } from '@/components/ui/line-chart';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
 import { useData } from '@/contexts/DataContext';
+import { useAppMode } from '@/contexts/ModeContext';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
@@ -20,6 +21,8 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { isLoading, dashboardStats, weeklyData, lowStockProducts, refreshAll } = useData();
+  const { appMode } = useAppMode();
+  const isPersonalMode = appMode === 'personal';
 
   // Form visibility states
   const [showSaleForm, setShowSaleForm] = useState(false);
@@ -64,7 +67,7 @@ export default function HomeScreen() {
                   <Text style={styles.rupeeIcon}>₹</Text>
                 </View>
               </View>
-              <Text style={styles.statLabel}>{t('dashboard.todaysSales')}</Text>
+              <Text style={styles.statLabel}>{isPersonalMode ? t('personal.todaysIncome') : t('dashboard.todaysSales')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -77,7 +80,7 @@ export default function HomeScreen() {
                   <FontAwesome name="shopping-bag" size={16} color="#D32F2F" />
                 </View>
               </View>
-              <Text style={styles.statLabel}>{t('dashboard.pendingPayments')}</Text>
+              <Text style={styles.statLabel}>{isPersonalMode ? t('personal.loanGiven') : t('dashboard.pendingPayments')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.pendingPayments.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -90,7 +93,7 @@ export default function HomeScreen() {
                   <MaterialIcons name="trending-up" size={18} color="#2E7D32" />
                 </View>
               </View>
-              <Text style={styles.statLabel}>{t('dashboard.profit')}</Text>
+              <Text style={styles.statLabel}>{isPersonalMode ? t('personal.savings') : t('dashboard.profit')}</Text>
               <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -112,7 +115,7 @@ export default function HomeScreen() {
         {/* Weekly Sales Chart */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>{t('dashboard.weeklySalesProfit')}</Text>
+            <Text style={styles.chartTitle}>{isPersonalMode ? t('personal.weeklyIncomeSavings') : t('dashboard.weeklySalesProfit')}</Text>
             <TouchableOpacity
               style={styles.viewReportBtn}
               onPress={() => router.push('/(tabs)/reports?period=weekly')}
@@ -133,41 +136,43 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Low Stock Alerts */}
-        <View style={styles.lowStockSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('dashboard.lowStockAlerts')}</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
-              <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {lowStockProducts.length === 0 ? (
-            <View style={styles.emptyLowStock}>
-              <FontAwesome name="check-circle" size={32} color="#2E7D32" />
-              <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
+        {/* Low Stock Alerts - only show in shopkeeper mode */}
+        {!isPersonalMode && (
+          <View style={styles.lowStockSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('dashboard.lowStockAlerts')}</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
+                <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            lowStockProducts.slice(0, 3).map((item) => (
-              <View key={item.id} style={styles.lowStockCard}>
-                {item.image ? (
-                  <Image source={{ uri: item.image }} style={styles.productImage} />
-                ) : (
-                  <View style={[styles.productImage, styles.productImagePlaceholder]}>
-                    <FontAwesome name="cube" size={24} color="#BDBDBD" />
-                  </View>
-                )}
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{item.name}</Text>
-                  <Text style={styles.stockWarning}>{t('inventory.lowStock', { count: item.stock })}</Text>
-                </View>
-                <TouchableOpacity style={styles.reorderButton}>
-                  <Text style={styles.reorderButtonText}>{t('inventory.reorder')}</Text>
-                </TouchableOpacity>
+
+            {lowStockProducts.length === 0 ? (
+              <View style={styles.emptyLowStock}>
+                <FontAwesome name="check-circle" size={32} color="#2E7D32" />
+                <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
               </View>
-            ))
-          )}
-        </View>
+            ) : (
+              lowStockProducts.slice(0, 3).map((item) => (
+                <View key={item.id} style={styles.lowStockCard}>
+                  {item.image ? (
+                    <Image source={{ uri: item.image }} style={styles.productImage} />
+                  ) : (
+                    <View style={[styles.productImage, styles.productImagePlaceholder]}>
+                      <FontAwesome name="cube" size={24} color="#BDBDBD" />
+                    </View>
+                  )}
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName}>{item.name}</Text>
+                    <Text style={styles.stockWarning}>{t('inventory.lowStock', { count: item.stock })}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.reorderButton}>
+                    <Text style={styles.reorderButtonText}>{t('inventory.reorder')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {/* FAB */}
@@ -320,13 +325,6 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontWeight: '500',
   },
-
-
-
-
-
-
-
   lowStockSection: {
     marginHorizontal: 16,
     marginTop: 16,

@@ -18,6 +18,14 @@
         "today": "आज",
         "warning": "चेतावनी"
     },
+    "personal": {
+        "people": "लोग",
+        "todaysIncome": "आज की आमदनी",
+        "loanGiven": "उधार दिया",
+        "savings": "बचत",
+        "weeklyIncomeSavings": "साप्ताहिक आमदनी और बचत",
+        "appSettings": "ऐप सेटिंग"
+    },
     "storeSettings": {
         "title": "स्टोर की सेटिंग",
         "storeName": "दुकान का नाम",
@@ -163,6 +171,7 @@
         "helpSupport": "सहायता और समर्थन",
         "logout": "लॉग आउट",
         "logoutConfirm": "क्या आप अपना स्टोर से लॉग आउट करना चाहते हैं?",
+        "switchMode": "मोड बदलें",
         "products": "उत्पाद",
         "orders": "ऑर्डर"
     },
@@ -500,5 +509,14 @@
         "stock_received": "माल आया",
         "stock_wastage": "बर्बादी/नुकसान",
         "other": "अन्य"
+    },
+    "modeSelect": {
+        "title": "आप इस ऐप का उपयोग कैसे करेंगे?",
+        "subtitle": "शुरू करने के लिए अपना मोड चुनें",
+        "shopkeeper": "मैं दुकानदार हूँ",
+        "shopkeeperDesc": "अपनी दुकान प्रबंधित करें, बिक्री, स्टॉक और ग्राहकों को ट्रैक करें",
+        "personal": "व्यक्तिगत वित्त",
+        "personalDesc": "अपनी आमदनी, खर्च और दोस्तों को दिए उधार को ट्रैक करें",
+        "switchLater": "आप सेटिंग से कभी भी मोड बदल सकते हैं"
     }
 }

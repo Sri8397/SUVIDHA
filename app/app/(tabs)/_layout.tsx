@@ -2,11 +2,15 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs } from 'expo-router';
-import { View, Platform, StyleSheet } from 'react-native';
+import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useAppMode } from '@/contexts/ModeContext';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { appMode } = useAppMode();
+  const isPersonalMode = appMode === 'personal';
+
   return (
     <Tabs
       screenOptions={{
@@ -58,12 +62,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="inventory" size={22} color={color} />
           ),
+          // Hide inventory tab in personal mode
+          href: isPersonalMode ? null : undefined,
         }}
       />
       <Tabs.Screen
         name="customers"
         options={{
-          title: t('customers.title'),
+          title: isPersonalMode ? t('personal.people') : t('customers.title'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="users" size={20} color={color} />
           ),

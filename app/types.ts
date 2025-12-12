@@ -182,13 +182,47 @@ export interface UserProfile {
     language: 'hi' | 'en';
 }
 
-// Storage Keys
+// Storage Keys - Base keys (shared across modes)
+export const SHARED_STORAGE_KEYS = {
+    USER_PROFILE: '@suvidha/user_profile',
+    FIRST_LAUNCH: '@suvidha/first_launch',
+    APP_MODE: '@suvidha_app_mode',
+} as const;
+
+// Storage Keys - Mode-specific (data separated by mode)
+// These are the base keys; actual keys will be prefixed with mode
+const MODE_SPECIFIC_KEYS = {
+    PRODUCTS: 'products',
+    CATEGORIES: 'categories',
+    CUSTOMERS: 'customers',
+    SALES: 'sales',
+    EXPENSES: 'expenses',
+    EMPLOYEES: 'employees',
+    STORE_SETTINGS: 'store_settings',
+} as const;
+
+// Function to get mode-prefixed storage keys
+export function getStorageKeys(mode: 'shopkeeper' | 'personal' | null) {
+    const prefix = mode ? `@suvidha/${mode}/` : '@suvidha/';
+    return {
+        PRODUCTS: `${prefix}${MODE_SPECIFIC_KEYS.PRODUCTS}`,
+        CATEGORIES: `${prefix}${MODE_SPECIFIC_KEYS.CATEGORIES}`,
+        CUSTOMERS: `${prefix}${MODE_SPECIFIC_KEYS.CUSTOMERS}`,
+        SALES: `${prefix}${MODE_SPECIFIC_KEYS.SALES}`,
+        EXPENSES: `${prefix}${MODE_SPECIFIC_KEYS.EXPENSES}`,
+        EMPLOYEES: `${prefix}${MODE_SPECIFIC_KEYS.EMPLOYEES}`,
+        STORE_SETTINGS: `${prefix}${MODE_SPECIFIC_KEYS.STORE_SETTINGS}`,
+    };
+}
+
+// Legacy STORAGE_KEYS for backward compatibility (defaults to no mode prefix)
+// Services should migrate to using getStorageKeys(mode) instead
 export const STORAGE_KEYS = {
     PRODUCTS: '@suvidha/products',
     CATEGORIES: '@suvidha/categories',
     CUSTOMERS: '@suvidha/customers',
     SALES: '@suvidha/sales',
-    EXPENSES: '@suvidha/expenses',  // Added for clarity
+    EXPENSES: '@suvidha/expenses',
     EMPLOYEES: '@suvidha/employees',
     STORE_SETTINGS: '@suvidha/store_settings',
     USER_PROFILE: '@suvidha/user_profile',

@@ -23,18 +23,28 @@ const languageDetector = {
     async: true,
     detect: async (callback: (lang: string) => void) => {
         try {
+            // Check if we're in a browser/native environment
+            if (typeof window === 'undefined') {
+                callback('hi'); // SSR: use default
+                return;
+            }
             const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
             callback(savedLanguage || 'hi'); // Default to Hindi
         } catch (error) {
+            // Silently fall back to default on SSR/web
             callback('hi');
         }
     },
     init: () => { },
     cacheUserLanguage: async (language: string) => {
         try {
+            // Check if we're in a browser/native environment
+            if (typeof window === 'undefined') {
+                return; // Skip caching during SSR
+            }
             await AsyncStorage.setItem(LANGUAGE_KEY, language);
         } catch (error) {
-            console.error('Error saving language:', error);
+            // Silently fail on SSR/web - not critical
         }
     },
 };
@@ -57,7 +67,7 @@ i18n
             or: { translation: or },
         },
         fallbackLng: 'hi',
-        lng: 'hi', // Default language
+        // Note: Don't set 'lng' here - let the languageDetector load the saved language
         interpolation: {
             escapeValue: false, // React already does escaping
         },
@@ -66,7 +76,13 @@ i18n
 // Helper function to change language and persist
 export const changeLanguage = async (languageCode: string) => {
     await i18n.changeLanguage(languageCode);
-    await AsyncStorage.setItem(LANGUAGE_KEY, languageCode);
+    try {
+        if (typeof window !== 'undefined') {
+            await AsyncStorage.setItem(LANGUAGE_KEY, languageCode);
+        }
+    } catch (error) {
+        // Silently fail - language change still works, just won't persist on web/SSR
+    }
 };
 
 export default i18n;

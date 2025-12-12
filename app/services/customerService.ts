@@ -2,14 +2,16 @@
 // Customer Service - CRUD Operations
 // ============================================
 
-import { Customer, STORAGE_KEYS } from '@/types';
+import { Customer } from '@/types';
 import { getData, setData, generateId, getTimestamp } from './storage';
+import { getKeysForCurrentMode } from './modeStorage';
 
 /**
  * Get all customers
  */
 export async function getCustomers(): Promise<Customer[]> {
-    const customers = await getData<Customer[]>(STORAGE_KEYS.CUSTOMERS);
+    const keys = getKeysForCurrentMode();
+    const customers = await getData<Customer[]>(keys.CUSTOMERS);
     return customers || [];
 }
 
@@ -27,6 +29,7 @@ export async function getCustomerById(id: string): Promise<Customer | null> {
 export async function addCustomer(
     customer: Omit<Customer, 'id' | 'outstanding' | 'createdAt' | 'updatedAt'>
 ): Promise<Customer> {
+    const keys = getKeysForCurrentMode();
     const customers = await getCustomers();
     const newCustomer: Customer = {
         ...customer,
@@ -36,7 +39,7 @@ export async function addCustomer(
         updatedAt: getTimestamp(),
     };
     customers.push(newCustomer);
-    await setData(STORAGE_KEYS.CUSTOMERS, customers);
+    await setData(keys.CUSTOMERS, customers);
     return newCustomer;
 }
 
@@ -47,6 +50,7 @@ export async function updateCustomer(
     id: string,
     updates: Partial<Omit<Customer, 'id' | 'createdAt'>>
 ): Promise<Customer | null> {
+    const keys = getKeysForCurrentMode();
     const customers = await getCustomers();
     const index = customers.findIndex(c => c.id === id);
     if (index === -1) return null;
@@ -56,7 +60,7 @@ export async function updateCustomer(
         ...updates,
         updatedAt: getTimestamp(),
     };
-    await setData(STORAGE_KEYS.CUSTOMERS, customers);
+    await setData(keys.CUSTOMERS, customers);
     return customers[index];
 }
 
@@ -64,10 +68,11 @@ export async function updateCustomer(
  * Delete customer
  */
 export async function deleteCustomer(id: string): Promise<boolean> {
+    const keys = getKeysForCurrentMode();
     const customers = await getCustomers();
     const filtered = customers.filter(c => c.id !== id);
     if (filtered.length === customers.length) return false;
-    await setData(STORAGE_KEYS.CUSTOMERS, filtered);
+    await setData(keys.CUSTOMERS, filtered);
     return true;
 }
 
@@ -113,3 +118,4 @@ export async function searchCustomers(query: string): Promise<Customer[]> {
         c.phone.includes(query)
     );
 }
+

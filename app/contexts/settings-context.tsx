@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getData, setData } from '@/services/storage';
-import { STORAGE_KEYS, UserProfile, StoreSettings } from '@/types';
+import { SHARED_STORAGE_KEYS, UserProfile, StoreSettings } from '@/types';
+import { getKeysForCurrentMode } from '@/services/modeStorage';
+import { useAppMode } from './ModeContext';
 
 // Default values
 const DEFAULT_USER_PROFILE: UserProfile = {
@@ -36,18 +38,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const [userProfile, setUserProfile] = useState<UserProfile>(DEFAULT_USER_PROFILE);
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
     const [isLoading, setIsLoading] = useState(true);
+    const { appMode } = useAppMode();
 
     // Load settings on mount
     useEffect(() => {
         loadSettings();
     }, []);
 
+    // Reload store settings when mode changes (store settings are per-mode)
+    useEffect(() => {
+        if (appMode) {
+            loadSettings();
+        }
+    }, [appMode]);
+
     const loadSettings = async () => {
         try {
             setIsLoading(true);
+            const modeKeys = getKeysForCurrentMode();
             const [profile, settings] = await Promise.all([
-                getData<UserProfile>(STORAGE_KEYS.USER_PROFILE),
-                getData<StoreSettings>(STORAGE_KEYS.STORE_SETTINGS),
+                getData<UserProfile>(SHARED_STORAGE_KEYS.USER_PROFILE), // User profile is shared
+                getData<StoreSettings>(modeKeys.STORE_SETTINGS), // Store settings are per-mode
             ]);
 
             if (profile) {
@@ -55,6 +66,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             }
             if (settings) {
                 setStoreSettings({ ...DEFAULT_STORE_SETTINGS, ...settings });
+            } else {
+                setStoreSettings(DEFAULT_STORE_SETTINGS); // Reset to defaults for new mode
             }
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -70,7 +83,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const updateUserProfile = useCallback(async (updates: Partial<UserProfile>): Promise<boolean> => {
         try {
             const newProfile = { ...userProfile, ...updates };
-            const success = await setData(STORAGE_KEYS.USER_PROFILE, newProfile);
+            const success = await setData(SHARED_STORAGE_KEYS.USER_PROFILE, newProfile);
             if (success) {
                 setUserProfile(newProfile);
             }
@@ -83,8 +96,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
     const updateStoreSettings = useCallback(async (updates: Partial<StoreSettings>): Promise<boolean> => {
         try {
+            const modeKeys = getKeysForCurrentMode();
             const newSettings = { ...storeSettings, ...updates };
-            const success = await setData(STORAGE_KEYS.STORE_SETTINGS, newSettings);
+            const success = await setData(modeKeys.STORE_SETTINGS, newSettings);
             if (success) {
                 setStoreSettings(newSettings);
             }
@@ -118,3 +132,4 @@ export function useSettings() {
     }
     return context;
 }
+

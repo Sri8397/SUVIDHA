@@ -2,8 +2,9 @@
 // Sale Service - Transaction Operations
 // ============================================
 
-import { Sale, SaleItem, STORAGE_KEYS } from '@/types';
+import { Sale, SaleItem } from '@/types';
 import { getData, setData, generateId, getTimestamp } from './storage';
+import { getKeysForCurrentMode } from './modeStorage';
 import { updateProductStock } from './productService';
 import { updateCustomerOutstanding } from './customerService';
 
@@ -11,7 +12,8 @@ import { updateCustomerOutstanding } from './customerService';
  * Get all sales
  */
 export async function getSales(): Promise<Sale[]> {
-    const sales = await getData<Sale[]>(STORAGE_KEYS.SALES);
+    const keys = getKeysForCurrentMode();
+    const sales = await getData<Sale[]>(keys.SALES);
     return sales || [];
 }
 
@@ -29,6 +31,7 @@ export async function getSaleById(id: string): Promise<Sale | null> {
 export async function createSale(
     sale: Omit<Sale, 'id' | 'createdAt'>
 ): Promise<Sale> {
+    const keys = getKeysForCurrentMode();
     const sales = await getSales();
 
     const newSale: Sale = {
@@ -52,7 +55,7 @@ export async function createSale(
     }
 
     sales.push(newSale);
-    await setData(STORAGE_KEYS.SALES, sales);
+    await setData(keys.SALES, sales);
     return newSale;
 }
 
@@ -98,6 +101,7 @@ export async function recordPayment(
     saleId: string,
     amount: number
 ): Promise<Sale | null> {
+    const keys = getKeysForCurrentMode();
     const sales = await getSales();
     const index = sales.findIndex(s => s.id === saleId);
     if (index === -1) return null;
@@ -124,7 +128,7 @@ export async function recordPayment(
         await updateCustomerOutstanding(sale.customerId, -amount);
     }
 
-    await setData(STORAGE_KEYS.SALES, sales);
+    await setData(keys.SALES, sales);
     return sales[index];
 }
 

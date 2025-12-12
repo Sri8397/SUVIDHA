@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "app",
+    "name": "Suvidha",
     "slug": "app",
     "version": "1.0.3",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "app",
     "userInterfaceStyle": "automatic",

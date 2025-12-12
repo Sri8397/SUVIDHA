@@ -71,7 +71,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                     ) : (
                         <View style={styles.profileImage}>
                             <Image
-                                source={require('@/assets/images/logo.png')}
+                                source={require('@/assets/images/icon.png')}
                                 style={styles.logo}
                                 resizeMode="contain"
                             />
@@ -119,7 +119,8 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                 onClose={() => setLanguageModalVisible(false)}
                 selectedLanguage={selectedLanguage}
                 onSelectLanguage={(lang) => {
-                    i18n.changeLanguage(lang);
+                    // LanguageModal already calls changeLanguage() which persists to AsyncStorage
+                    // Just update local state here
                     setSelectedLanguage(lang);
                 }}
             />
