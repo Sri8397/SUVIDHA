@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/utils/i18n';
@@ -31,7 +31,6 @@ export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLang
     const handleLanguageSelect = async (langId: string) => {
         await changeLanguage(langId);
         onSelectLanguage(langId);
-        onClose();
     };
 
     return (
@@ -43,30 +42,31 @@ export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLang
         >
             <View style={styles.centeredView}>
                 <View style={styles.modalView}>
-                    <Text style={styles.modalTitle}>{t('more.selectLanguage', 'भाषा चुनें')}</Text>
+                    <Text style={styles.modalTitle}>{t('languages.selectLanguage', 'भाषा चुनें')}</Text>
 
-                    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={true}>
-                        <View style={styles.radioGroup}>
-                            {languages.map((lang) => (
-                                <TouchableOpacity
-                                    key={lang.id}
-                                    style={styles.radioButton}
-                                    onPress={() => handleLanguageSelect(lang.id)}
-                                >
-                                    <MaterialIcons
-                                        name={selectedLanguage === lang.id ? "radio-button-on" : "radio-button-off"}
-                                        size={24}
-                                        color={selectedLanguage === lang.id ? "#2E7D32" : "#757575"}
-                                    />
-                                    <Text style={styles.radioLabel}>{lang.label}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </ScrollView>
+                    <View style={styles.radioGroup}>
+                        {languages.map((lang) => (
+                            <TouchableOpacity
+                                key={lang.id}
+                                style={styles.radioButton}
+                                onPress={() => handleLanguageSelect(lang.id)}
+                            >
+                                <MaterialIcons
+                                    name={selectedLanguage === lang.id ? "radio-button-on" : "radio-button-off"}
+                                    size={24}
+                                    color={selectedLanguage === lang.id ? "#2E7D32" : "#757575"}
+                                />
+                                <Text style={styles.radioLabel}>{lang.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
 
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.buttonCancel} onPress={onClose}>
-                            <Text style={styles.textCancel}>{t('common.cancel')}</Text>
+                            <Text style={styles.textCancel}>{t('common.cancel', 'रद्द करें')}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.buttonApply} onPress={onClose}>
+                            <Text style={styles.textApply}>{t('common.apply', 'लागू करें')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -81,16 +81,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.5)',
-        paddingHorizontal: 20,
     },
     modalView: {
-        width: '100%',
-        maxWidth: 400,
+        width: 300,
         backgroundColor: 'white',
-        borderRadius: 12,
-        paddingVertical: 24,
-        paddingHorizontal: 16,
-        maxHeight: '80%',
+        borderRadius: 8,
+        padding: 24,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -104,42 +100,40 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#212121',
-        textAlign: 'center',
-    },
-    scrollView: {
-        marginBottom: 24,
+        color: '#000',
     },
     radioGroup: {
-        gap: 12,
+        gap: 16,
+        marginBottom: 24,
     },
     radioButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 8,
         gap: 12,
     },
     radioLabel: {
         fontSize: 16,
-        color: '#212121',
+        color: '#000',
     },
     buttonContainer: {
         flexDirection: 'row',
-        gap: 12,
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
+        gap: 20,
     },
     buttonCancel: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
-        backgroundColor: '#F5F5F5',
+        padding: 8,
     },
     textCancel: {
-        color: '#212121',
-        fontWeight: 'bold',
-        textAlign: 'center',
+        color: '#757575',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    buttonApply: {
+        padding: 8,
+    },
+    textApply: {
+        color: '#2E7D32',
+        fontSize: 14,
+        fontWeight: '600',
     },
 });

@@ -14,6 +14,8 @@ import {
     Image,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../ui/TransliterationInput';
@@ -192,7 +194,10 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -204,7 +209,11 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     <View style={styles.closeButton} />
                 </View>
 
-                <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={styles.form}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Product Image */}
                     <View style={styles.imageSection}>
                         <Text style={styles.label}>{t('forms.productImage')}</Text>
@@ -254,7 +263,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={costPrice}
-                                onChangeText={setCostPrice}
+                                onChangeText={(text) => setCostPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -265,7 +274,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={price}
-                                onChangeText={setPrice}
+                                onChangeText={(text) => setPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -280,7 +289,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={[styles.input, editProduct && styles.inputDisabled]}
                                 value={stock}
-                                onChangeText={editProduct ? undefined : setStock}
+                                onChangeText={editProduct ? undefined : (text) => setStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -297,7 +306,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={minStock}
-                                onChangeText={setMinStock}
+                                onChangeText={(text) => setMinStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="5"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -350,7 +359,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                         )}
                     </TouchableOpacity>
                 </ScrollView>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

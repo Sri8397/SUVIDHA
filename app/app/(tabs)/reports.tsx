@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { DualLineChart } from '@/components/ui/line-chart';
@@ -28,7 +28,6 @@ export default function ReportsScreen() {
     const router = useRouter();
     const { isLoading, dashboardStats, weeklyData, categoryBreakdown, getChartDataByPeriod } = useData();
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('weekly');
-    const [searchQuery, setSearchQuery] = useState('');
     const [chartData, setChartData] = useState<WeeklyData>(weeklyData);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
 
@@ -99,18 +98,6 @@ export default function ReportsScreen() {
 
             {/* Header */}
             <Header title={t('reports.title')} showLanguageToggle={true} />
-
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <FontAwesome name="search" size={18} color="#9E9E9E" />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder={t('common.search')}
-                    placeholderTextColor="#9E9E9E"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                />
-            </View>
 
             {/* Time Period Filters */}
             <View style={styles.filterWrapper}>

@@ -2,14 +2,16 @@
 // Product Service - CRUD Operations
 // ============================================
 
-import { Product, Category, STORAGE_KEYS, DEFAULT_CATEGORIES } from '@/types';
+import { Product, Category, DEFAULT_CATEGORIES } from '@/types';
 import { getData, setData, generateId, getTimestamp } from './storage';
+import { getKeysForCurrentMode } from './modeStorage';
 
 /**
  * Get all products
  */
 export async function getProducts(): Promise<Product[]> {
-    const products = await getData<Product[]>(STORAGE_KEYS.PRODUCTS);
+    const keys = getKeysForCurrentMode();
+    const products = await getData<Product[]>(keys.PRODUCTS);
     return products || [];
 }
 
@@ -27,6 +29,7 @@ export async function getProductById(id: string): Promise<Product | null> {
 export async function addProduct(
     product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Product> {
+    const keys = getKeysForCurrentMode();
     const products = await getProducts();
     const newProduct: Product = {
         ...product,
@@ -35,7 +38,7 @@ export async function addProduct(
         updatedAt: getTimestamp(),
     };
     products.push(newProduct);
-    await setData(STORAGE_KEYS.PRODUCTS, products);
+    await setData(keys.PRODUCTS, products);
     return newProduct;
 }
 
@@ -46,6 +49,7 @@ export async function updateProduct(
     id: string,
     updates: Partial<Omit<Product, 'id' | 'createdAt'>>
 ): Promise<Product | null> {
+    const keys = getKeysForCurrentMode();
     const products = await getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index === -1) return null;
@@ -55,7 +59,7 @@ export async function updateProduct(
         ...updates,
         updatedAt: getTimestamp(),
     };
-    await setData(STORAGE_KEYS.PRODUCTS, products);
+    await setData(keys.PRODUCTS, products);
     return products[index];
 }
 
@@ -63,10 +67,11 @@ export async function updateProduct(
  * Delete product
  */
 export async function deleteProduct(id: string): Promise<boolean> {
+    const keys = getKeysForCurrentMode();
     const products = await getProducts();
     const filtered = products.filter(p => p.id !== id);
     if (filtered.length === products.length) return false;
-    await setData(STORAGE_KEYS.PRODUCTS, filtered);
+    await setData(keys.PRODUCTS, filtered);
     return true;
 }
 
@@ -120,10 +125,11 @@ export async function searchProducts(query: string): Promise<Product[]> {
  * Get all categories
  */
 export async function getCategories(): Promise<Category[]> {
-    const categories = await getData<Category[]>(STORAGE_KEYS.CATEGORIES);
+    const keys = getKeysForCurrentMode();
+    const categories = await getData<Category[]>(keys.CATEGORIES);
     // Return default categories if none saved
     if (!categories || categories.length === 0) {
-        await setData(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
+        await setData(keys.CATEGORIES, DEFAULT_CATEGORIES);
         return DEFAULT_CATEGORIES;
     }
     return categories;
@@ -133,12 +139,14 @@ export async function getCategories(): Promise<Category[]> {
  * Add new category
  */
 export async function addCategory(name: string): Promise<Category> {
+    const keys = getKeysForCurrentMode();
     const categories = await getCategories();
     const newCategory: Category = {
         id: generateId(),
         name,
     };
     categories.push(newCategory);
-    await setData(STORAGE_KEYS.CATEGORIES, categories);
+    await setData(keys.CATEGORIES, categories);
     return newCategory;
 }
+

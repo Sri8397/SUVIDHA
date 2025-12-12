@@ -58,7 +58,8 @@ export default function OTPScreen() {
         if (isOtpComplete) {
             // Any 6-digit OTP works
             await signup(name || '', phone || '');
-            router.replace('/(tabs)');
+            // Navigate to mode selection after successful signup
+            router.replace('/mode-select');
         }
     };
 

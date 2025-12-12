@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/auth-context';
 import { useSettings } from '@/contexts/settings-context';
 import { useData } from '@/contexts/DataContext';
+import { useAppMode } from '@/contexts/ModeContext';
 import { router } from 'expo-router';
 import { Header } from '@/components/ui/header';
 
@@ -28,15 +29,22 @@ export default function MoreScreen() {
     const { logout, user } = useAuth();
     const { userProfile, storeSettings, isLoading } = useSettings();
     const { products, sales, dashboardStats } = useData();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
 
-    const menuItems = useMemo(() => [
-        { id: 'profile', icon: 'user', label: t('profile.title'), type: 'fontawesome' },
-        { id: 'store', icon: 'settings', label: t('storeSettings.title'), type: 'material' },
-        { id: 'employees', icon: 'people', label: t('employees.title'), type: 'material' },
-        { id: 'billing', icon: 'folder', label: t('billing.title'), type: 'material' },
-        { id: 'support', icon: 'help-outline', label: t('support.title'), type: 'material' },
-        { id: 'logout', icon: 'logout', label: t('more.logout'), type: 'material', danger: true },
-    ], [t]);
+    const menuItems = useMemo(() => {
+        const items = [
+            { id: 'profile', icon: 'user', label: t('profile.title'), type: 'fontawesome' },
+            { id: 'store', icon: 'settings', label: isPersonalMode ? t('personal.appSettings') : t('storeSettings.title'), type: 'material' },
+            { id: 'employees', icon: 'people', label: t('employees.title'), type: 'material', hideInPersonal: true },
+            { id: 'billing', icon: 'folder', label: t('billing.title'), type: 'material' },
+            { id: 'support', icon: 'help-outline', label: t('support.title'), type: 'material' },
+            { id: 'switchMode', icon: 'swap-horiz', label: t('more.switchMode'), type: 'material' },
+            { id: 'logout', icon: 'logout', label: t('more.logout'), type: 'material', danger: true },
+        ];
+        // Filter out items that should be hidden in personal mode
+        return isPersonalMode ? items.filter(item => !item.hideInPersonal) : items;
+    }, [t, isPersonalMode]);
 
     // Calculate stats
     const stats = useMemo(() => {
@@ -66,6 +74,8 @@ export default function MoreScreen() {
             router.push('/billing');
         } else if (itemId === 'support') {
             router.push('/support');
+        } else if (itemId === 'switchMode') {
+            router.push('/mode-select');
         } else {
             console.log('Menu pressed:', itemId);
         }

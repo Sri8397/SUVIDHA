@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { DataProvider } from '@/contexts/DataContext';
 import { SettingsProvider } from '@/contexts/settings-context';
+import { ModeProvider, useAppMode } from '@/contexts/ModeContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 export const unstable_settings = {
@@ -17,9 +18,10 @@ export const unstable_settings = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { appMode, isLoading: modeLoading } = useAppMode();
 
-  if (isLoading) {
+  if (authLoading || modeLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
@@ -30,12 +32,12 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </>
-        ) : (
+        {!isAuthenticated ? (
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        ) : !appMode ? (
+          <Stack.Screen name="mode-select" options={{ headerShown: false }} />
+        ) : (
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         )}
       </Stack>
       <StatusBar style="auto" />
@@ -46,11 +48,13 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <DataProvider>
-        <SettingsProvider>
-          <RootLayoutNav />
-        </SettingsProvider>
-      </DataProvider>
+      <ModeProvider>
+        <DataProvider>
+          <SettingsProvider>
+            <RootLayoutNav />
+          </SettingsProvider>
+        </DataProvider>
+      </ModeProvider>
     </AuthProvider>
   );
 }

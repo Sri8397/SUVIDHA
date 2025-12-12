@@ -2,14 +2,16 @@
 // Expense Service - Expense Tracking
 // ============================================
 
-import { Expense, ExpenseCategory, STORAGE_KEYS } from '@/types';
+import { Expense, ExpenseCategory } from '@/types';
 import { getData, setData, generateId, getTimestamp } from './storage';
+import { getKeysForCurrentMode } from './modeStorage';
 
 /**
  * Get all expenses
  */
 export async function getExpenses(): Promise<Expense[]> {
-    const expenses = await getData<Expense[]>(STORAGE_KEYS.EXPENSES);
+    const keys = getKeysForCurrentMode();
+    const expenses = await getData<Expense[]>(keys.EXPENSES);
     return expenses || [];
 }
 
@@ -27,6 +29,7 @@ export async function getExpenseById(id: string): Promise<Expense | null> {
 export async function addExpense(
     expense: Omit<Expense, 'id' | 'createdAt'>
 ): Promise<Expense> {
+    const keys = getKeysForCurrentMode();
     const expenses = await getExpenses();
     const newExpense: Expense = {
         ...expense,
@@ -34,7 +37,7 @@ export async function addExpense(
         createdAt: getTimestamp(),
     };
     expenses.push(newExpense);
-    await setData(STORAGE_KEYS.EXPENSES, expenses);
+    await setData(keys.EXPENSES, expenses);
     return newExpense;
 }
 
@@ -45,6 +48,7 @@ export async function updateExpense(
     id: string,
     updates: Partial<Omit<Expense, 'id' | 'createdAt'>>
 ): Promise<Expense | null> {
+    const keys = getKeysForCurrentMode();
     const expenses = await getExpenses();
     const index = expenses.findIndex(e => e.id === id);
     if (index === -1) return null;
@@ -53,7 +57,7 @@ export async function updateExpense(
         ...expenses[index],
         ...updates,
     };
-    await setData(STORAGE_KEYS.EXPENSES, expenses);
+    await setData(keys.EXPENSES, expenses);
     return expenses[index];
 }
 
@@ -61,10 +65,11 @@ export async function updateExpense(
  * Delete expense
  */
 export async function deleteExpense(id: string): Promise<boolean> {
+    const keys = getKeysForCurrentMode();
     const expenses = await getExpenses();
     const filtered = expenses.filter(e => e.id !== id);
     if (filtered.length === expenses.length) return false;
-    await setData(STORAGE_KEYS.EXPENSES, filtered);
+    await setData(keys.EXPENSES, filtered);
     return true;
 }
 

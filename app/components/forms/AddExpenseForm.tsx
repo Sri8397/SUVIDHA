@@ -13,6 +13,8 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../ui/TransliterationInput';
@@ -92,7 +94,10 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
             presentationStyle="pageSheet"
             onRequestClose={handleClose}
         >
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.container}
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -102,7 +107,11 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                     <View style={styles.closeButton} />
                 </View>
 
-                <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+                <ScrollView
+                    style={styles.form}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Category Selection */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.expense.category')}</Text>
@@ -178,7 +187,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                         )}
                     </TouchableOpacity>
                 </ScrollView>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

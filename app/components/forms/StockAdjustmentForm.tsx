@@ -92,11 +92,12 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
             return;
         }
 
-        // For REMOVE, check if we have enough stock
         if (adjustmentType === 'REMOVE' && qty > selectedProduct.stock) {
             Alert.alert(t('common.error'), `${t('stockAdjustment.currentStock', { stock: selectedProduct.stock })}`);
             return;
         }
+
+
 
         // Calculate stock delta based on adjustment type
         const stockDelta = adjustmentType === 'ADD' ? qty : -qty;
@@ -226,7 +227,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                         <TextInput
                             style={styles.input}
                             value={quantity}
-                            onChangeText={setQuantity}
+                            onChangeText={(text) => setQuantity(text.replace(/[^0-9]/g, ''))}
                             placeholder={t('stockAdjustment.howMany')}
                             placeholderTextColor="#9E9E9E"
                             keyboardType="numeric"
@@ -240,7 +241,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                             <TextInput
                                 style={styles.input}
                                 value={costPerUnit}
-                                onChangeText={setCostPerUnit}
+                                onChangeText={(text) => setCostPerUnit(text.replace(/[^0-9.]/g, ''))}
                                 placeholder={t('stockAdjustment.cost')}
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"

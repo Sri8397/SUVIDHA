@@ -18,6 +18,14 @@
         "today": "Today",
         "warning": "Warning"
     },
+    "personal": {
+        "people": "People",
+        "todaysIncome": "Today's Income",
+        "loanGiven": "Loan Given",
+        "savings": "Savings",
+        "weeklyIncomeSavings": "Weekly Income & Savings",
+        "appSettings": "App Settings"
+    },
     "storeSettings": {
         "title": "Store Settings",
         "storeName": "Store Name",
@@ -163,6 +171,7 @@
         "helpSupport": "Help & Support",
         "logout": "Log Out",
         "logoutConfirm": "Do you want to log out from your store?",
+        "switchMode": "Switch Mode",
         "products": "Products",
         "orders": "Orders"
     },
@@ -358,6 +367,7 @@
         "newOrder": "New Order Received: Order of ₹ 500 from Ramesh Kumar.",
         "paymentReceived": "Payment Received: ₹ 2,500 received from Vikram Singh.",
         "systemUpdate": "System Update: New version of the app is available.",
+        "justNow": "Just Now",
         "minutesAgo": "{{count}} minute ago",
         "hourAgo": "{{count}} hour ago",
         "hoursAgo": "{{count}} hours ago",
@@ -500,5 +510,14 @@
         "stock_received": "Stock Received",
         "stock_wastage": "Wastage/Loss",
         "other": "Other"
+    },
+    "modeSelect": {
+        "title": "How will you use this app?",
+        "subtitle": "Choose your mode to get started",
+        "shopkeeper": "I am a Shopkeeper",
+        "shopkeeperDesc": "Manage your store, track sales, inventory, and customers",
+        "personal": "Personal Finance",
+        "personalDesc": "Track your income, expenses, and loans to friends",
+        "switchLater": "You can switch modes anytime from Settings"
     }
 }

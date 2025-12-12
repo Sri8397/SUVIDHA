@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal, Alert, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
@@ -54,7 +54,10 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
             animationType="fade"
             onRequestClose={onClose}
         >
-            <View style={styles.editModalOverlay}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.editModalOverlay}
+            >
                 <View style={styles.editModalContent}>
                     <Text style={styles.editModalTitle}>{title}</Text>
                     {keyboardType === 'default' ? (
@@ -98,7 +101,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                         </TouchableOpacity>
                     </View>
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

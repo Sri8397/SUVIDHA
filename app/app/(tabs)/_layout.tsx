@@ -2,11 +2,20 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Tabs } from 'expo-router';
-import { View, Platform, StyleSheet } from 'react-native';
+import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useAppMode } from '@/contexts/ModeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const { appMode } = useAppMode();
+  const isPersonalMode = appMode === 'personal';
+  const insets = useSafeAreaInsets();
+  
+  // Use the device's bottom safe area inset to properly account for home indicator
+  const bottomInset = insets.bottom;
+  
   return (
     <Tabs
       screenOptions={{
@@ -15,8 +24,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          height: Platform.OS === 'ios' ? 85 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 0,
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset,
           borderTopWidth: 1,
           borderTopColor: '#E0E0E0',
           ...Platform.select({
@@ -33,13 +42,13 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           paddingVertical: 8,
-          height: Platform.OS === 'ios' ? 65 : 70,
+          height: 60,
         },
         tabBarLabelStyle: {
           fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
           fontSize: 11,
           fontWeight: '600',
-          paddingBottom: Platform.OS === 'ios' ? 0 : 10,
+          paddingBottom: 4,
         },
       }}>
       <Tabs.Screen
@@ -58,12 +67,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="inventory" size={22} color={color} />
           ),
+          // Hide inventory tab in personal mode
+          href: isPersonalMode ? null : undefined,
         }}
       />
       <Tabs.Screen
         name="customers"
         options={{
-          title: t('customers.title'),
+          title: isPersonalMode ? t('personal.people') : t('customers.title'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="users" size={20} color={color} />
           ),
