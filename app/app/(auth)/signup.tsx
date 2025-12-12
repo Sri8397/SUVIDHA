@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliterationInput } from '../../components/ui/TransliterationInput';
 
 export default function SignupScreen() {
     const { t } = useTranslation();
@@ -65,7 +66,7 @@ export default function SignupScreen() {
                     {/* Signup Form */}
                     <View style={styles.formContainer}>
                         <View style={styles.inputContainer}>
-                            <TextInput
+                            <TransliterationInput
                                 style={styles.input}
                                 placeholder={t('auth.enterNamePlaceholder')}
                                 placeholderTextColor="#9E9E9E"

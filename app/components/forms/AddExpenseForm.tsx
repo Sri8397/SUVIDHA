@@ -15,6 +15,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliterationInput } from '../ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { ExpenseCategory, EXPENSE_CATEGORY_LABELS } from '@/types';
 import { useTranslation } from 'react-i18next';
@@ -152,7 +153,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                     {/* Description */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.expense.description')}</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={[styles.input, styles.textArea]}
                             value={description}
                             onChangeText={setDescription}

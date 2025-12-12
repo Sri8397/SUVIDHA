@@ -16,6 +16,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliterationInput } from '../ui/TransliterationInput';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
@@ -237,7 +238,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                     {/* Product Name */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.productName')} *</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}

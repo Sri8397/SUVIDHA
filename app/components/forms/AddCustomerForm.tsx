@@ -15,6 +15,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliterationInput } from '../ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { useTranslation } from 'react-i18next';
 
@@ -133,7 +134,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                     {/* Customer Name */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.customer.name')} *</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}
@@ -159,7 +160,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                     {/* Address */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.customer.address')}</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={[styles.input, styles.textArea]}
                             value={address}
                             onChangeText={setAddress}
