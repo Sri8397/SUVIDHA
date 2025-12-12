@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
+import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { Product, ExpenseCategory } from '@/types';
 import { useTranslation } from 'react-i18next';
 
@@ -252,7 +253,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                     {/* Reason */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('stockAdjustment.reason')}</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={[styles.input, styles.textArea]}
                             value={reason}
                             onChangeText={setReason}

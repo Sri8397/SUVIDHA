@@ -5,6 +5,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
+import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
@@ -119,7 +120,7 @@ export default function InventoryScreen() {
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
-                <TextInput
+                <TransliterationInput
                     style={styles.searchInput}
                     placeholder={t('common.search')}
                     placeholderTextColor="#9E9E9E"

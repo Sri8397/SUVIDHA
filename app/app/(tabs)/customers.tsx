@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
+import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
@@ -100,7 +101,7 @@ export default function CustomersScreen() {
             {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <FontAwesome name="search" size={18} color="#9E9E9E" />
-                <TextInput
+                <TransliterationInput
                     style={styles.searchInput}
                     placeholder={t('customers.searchPlaceholder')}
                     placeholderTextColor="#9E9E9E"
