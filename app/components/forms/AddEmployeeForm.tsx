@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { TransliterationInput } from '../ui/TransliterationInput';
 import * as employeeService from '@/services/employeeService';
 
 // Predefined roles for employees
@@ -162,7 +163,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                     {/* Employee Name */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('forms.employee.name')} *</Text>
-                        <TextInput
+                        <TransliterationInput
                             style={styles.input}
                             value={name}
                             onChangeText={setName}

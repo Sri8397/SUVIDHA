@@ -9,6 +9,7 @@ import { useData } from '@/contexts/DataContext';
 import { useSettings } from '@/contexts/settings-context';
 import { STORAGE_KEYS, Customer } from '@/types';
 import { getData, setData } from '@/services/storage';
+import { TransliterationInput } from '../components/ui/TransliterationInput';
 
 // Data types that can be cleared
 interface ClearOptions {
@@ -56,15 +57,26 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
             <View style={styles.editModalOverlay}>
                 <View style={styles.editModalContent}>
                     <Text style={styles.editModalTitle}>{title}</Text>
-                    <TextInput
-                        style={styles.editModalInput}
-                        value={inputValue}
-                        onChangeText={setInputValue}
-                        keyboardType={keyboardType}
-                        placeholder={placeholder}
-                        placeholderTextColor="#9E9E9E"
-                        autoFocus
-                    />
+                    {keyboardType === 'default' ? (
+                        <TransliterationInput
+                            style={styles.editModalInput}
+                            value={inputValue}
+                            onChangeText={setInputValue}
+                            placeholder={placeholder}
+                            placeholderTextColor="#9E9E9E"
+                            autoFocus
+                        />
+                    ) : (
+                        <TextInput
+                            style={styles.editModalInput}
+                            value={inputValue}
+                            onChangeText={setInputValue}
+                            keyboardType={keyboardType}
+                            placeholder={placeholder}
+                            placeholderTextColor="#9E9E9E"
+                            autoFocus
+                        />
+                    )}
                     <View style={styles.editModalButtons}>
                         <TouchableOpacity
                             style={styles.editCancelButton}
