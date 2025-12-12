@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useSettings } from '@/contexts/settings-context';
 import { useAuth } from '@/contexts/auth-context';
 import * as ImagePicker from 'expo-image-picker';
+import { TransliterationInput } from '../components/ui/TransliterationInput';
 
 interface EditModalProps {
     visible: boolean;
@@ -47,15 +48,26 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
             >
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>{title}</Text>
-                    <TextInput
-                        style={styles.modalInput}
-                        value={inputValue}
-                        onChangeText={setInputValue}
-                        keyboardType={keyboardType}
-                        placeholder={placeholder}
-                        placeholderTextColor="#9E9E9E"
-                        autoFocus
-                    />
+                    {keyboardType === 'default' ? (
+                        <TransliterationInput
+                            style={styles.modalInput}
+                            value={inputValue}
+                            onChangeText={setInputValue}
+                            placeholder={placeholder}
+                            placeholderTextColor="#9E9E9E"
+                            autoFocus
+                        />
+                    ) : (
+                        <TextInput
+                            style={styles.modalInput}
+                            value={inputValue}
+                            onChangeText={setInputValue}
+                            keyboardType={keyboardType}
+                            placeholder={placeholder}
+                            placeholderTextColor="#9E9E9E"
+                            autoFocus
+                        />
+                    )}
                     <View style={styles.modalButtons}>
                         <TouchableOpacity
                             style={styles.cancelButton}
