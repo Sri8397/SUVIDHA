@@ -19,8 +19,9 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
-import { ExpenseCategory, EXPENSE_CATEGORY_LABELS } from '@/types';
+import { ExpenseCategory } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddExpenseFormProps {
     visible: boolean;
@@ -101,7 +102,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('forms.expense.addTitle')}</Text>
                     <View style={styles.closeButton} />
@@ -128,7 +129,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                     <FontAwesome
                                         name={cat.icon as any}
                                         size={14}
-                                        color={category === cat.id ? '#FFFFFF' : '#757575'}
+                                        color={category === cat.id ? Colors.light.white : Colors.light.textSecondary}
                                     />
                                     <Text
                                         style={[
@@ -153,7 +154,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                 value={amount}
                                 onChangeText={setAmount}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -167,7 +168,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                             value={description}
                             onChangeText={setDescription}
                             placeholder={t('forms.expense.descriptionPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
                             numberOfLines={3}
                             textAlignVertical="top"
@@ -184,7 +185,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('forms.addExpense')}</Text>
                         )}
@@ -198,7 +199,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 12,
     },
     categoryGrid: {
@@ -241,57 +242,57 @@ const styles = StyleSheet.create({
     categoryChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 20,
         paddingHorizontal: 12,
         paddingVertical: 8,
         gap: 6,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     categoryChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     categoryChipText: {
         fontSize: 13,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     categoryChipTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
         fontWeight: '600',
     },
     amountInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 10,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background,
         paddingHorizontal: 12,
     },
     currencySymbol: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
         marginRight: 6,
     },
     amountInput: {
         flex: 1,
         fontSize: 20,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
         paddingVertical: 12,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FAFAFA',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.background,
     },
     textArea: {
         height: 80,
@@ -300,12 +301,12 @@ const styles = StyleSheet.create({
     bottomButtonContainer: {
         padding: 16,
         paddingBottom: 32,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -316,6 +317,6 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

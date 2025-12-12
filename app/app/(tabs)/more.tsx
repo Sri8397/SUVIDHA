@@ -9,6 +9,7 @@ import { useData } from '@/contexts/DataContext';
 import { useAppMode } from '@/contexts/ModeContext';
 import { router } from 'expo-router';
 import { Header } from '@/components/ui/header';
+import { Colors } from '@/constants/theme';
 
 
 
@@ -104,14 +105,14 @@ export default function MoreScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <Header title={t('more.title')} showLanguageToggle={true} />
@@ -182,13 +183,13 @@ export default function MoreScreen() {
                                     <MaterialIcons
                                         name={item.icon as any}
                                         size={22}
-                                        color={item.danger ? '#D32F2F' : '#616161'}
+                                        color={item.danger ? Colors.light.error : Colors.light.textSecondary}
                                     />
                                 ) : (
                                     <FontAwesome
                                         name={item.icon as any}
                                         size={20}
-                                        color={item.danger ? '#D32F2F' : '#616161'}
+                                        color={item.danger ? Colors.light.error : Colors.light.textSecondary}
                                     />
                                 )}
                             </View>
@@ -240,13 +241,13 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background,
     },
     scrollView: {
         flex: 1,
@@ -262,15 +263,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 20,
         paddingBottom: 24,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background,
     },
     profileImageContainer: {
         width: 110,
         height: 110,
         borderRadius: 55,
         overflow: 'hidden',
-        backgroundColor: '#E8E8E8',
-        shadowColor: '#000',
+        backgroundColor: Colors.light.border,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
@@ -287,24 +288,24 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 22,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 4,
     },
     storeName: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         fontWeight: '400',
     },
 
     // Stats Row
     statsRow: {
         flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         borderRadius: 12,
         paddingVertical: 16,
         paddingHorizontal: 8,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 3,
@@ -317,29 +318,29 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 12,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
         marginBottom: 4,
     },
     statValue: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     negativeValue: {
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     statDivider: {
         width: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: Colors.light.border,
         marginVertical: 4,
     },
 
     // Menu Card
     menuCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 3,
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
     },
     menuItemBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        borderBottomColor: Colors.light.border, // Slightly lighter border for items
     },
     menuIconContainer: {
         width: 24,
@@ -366,22 +367,22 @@ const styles = StyleSheet.create({
     menuItemText: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#212121',
+        color: Colors.light.text,
     },
     menuItemTextDanger: {
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
 
     // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 40,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 24,
         width: '100%',
@@ -390,12 +391,12 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 12,
     },
     modalMessage: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 24,
@@ -410,24 +411,24 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         alignItems: 'center',
     },
     cancelButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     logoutButton: {
         flex: 1,
         paddingVertical: 12,
         borderRadius: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         alignItems: 'center',
     },
     logoutButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

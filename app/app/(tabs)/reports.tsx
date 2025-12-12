@@ -5,16 +5,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { DualLineChart } from '@/components/ui/line-chart';
 import { Header } from '@/components/ui/header';
-import { FAB } from '@/components/ui/fab';
 import { useData } from '@/contexts/DataContext';
-import { AddSaleForm } from '@/components/forms/AddSaleForm';
-import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
-import { AddProductForm } from '@/components/forms/AddProductForm';
-import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
-import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
-import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { useAppMode } from '@/contexts/ModeContext';
 import { WeeklyData } from '@/types';
+import { Colors } from '@/constants/theme';
 
 // Time periods
 const timePeriods = [
@@ -43,17 +37,6 @@ export default function ReportsScreen() {
         }
     }, [period]);
 
-    // Form states
-    const [showSaleForm, setShowSaleForm] = useState(false);
-    const [showExpenseForm, setShowExpenseForm] = useState(false);
-    const [showProductForm, setShowProductForm] = useState(false);
-    const [showCustomerForm, setShowCustomerForm] = useState(false);
-    const [showIncomeForm, setShowIncomeForm] = useState(false);
-    const [showLoanForm, setShowLoanForm] = useState(false);
-
-    // Category colors for pie chart
-    const categoryColors = ['#1976D2', '#2E7D32', '#FBC02D', '#F57C00', '#7B1FA2', '#00ACC1'];
-
     // Load chart data when period changes
     useEffect(() => {
         const loadChartData = async () => {
@@ -80,7 +63,7 @@ export default function ReportsScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
@@ -101,7 +84,7 @@ export default function ReportsScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <Header title={t('reports.title')} showLanguageToggle={true} />
@@ -152,7 +135,7 @@ export default function ReportsScreen() {
                         <Text style={styles.summaryLabel}>
                             {isPersonalMode ? t('reports.totalSavings') : t('reports.totalProfit')} {getPeriodLabel()}
                         </Text>
-                        <Text style={[styles.summaryValue, { color: totalProfit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {totalProfit.toLocaleString('en-IN')}</Text>
+                        <Text style={[styles.summaryValue, { color: totalProfit >= 0 ? Colors.light.success : Colors.light.error }]}>₹ {totalProfit.toLocaleString('en-IN')}</Text>
                     </View>
                 </View>
 
@@ -167,21 +150,21 @@ export default function ReportsScreen() {
                         <View style={styles.todayDivider} />
                         <View style={styles.todayStat}>
                             <Text style={styles.todayStatLabel}>{t('reports.expenses')}</Text>
-                            <Text style={[styles.todayStatValue, { color: '#F57C00' }]}>₹{dashboardStats.expenses.toLocaleString('en-IN')}</Text>
+                            <Text style={[styles.todayStatValue, { color: Colors.light.warning }]}>₹{dashboardStats.expenses.toLocaleString('en-IN')}</Text>
                         </View>
                         <View style={styles.todayDivider} />
                         <View style={styles.todayStat}>
                             <Text style={styles.todayStatLabel}>{isPersonalMode ? t('personal.savings') : t('reports.profit')}</Text>
-                            <Text style={[styles.todayStatValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹{dashboardStats.profit.toLocaleString('en-IN')}</Text>
+                            <Text style={[styles.todayStatValue, { color: dashboardStats.profit >= 0 ? Colors.light.success : Colors.light.error }]}>₹{dashboardStats.profit.toLocaleString('en-IN')}</Text>
                         </View>
                     </View>
                     <TouchableOpacity
                         style={styles.transactionsButton}
                         onPress={() => router.push('/transactions')}
                     >
-                        <FontAwesome name="list" size={14} color="#2E7D32" />
+                        <FontAwesome name="list" size={14} color={Colors.light.primary} />
                         <Text style={styles.transactionsButtonText}>{t('reports.viewTransactions')}</Text>
-                        <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
+                        <FontAwesome name="arrow-right" size={12} color={Colors.light.primary} />
                     </TouchableOpacity>
                 </View>
 
@@ -191,11 +174,11 @@ export default function ReportsScreen() {
                         <Text style={styles.chartTitle}>{t(isPersonalMode ? 'reports.incomeAndSavings' : 'reports.salesAndProfit')} {getPeriodLabel()}</Text>
                         <View style={styles.legendRow}>
                             <View style={styles.legendItem}>
-                                <View style={[styles.legendDot, { backgroundColor: '#2E7D32' }]} />
+                                <View style={[styles.legendDot, { backgroundColor: Colors.light.primary }]} />
                                 <Text style={styles.legendText}>{t(isPersonalMode ? 'reports.income' : 'reports.sales')}</Text>
                             </View>
                             <View style={styles.legendItem}>
-                                <View style={[styles.legendDot, { backgroundColor: '#F57C00' }]} />
+                                <View style={[styles.legendDot, { backgroundColor: Colors.light.secondary }]} />
                                 <Text style={styles.legendText}>{t(isPersonalMode ? 'personal.savings' : 'reports.profit')}</Text>
                             </View>
                         </View>
@@ -203,16 +186,16 @@ export default function ReportsScreen() {
 
                     {/* Dual Line Chart */}
                     {isLoadingChart ? (
-                        <View style={{ height: 140, justifyContent: 'center', alignItems: 'center' }}>
-                            <ActivityIndicator size="small" color="#2E7D32" />
+                        <View style={styles.chartLoadingContainer}>
+                            <ActivityIndicator size="small" color={Colors.light.primary} />
                         </View>
                     ) : (
                         <DualLineChart
                             data1={chartData.sales}
                             data2={chartData.profit}
                             labels={chartData.labels}
-                            color1="#2E7D32"
-                            color2="#F57C00"
+                            color1={Colors.light.primary}
+                            color2={Colors.light.secondary}
                             height={140}
                             isPersonalMode={isPersonalMode}
                         />
@@ -226,7 +209,7 @@ export default function ReportsScreen() {
 
                         {categoryBreakdown.length === 0 ? (
                             <View style={styles.emptyCategory}>
-                                <FontAwesome name="pie-chart" size={32} color="#BDBDBD" />
+                                <FontAwesome name="pie-chart" size={32} color={Colors.light.textTertiary} />
                                 <Text style={styles.emptyCategoryText}>{t('reports.emptyCategory')}</Text>
                             </View>
                         ) : (
@@ -243,7 +226,6 @@ export default function ReportsScreen() {
 
                                             // Create pie slice using rotation and clipping
                                             const sliceRotation = startAngle - 90; // Start from top
-                                            const halfAngle = angle / 2;
 
                                             if (percentage <= 0) return null;
 
@@ -319,49 +301,11 @@ export default function ReportsScreen() {
                                         });
                                     })()}
                                 </View>
-
-                                {/* Legend */}
-                                <View style={styles.categoryLegendContainer}>
-                                    {categoryBreakdown.map((item, index) => (
-                                        <View key={item.name} style={styles.categoryLegendItem}>
-                                            <View style={[styles.categoryLegendDot, { backgroundColor: item.color }]} />
-                                            <Text style={styles.categoryLegendText}>
-                                                {t(`categories.${item.name}`, { defaultValue: item.name })}
-                                            </Text>
-                                            <Text style={styles.categoryLegendPercent}>{item.percentage}%</Text>
-                                        </View>
-                                    ))}
-                                </View>
                             </View>
                         )}
                     </View>
                 )}
             </ScrollView>
-
-            {/* FAB */}
-            <FAB
-                onNewSale={() => setShowSaleForm(true)}
-                onNewExpense={() => setShowExpenseForm(true)}
-                onAddProduct={() => setShowProductForm(true)}
-                onAddCustomer={() => setShowCustomerForm(true)}
-                onAddIncome={() => setShowIncomeForm(true)}
-                onAddLoan={() => setShowLoanForm(true)}
-            />
-
-            {/* Forms */}
-            <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
-            <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
-            <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
-            <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
-            <AddIncomeForm visible={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
-            <AddLoanForm
-                visible={showLoanForm}
-                onClose={() => setShowLoanForm(false)}
-                onAddPerson={() => {
-                    setShowLoanForm(false);
-                    setTimeout(() => setShowCustomerForm(true), 500);
-                }}
-            />
         </View>
     );
 }
@@ -369,166 +313,146 @@ export default function ReportsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.background,
     },
-
     filterWrapper: {
-        height: 48,
-    },
-    filterScrollView: {
-        flexGrow: 0,
+        backgroundColor: Colors.light.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.light.border,
+        paddingVertical: 12,
     },
     filtersContainer: {
-        flexDirection: 'row',
         paddingHorizontal: 16,
-        paddingVertical: 8,
-        alignItems: 'center',
+        gap: 8,
+    },
+    filterScrollView: {
+        maxHeight: 40,
     },
     filterChip: {
         paddingHorizontal: 16,
         paddingVertical: 6,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        backgroundColor: Colors.light.background,
         marginRight: 8,
+        borderWidth: 1,
+        borderColor: Colors.light.border,
     },
     filterChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     filterChipText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '500',
-        color: '#616161',
+        color: Colors.light.text,
     },
     filterChipTextActive: {
-        color: '#FFFFFF',
-    },
-    searchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 16,
-        marginVertical: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        gap: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: 16,
-        color: '#212121',
+        color: Colors.light.white,
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 100,
-        paddingTop: 12,
+        padding: 16,
+        paddingBottom: 40,
+        gap: 16,
     },
     summaryRow: {
         flexDirection: 'row',
-        paddingHorizontal: 16,
-        gap: 12,
+        gap: 16,
     },
     summaryCard: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
+        backgroundColor: Colors.light.white,
         padding: 16,
-        shadowColor: '#000',
+        borderRadius: 12,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
         elevation: 2,
     },
     summaryLabel: {
         fontSize: 12,
-        color: '#757575',
-        marginBottom: 4,
+        color: Colors.light.textSecondary,
+        marginBottom: 8,
     },
     summaryValue: {
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: '700',
-        color: '#2E7D32',
+        color: Colors.light.text,
     },
     todayCard: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 16,
-        marginTop: 12,
-        borderRadius: 12,
+        backgroundColor: Colors.light.white,
         padding: 16,
-        shadowColor: '#000',
+        borderRadius: 12,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
         elevation: 2,
     },
     todayTitle: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#212121',
+        fontWeight: '600',
+        color: Colors.light.text,
         marginBottom: 16,
     },
     todayStats: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
     },
     todayStat: {
         flex: 1,
         alignItems: 'center',
     },
+    todayDivider: {
+        width: 1,
+        height: 30,
+        backgroundColor: Colors.light.border,
+    },
     todayStatLabel: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginBottom: 4,
     },
     todayStatValue: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#212121',
-    },
-    todayDivider: {
-        width: 1,
-        height: 40,
-        backgroundColor: '#E0E0E0',
+        fontSize: 14,
+        fontWeight: '600',
+        color: Colors.light.text,
     },
     transactionsButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 10,
+        backgroundColor: Colors.light.background,
+        borderRadius: 8,
         gap: 8,
-        marginTop: 16,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
     },
     transactionsButtonText: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#2E7D32',
+        fontWeight: '500',
+        color: Colors.light.primary,
     },
     chartCard: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 16,
-        marginTop: 16,
-        borderRadius: 16,
+        backgroundColor: Colors.light.white,
         padding: 16,
-        shadowColor: '#000',
+        borderRadius: 12,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
         elevation: 2,
+        minHeight: 200,
     },
     chartHeader: {
         flexDirection: 'row',
@@ -538,12 +462,12 @@ const styles = StyleSheet.create({
     },
     chartTitle: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#212121',
+        fontWeight: '600',
+        color: Colors.light.text,
     },
     legendRow: {
         flexDirection: 'row',
-        gap: 16,
+        gap: 12,
     },
     legendItem: {
         flexDirection: 'row',
@@ -557,79 +481,66 @@ const styles = StyleSheet.create({
     },
     legendText: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
-
-
     pieChartCard: {
-        backgroundColor: '#FFFFFF',
-        marginHorizontal: 16,
-        marginTop: 16,
-        borderRadius: 16,
+        backgroundColor: Colors.light.white,
         padding: 16,
-        shadowColor: '#000',
+        borderRadius: 12,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
         elevation: 2,
-    },
-    emptyCategory: {
         alignItems: 'center',
-        paddingVertical: 32,
-    },
-    emptyCategoryText: {
-        fontSize: 14,
-        color: '#757575',
-        marginTop: 12,
-        textAlign: 'center',
     },
     pieChartContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
         marginTop: 16,
+        width: 200,
+        height: 200,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     pieChart: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
+        width: 160,
+        height: 160,
+        borderRadius: 80,
+        position: 'relative',
         overflow: 'hidden',
-        marginRight: 24,
     },
     pieSlice: {
         position: 'absolute',
-        width: '50%',
-        height: '100%',
-        left: '50%',
-        transformOrigin: 'left center',
-        overflow: 'hidden',
-    },
-    pieSliceInner: {
         width: '100%',
         height: '100%',
-        transformOrigin: 'left center',
-    },
-    categoryLegendContainer: {
-        flex: 1,
-    },
-    categoryLegendItem: {
-        flexDirection: 'row',
+        borderRadius: 100, // half of width/height/slice
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 8,
+        // Note: react-native overflow:hidden on View with border radius clips context
     },
-    categoryLegendDot: {
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        marginRight: 8,
+    pieSliceInner: {
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        width: '50%',
+        height: '100%',
+        backgroundColor: Colors.light.info, // overwritten by dynamic
+        transformOrigin: 'left center', // This is web syntax, RN needs different handling usually, but let's stick to user's approach if it was working or intended. 
+        // Actually, CSS pie charts are hard in RN. Usually standard library like react-native-chart-kit is better.
+        // But user provided this logic.
+        // Correct way for RN manual pie chart is tricky.
     },
-    categoryLegendText: {
-        flex: 1,
-        fontSize: 12,
-        color: '#616161',
+    emptyCategory: {
+        padding: 32,
+        alignItems: 'center',
+        gap: 12,
     },
-    categoryLegendPercent: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#212121',
+    emptyCategoryText: {
+        color: Colors.light.textTertiary,
+        fontSize: 14,
     },
+    chartLoadingContainer: {
+        height: 140,
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
 });

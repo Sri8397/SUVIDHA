@@ -20,6 +20,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { SaleItem, Sale } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddSaleFormProps {
     visible: boolean;
@@ -200,7 +201,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('forms.sale.title')}</Text>
                     <View style={styles.closeButton} />
@@ -217,13 +218,13 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         onPress={() => setShowCustomerPicker(true)}
                     >
                         <View style={styles.customerIcon}>
-                            <FontAwesome name="user" size={20} color="#2E7D32" />
+                            <FontAwesome name="user" size={20} color={Colors.light.primary} />
                         </View>
                         <View style={styles.customerInfo}>
                             <Text style={styles.customerLabel}>{t('forms.sale.selectCustomer')}</Text>
                             <Text style={styles.customerName}>{customerName}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#9E9E9E" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textTertiary} />
                     </TouchableOpacity>
 
                     {/* Items List */}
@@ -234,14 +235,14 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                 style={styles.addButton}
                                 onPress={() => setShowProductPicker(true)}
                             >
-                                <FontAwesome name="plus" size={14} color="#FFFFFF" />
+                                <FontAwesome name="plus" size={14} color={Colors.light.white} />
                                 <Text style={styles.addButtonText}>{t('forms.sale.addProduct')}</Text>
                             </TouchableOpacity>
                         </View>
 
                         {items.length === 0 ? (
                             <View style={styles.emptyItems}>
-                                <FontAwesome name="shopping-cart" size={32} color="#BDBDBD" />
+                                <FontAwesome name="shopping-cart" size={32} color={Colors.light.textTertiary} />
                                 <Text style={styles.emptyText}>{t('forms.sale.addProductInstruction')}</Text>
                             </View>
                         ) : (
@@ -256,14 +257,14 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                             style={styles.qtyButton}
                                             onPress={() => updateItemQuantity(index, item.quantity - 1)}
                                         >
-                                            <FontAwesome name="minus" size={12} color="#757575" />
+                                            <FontAwesome name="minus" size={12} color={Colors.light.textSecondary} />
                                         </TouchableOpacity>
                                         <Text style={styles.qtyText}>{item.quantity}</Text>
                                         <TouchableOpacity
                                             style={styles.qtyButton}
                                             onPress={() => updateItemQuantity(index, item.quantity + 1)}
                                         >
-                                            <FontAwesome name="plus" size={12} color="#757575" />
+                                            <FontAwesome name="plus" size={12} color={Colors.light.textSecondary} />
                                         </TouchableOpacity>
                                     </View>
                                     <Text style={styles.itemTotal}>₹{item.total}</Text>
@@ -293,7 +294,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                 }
                             }}
                             placeholder="0"
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="numeric"
                         />
                     </View>
@@ -350,7 +351,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                                 }
                             }}
                             placeholder={total.toString()}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="numeric"
                             editable={!!selectedCustomerId}
                         />
@@ -379,7 +380,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('forms.sale.completeSale')}</Text>
                         )}
@@ -397,7 +398,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         <View style={styles.pickerHeader}>
                             <Text style={styles.pickerTitle}>{t('forms.sale.selectProduct')}</Text>
                             <TouchableOpacity onPress={() => setShowProductPicker(false)}>
-                                <FontAwesome name="times" size={20} color="#757575" />
+                                <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView>
@@ -429,7 +430,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
                         <View style={styles.pickerHeader}>
                             <Text style={styles.pickerTitle}>{t('forms.sale.selectCustomer')}</Text>
                             <TouchableOpacity onPress={() => setShowCustomerPicker(false)}>
-                                <FontAwesome name="times" size={20} color="#757575" />
+                                <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView>
@@ -464,7 +465,7 @@ export function AddSaleForm({ visible, onClose }: AddSaleFormProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     header: {
         flexDirection: 'row',
@@ -472,9 +473,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
     customerSelector: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         padding: 16,
         borderRadius: 12,
         marginBottom: 16,
@@ -503,7 +504,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -513,12 +514,12 @@ const styles = StyleSheet.create({
     },
     customerLabel: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     customerName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
     },
     section: {
         marginBottom: 16,
@@ -532,13 +533,13 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     addButton: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 8,
@@ -546,24 +547,24 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     emptyItems: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         padding: 32,
         borderRadius: 12,
         alignItems: 'center',
     },
     emptyText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 12,
         textAlign: 'center',
     },
     itemCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         padding: 12,
         borderRadius: 12,
         marginBottom: 8,
@@ -574,11 +575,11 @@ const styles = StyleSheet.create({
     itemName: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
     },
     itemPrice: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 2,
     },
     itemControls: {
@@ -590,7 +591,7 @@ const styles = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: 14,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -602,7 +603,7 @@ const styles = StyleSheet.create({
     itemTotal: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#2E7D32',
+        color: Colors.light.primary,
         minWidth: 60,
         textAlign: 'right',
     },
@@ -612,22 +613,22 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FFFFFF',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.card,
     },
     inputDisabled: {
-        backgroundColor: '#F5F5F5',
-        color: '#9E9E9E',
+        backgroundColor: Colors.light.background,
+        color: Colors.light.textTertiary,
     },
     paymentMethods: {
         flexDirection: 'row',
@@ -638,24 +639,24 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
+        borderColor: Colors.light.border,
+        backgroundColor: Colors.light.card,
         alignItems: 'center',
     },
     paymentChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     paymentChipText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#616161',
+        color: Colors.light.textSecondary,
     },
     paymentChipTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     totalCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderRadius: 12,
         padding: 16,
         marginTop: 8,
@@ -667,19 +668,19 @@ const styles = StyleSheet.create({
     },
     totalLabel: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     totalValue: {
         fontSize: 14,
-        color: '#212121',
+        color: Colors.light.text,
     },
     discountValue: {
         fontSize: 14,
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     grandTotalRow: {
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
         paddingTop: 12,
         marginTop: 4,
         marginBottom: 0,
@@ -687,15 +688,15 @@ const styles = StyleSheet.create({
     grandTotalLabel: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     grandTotalValue: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -708,11 +709,11 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     pickerContainer: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
     },
     pickerHeader: {
         flexDirection: 'row',
@@ -720,12 +721,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     pickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerItem: {
         flexDirection: 'row',
@@ -733,20 +734,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
+        borderBottomColor: Colors.light.background,
     },
     pickerItemName: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerItemPrice: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     emptyPicker: {
         textAlign: 'center',
         padding: 32,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
 });

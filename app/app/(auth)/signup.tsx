@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../../components/ui/TransliterationInput';
+import { Colors } from '@/constants/theme';
 
 export default function SignupScreen() {
     const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function SignupScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -53,7 +54,7 @@ export default function SignupScreen() {
                     {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
+                            <FontAwesome name="arrow-left" size={20} color={Colors.light.white} />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>{t('auth.yourStore')}</Text>
                     </View>
@@ -69,7 +70,7 @@ export default function SignupScreen() {
                             <TransliterationInput
                                 style={styles.input}
                                 placeholder={t('auth.enterNamePlaceholder')}
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 value={name}
                                 onChangeText={setName}
                             />
@@ -79,7 +80,7 @@ export default function SignupScreen() {
                             <TextInput
                                 style={styles.input}
                                 placeholder={t('auth.enterPhonePlaceholder')}
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="phone-pad"
                                 maxLength={10}
                                 value={phone}
@@ -91,7 +92,7 @@ export default function SignupScreen() {
                             <TextInput
                                 style={styles.input}
                                 placeholder={t('auth.createPasswordPlaceholder')}
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 secureTextEntry
                                 value={password}
                                 onChangeText={setPassword}
@@ -121,7 +122,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     keyboardView: {
         flex: 1,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     header: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 16,
@@ -143,18 +144,18 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     titleSection: {
         paddingVertical: 24,
         paddingHorizontal: 24,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     titleText: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     formContainer: {
         flex: 1,
@@ -166,16 +167,16 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FFFFFF',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.white,
     },
     signupButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
@@ -183,12 +184,12 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     signupButtonDisabled: {
-        backgroundColor: '#A5D6A7',
+        backgroundColor: Colors.light.primaryDisabled,
     },
     signupButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     loginLink: {
         alignItems: 'center',
@@ -196,10 +197,10 @@ const styles = StyleSheet.create({
     },
     loginLinkText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     loginLinkHighlight: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
 });

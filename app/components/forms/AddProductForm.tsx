@@ -22,8 +22,9 @@ import { TransliterationInput } from '../ui/TransliterationInput';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
+import { Colors } from '@/constants/theme';
 
-import { Category } from '@/types';
+
 
 interface AddProductFormProps {
     visible: boolean;
@@ -201,7 +202,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>
                         {editProduct ? t('common.edit') + ' ' + t('inventory.product') : t('inventory.addProduct')}
@@ -222,7 +223,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                 <Image source={{ uri: image }} style={styles.productImage} />
                             ) : (
                                 <View style={styles.imagePlaceholder}>
-                                    <FontAwesome name="image" size={40} color="#BDBDBD" />
+                                    <FontAwesome name="image" size={40} color={Colors.light.textTertiary} />
                                 </View>
                             )}
                         </View>
@@ -231,14 +232,14 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                 style={styles.imageButton}
                                 onPress={() => pickImage(true)}
                             >
-                                <FontAwesome name="camera" size={16} color="#2E7D32" />
+                                <FontAwesome name="camera" size={16} color={Colors.light.primary} />
                                 <Text style={styles.imageButtonText}>{t('forms.camera')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.imageButton}
                                 onPress={() => pickImage(false)}
                             >
-                                <FontAwesome name="photo" size={16} color="#2E7D32" />
+                                <FontAwesome name="photo" size={16} color={Colors.light.primary} />
                                 <Text style={styles.imageButtonText}>{t('forms.gallery')}</Text>
                             </TouchableOpacity>
                         </View>
@@ -252,31 +253,31 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             value={name}
                             onChangeText={setName}
                             placeholder={t('forms.productName')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                         />
                     </View>
 
                     {/* Price */}
                     <View style={styles.row}>
-                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                        <View style={[styles.inputGroup, styles.halfInputLeft]}>
                             <Text style={styles.label}>{t('forms.costPrice')} (₹) *</Text>
                             <TextInput
                                 style={styles.input}
                                 value={costPrice}
                                 onChangeText={(text) => setCostPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
-                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                        <View style={[styles.inputGroup, styles.halfInputRight]}>
                             <Text style={styles.label}>{t('forms.sellingPrice')} (₹) *</Text>
                             <TextInput
                                 style={styles.input}
                                 value={price}
                                 onChangeText={(text) => setPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -284,14 +285,14 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
 
                     {/* Stock */}
                     <View style={styles.row}>
-                        <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                        <View style={[styles.inputGroup, styles.halfInputLeft]}>
                             <Text style={styles.label}>{t('forms.currentStock')} {editProduct ? '' : '*'}</Text>
                             <TextInput
                                 style={[styles.input, editProduct && styles.inputDisabled]}
                                 value={stock}
                                 onChangeText={editProduct ? undefined : (text) => setStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                                 editable={!editProduct}
                             />
@@ -301,14 +302,14 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                                 </Text>
                             )}
                         </View>
-                        <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                        <View style={[styles.inputGroup, styles.halfInputRight]}>
                             <Text style={styles.label}>{t('forms.minStock')}</Text>
                             <TextInput
                                 style={styles.input}
                                 value={minStock}
                                 onChangeText={(text) => setMinStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="5"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -351,7 +352,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>
                                 {editProduct ? t('common.save') : t('inventory.addProduct')}
@@ -367,7 +368,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
     },
     header: {
         flexDirection: 'row',
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -409,11 +410,11 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 12,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 2,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderStyle: 'dashed',
     },
     imageButtons: {
@@ -428,12 +429,12 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#2E7D32',
+        borderColor: Colors.light.primary,
     },
     imageButtonText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     inputGroup: {
         marginBottom: 16,
@@ -441,26 +442,26 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FAFAFA',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.background,
     },
     inputDisabled: {
-        backgroundColor: '#F0F0F0',
-        color: '#9E9E9E',
+        backgroundColor: Colors.light.background,
+        color: Colors.light.textTertiary,
     },
     helperText: {
         fontSize: 11,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 4,
         fontStyle: 'italic',
     },
@@ -475,24 +476,24 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
+        borderColor: Colors.light.border,
+        backgroundColor: Colors.light.card,
         marginRight: 8,
     },
     categoryChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     categoryChipText: {
         fontSize: 14,
-        color: '#616161',
+        color: Colors.light.textSecondary,
     },
     categoryChipTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
         fontWeight: '600',
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -505,6 +506,14 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
+    },
+    halfInputLeft: {
+        flex: 1,
+        marginRight: 8,
+    },
+    halfInputRight: {
+        flex: 1,
+        marginLeft: 8,
     },
 });

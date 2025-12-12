@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, TextInput, StyleSheet, Linking, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Linking, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/ui/header';
@@ -15,10 +15,11 @@ import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { ReceivePaymentForm } from '@/components/forms/ReceivePaymentForm';
 import { useAppMode } from '@/contexts/ModeContext';
 import { Customer } from '@/types';
+import { Colors } from '@/constants/theme';
 
 export default function CustomersScreen() {
     const { t } = useTranslation();
-    const { isLoading, customers, deleteCustomer, updateCustomer } = useData();
+    const { isLoading, customers } = useData();
     const { appMode } = useAppMode();
     const isPersonalMode = appMode === 'personal';
     const [searchQuery, setSearchQuery] = useState('');
@@ -55,25 +56,7 @@ export default function CustomersScreen() {
         setShowCustomerForm(true);
     };
 
-    const handleDelete = (customer: Customer) => {
-        Alert.alert(
-            t(isPersonalMode ? 'personal.friend.deleteFriend' : 'customers.deleteCustomer'),
-            t(isPersonalMode ? 'personal.friend.deleteFriendConfirm' : 'customers.deleteCustomerConfirm', { name: customer.name }),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        const success = await deleteCustomer(customer.id);
-                        if (success) {
-                            Alert.alert(t('common.success'), t(isPersonalMode ? 'personal.friend.friendDeleted' : 'customers.customerDeleted'));
-                        }
-                    }
-                }
-            ]
-        );
-    };
+
 
     const handleReceivePayment = (customer: Customer) => {
         setPaymentCustomer(customer);
@@ -93,25 +76,25 @@ export default function CustomersScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <Header title={t(isPersonalMode ? 'personal.people' : 'customers.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-                <FontAwesome name="search" size={18} color="#9E9E9E" />
+                <FontAwesome name="search" size={18} color={Colors.light.textTertiary} />
                 <TransliterationInput
                     style={styles.searchInput}
                     placeholder={t(isPersonalMode ? 'personal.friend.searchPlaceholder' : 'customers.searchPlaceholder')}
-                    placeholderTextColor="#9E9E9E"
+                    placeholderTextColor={Colors.light.textTertiary}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
@@ -146,7 +129,7 @@ export default function CustomersScreen() {
                                 style={styles.moreButton}
                                 onPress={() => handleEdit(customer)}
                             >
-                                <FontAwesome name="pencil" size={16} color="#757575" />
+                                <FontAwesome name="pencil" size={16} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
 
@@ -163,14 +146,14 @@ export default function CustomersScreen() {
                                 style={styles.callButton}
                                 onPress={() => handleCall(customer.phone)}
                             >
-                                <FontAwesome name="phone" size={14} color="#2E7D32" />
+                                <FontAwesome name="phone" size={14} color={Colors.light.primary} />
                                 <Text style={styles.callButtonText}>{t('customers.call')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.messageButton}
                                 onPress={() => handleMessage(customer.phone)}
                             >
-                                <FontAwesome name="whatsapp" size={14} color="#FFFFFF" />
+                                <FontAwesome name="whatsapp" size={14} color={Colors.light.white} />
                                 <Text style={styles.messageButtonText}>WhatsApp</Text>
                             </TouchableOpacity>
                             {customer.outstanding > 0 && (
@@ -178,7 +161,7 @@ export default function CustomersScreen() {
                                     style={styles.clearBakayaButton}
                                     onPress={() => handleReceivePayment(customer)}
                                 >
-                                    <FontAwesome name="money" size={14} color="#E65100" />
+                                    <FontAwesome name="money" size={14} color={Colors.light.secondary} />
                                     <Text style={styles.clearBakayaButtonText}>{t('customers.collectPayment')}</Text>
                                 </TouchableOpacity>
                             )}
@@ -187,7 +170,7 @@ export default function CustomersScreen() {
                 ))}
                 {filteredCustomers.length === 0 && (
                     <View style={styles.emptyState}>
-                        <FontAwesome name="users" size={48} color="#BDBDBD" />
+                        <FontAwesome name="users" size={48} color={Colors.light.textTertiary} />
                         <Text style={styles.emptyStateText}>
                             {customers.length === 0
                                 ? t(isPersonalMode ? 'personal.friend.noFriends' : 'customers.noCustomers')
@@ -198,7 +181,7 @@ export default function CustomersScreen() {
                                 style={styles.addFirstButton}
                                 onPress={() => setShowCustomerForm(true)}
                             >
-                                <FontAwesome name="plus" size={14} color="#FFFFFF" />
+                                <FontAwesome name="plus" size={14} color={Colors.light.white} />
                                 <Text style={styles.addFirstButtonText}>{t(isPersonalMode ? 'personal.friend.addFriend' : 'customers.addCustomer')}</Text>
                             </TouchableOpacity>
                         )}
@@ -247,18 +230,18 @@ export default function CustomersScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         marginVertical: 12,
         paddingHorizontal: 16,
@@ -266,12 +249,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         gap: 12,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     searchInput: {
         flex: 1,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     countContainer: {
         paddingHorizontal: 16,
@@ -279,7 +262,7 @@ const styles = StyleSheet.create({
     },
     countText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     scrollView: {
         flex: 1,
@@ -289,14 +272,14 @@ const styles = StyleSheet.create({
         paddingTop: 8,
     },
     customerCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         marginBottom: 12,
         borderRadius: 12,
         padding: 16,
         borderLeftWidth: 4,
-        borderLeftColor: '#2E7D32',
-        shadowColor: '#000',
+        borderLeftColor: Colors.light.primary,
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -310,7 +293,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -318,7 +301,7 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     customerInfo: {
         flex: 1,
@@ -326,18 +309,18 @@ const styles = StyleSheet.create({
     customerName: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 2,
     },
     customerPhone: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     moreButton: {
         padding: 8,
     },
     outstandingBadge: {
-        backgroundColor: '#FFF8E1',
+        backgroundColor: Colors.light.secondaryLight,
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 8,
@@ -345,11 +328,11 @@ const styles = StyleSheet.create({
     },
     customerOutstanding: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     outstandingAmount: {
         fontWeight: '700',
-        color: '#F57C00',
+        color: Colors.light.secondary,
     },
     customerActions: {
         flexDirection: 'row',
@@ -365,12 +348,12 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#2E7D32',
+        borderColor: Colors.light.primary,
     },
     callButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     messageButton: {
         flex: 1,
@@ -380,12 +363,12 @@ const styles = StyleSheet.create({
         gap: 6,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: '#25D366',
+        backgroundColor: Colors.light.success,
     },
     messageButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     emptyState: {
         alignItems: 'center',
@@ -394,7 +377,7 @@ const styles = StyleSheet.create({
     },
     emptyStateText: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 16,
         textAlign: 'center',
         paddingHorizontal: 32,
@@ -403,7 +386,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 8,
@@ -412,7 +395,7 @@ const styles = StyleSheet.create({
     addFirstButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     clearBakayaButton: {
         flex: 1,
@@ -422,13 +405,13 @@ const styles = StyleSheet.create({
         gap: 6,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: '#FFF3E0',
+        backgroundColor: Colors.light.secondaryLight,
         borderWidth: 1,
-        borderColor: '#FFB74D',
+        borderColor: Colors.light.secondary,
     },
     clearBakayaButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#E65100',
+        color: Colors.light.secondary,
     },
 });

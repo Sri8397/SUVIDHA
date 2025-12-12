@@ -3,7 +3,7 @@
 // Requires selecting a friend before recording a loan
 // ============================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -21,6 +21,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Customer } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddLoanFormProps {
     visible: boolean;
@@ -124,7 +125,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                     {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                            <FontAwesome name="times" size={24} color="#333" />
+                            <FontAwesome name="times" size={24} color={Colors.light.text} />
                         </TouchableOpacity>
                         <Text style={styles.title}>{t('personal.loan.title')}</Text>
                         <View style={styles.placeholder} />
@@ -132,13 +133,13 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
 
                     {/* Empty State */}
                     <View style={styles.emptyState}>
-                        <FontAwesome name="user-plus" size={64} color="#BDBDBD" />
+                        <FontAwesome name="user-plus" size={64} color={Colors.light.textTertiary} />
                         <Text style={styles.emptyTitle}>{t('personal.loan.noFriends')}</Text>
                         <TouchableOpacity
                             style={styles.addFriendButton}
                             onPress={handleAddPerson}
                         >
-                            <FontAwesome name="plus" size={16} color="#FFFFFF" />
+                            <FontAwesome name="plus" size={16} color={Colors.light.white} />
                             <Text style={styles.addFriendButtonText}>{t('personal.loan.addFriend')}</Text>
                         </TouchableOpacity>
                     </View>
@@ -161,7 +162,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={24} color="#333" />
+                        <FontAwesome name="times" size={24} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('personal.loan.title')}</Text>
                     <View style={styles.placeholder} />
@@ -181,7 +182,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                             ]}>
                                 {selectedFriend?.name || t('personal.loan.selectFriend')}
                             </Text>
-                            <FontAwesome name="chevron-down" size={16} color="#666" />
+                            <FontAwesome name="chevron-down" size={16} color={Colors.light.textSecondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -199,7 +200,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                                 <FontAwesome
                                     name="arrow-up"
                                     size={18}
-                                    color={loanType === 'give' ? '#FFFFFF' : '#D32F2F'}
+                                    color={loanType === 'give' ? Colors.light.white : Colors.light.error}
                                 />
                                 <Text style={[
                                     styles.loanTypeText,
@@ -218,7 +219,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                                 <FontAwesome
                                     name="arrow-down"
                                     size={18}
-                                    color={loanType === 'receive' ? '#FFFFFF' : '#2E7D32'}
+                                    color={loanType === 'receive' ? Colors.light.white : Colors.light.success}
                                 />
                                 <Text style={[
                                     styles.loanTypeText,
@@ -240,7 +241,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                                 value={amount}
                                 onChangeText={setAmount}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -254,7 +255,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                             value={description}
                             onChangeText={setDescription}
                             placeholder={t('forms.descriptionPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
                             numberOfLines={2}
                         />
@@ -269,7 +270,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('common.save')}</Text>
                         )}
@@ -317,7 +318,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                                             )}
                                         </View>
                                         {selectedFriend?.id === friend.id && (
-                                            <FontAwesome name="check" size={16} color="#2E7D32" />
+                                            <FontAwesome name="check" size={16} color={Colors.light.primary} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -333,7 +334,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         padding: 4,
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     placeholder: {
         width: 32,
@@ -365,24 +366,24 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     selectButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 16,
     },
     selectButtonText: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     selectButtonPlaceholder: {
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
     loanTypeContainer: {
         flexDirection: 'row',
@@ -394,65 +395,65 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingVertical: 14,
         borderWidth: 2,
-        borderColor: 'transparent',
+        borderColor: Colors.light.transparent,
     },
     loanTypeButtonActive: {
-        backgroundColor: '#D32F2F',
-        borderColor: '#D32F2F',
+        backgroundColor: Colors.light.error,
+        borderColor: Colors.light.error,
     },
     loanTypeButtonActiveGreen: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.success,
+        borderColor: Colors.light.success,
     },
     loanTypeText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
     },
     loanTypeTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     amountInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
     },
     currencySymbol: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
         marginRight: 8,
     },
     amountInput: {
         flex: 1,
         fontSize: 20,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
         paddingVertical: 12,
     },
     textInput: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         minHeight: 60,
         textAlignVertical: 'top',
     },
     footer: {
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     emptyState: {
         flex: 1,
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 16,
         marginBottom: 24,
         textAlign: 'center',
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingHorizontal: 24,
         paddingVertical: 14,
@@ -491,16 +492,16 @@ const styles = StyleSheet.create({
     addFriendButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     pickerOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     pickerContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 16,
         width: '85%',
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
     pickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
         textAlign: 'center',
     },
@@ -522,22 +523,22 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     pickerItemSelected: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.background,
     },
     friendInfo: {
         flex: 1,
     },
     pickerItemText: {
         fontSize: 16,
-        color: '#424242',
+        color: Colors.light.text,
     },
     pickerItemTextSelected: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
     outstandingText: {
         fontSize: 12,
-        color: '#D32F2F',
+        color: Colors.light.error,
         marginTop: 2,
     },
 });

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
+import { Colors } from '@/constants/theme';
 
 export default function SupportScreen() {
     const { t } = useTranslation();
@@ -22,13 +23,13 @@ export default function SupportScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <FontAwesome name="arrow-left" size={20} color="#212121" />
+                        <FontAwesome name="arrow-left" size={20} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('support.title')}</Text>
                     <View style={styles.backButton} />
@@ -46,35 +47,35 @@ export default function SupportScreen() {
 
                     <TouchableOpacity style={styles.fieldCard} onPress={handleCall}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="phone" size={24} color="#2E7D32" />
+                            <MaterialIcons name="phone" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.phoneSupport')}</Text>
                             <Text style={styles.fieldValue}>1800-123-456 {t('support.tollFree')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard} onPress={handleEmail}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="email" size={24} color="#2E7D32" />
+                            <MaterialIcons name="email" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.emailSupport')}</Text>
                             <Text style={styles.fieldValue}>support@suvidha.app</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard} onPress={handleWhatsApp}>
                         <View style={styles.iconContainer}>
-                            <FontAwesome name="whatsapp" size={24} color="#2E7D32" />
+                            <FontAwesome name="whatsapp" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.whatsappSupport')}</Text>
                             <Text style={styles.fieldValue}>{t('support.startChat')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -84,42 +85,42 @@ export default function SupportScreen() {
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
+                            <MaterialIcons name="help-outline" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.faq1')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
+                            <MaterialIcons name="help-outline" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.faq2')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
+                            <MaterialIcons name="help-outline" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.faq3')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="help-outline" size={24} color="#2E7D32" />
+                            <MaterialIcons name="help-outline" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.faq4')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -129,7 +130,7 @@ export default function SupportScreen() {
 
                     <View style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="info-outline" size={24} color="#2E7D32" />
+                            <MaterialIcons name="info-outline" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.appVersion')}</Text>
@@ -139,22 +140,22 @@ export default function SupportScreen() {
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="description" size={24} color="#2E7D32" />
+                            <MaterialIcons name="description" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.termsAndConditions')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="privacy-tip" size={24} color="#2E7D32" />
+                            <MaterialIcons name="privacy-tip" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('support.privacyPolicy')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -165,10 +166,10 @@ export default function SupportScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     headerSafeArea: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -176,9 +177,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         padding: 8,
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     scrollView: {
         flex: 1,
@@ -201,17 +202,17 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
     },
     fieldCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -232,11 +233,11 @@ const styles = StyleSheet.create({
     fieldLabel: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#212121',
+        color: Colors.light.text,
     },
     fieldValue: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 4,
     },
 });

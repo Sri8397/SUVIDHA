@@ -5,6 +5,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
+import { Colors } from '@/constants/theme';
 
 import { LanguageModal } from './language-modal';
 import { NotificationList } from './notification-list';
@@ -66,7 +67,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                 <View style={styles.headerLeft}>
                     {showBackButton ? (
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <FontAwesome name="arrow-left" size={20} color="#212121" />
+                            <FontAwesome name="arrow-left" size={20} color={Colors.light.text} />
                         </TouchableOpacity>
                     ) : (
                         <View style={styles.profileImage}>
@@ -102,7 +103,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
                         style={styles.bellButton}
                         onPress={() => setNotificationVisible(true)}
                     >
-                        <FontAwesome name="bell-o" size={24} color="#212121" />
+                        <FontAwesome name="bell-o" size={24} color={Colors.light.text} />
                         {hasNotifications && (
                             <View style={styles.notificationBadge}>
                                 <Text style={styles.badgeText}>
@@ -135,7 +136,7 @@ export function Header({ title, showOnlineStatus = false, showLanguageToggle = t
 
 const styles = StyleSheet.create({
     headerSafeArea: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
     },
     header: {
         flexDirection: 'row',
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     onlineStatus: {
         flexDirection: 'row',
@@ -177,11 +178,11 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
     },
     onlineText: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     headerRight: {
         flexDirection: 'row',
@@ -190,13 +191,13 @@ const styles = StyleSheet.create({
     },
     langButton: {
         padding: 8,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 8,
     },
     langText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
     },
     bellButton: {
         position: 'relative',
@@ -209,17 +210,17 @@ const styles = StyleSheet.create({
         minWidth: 18,
         height: 18,
         borderRadius: 9,
-        backgroundColor: '#D32F2F',
+        backgroundColor: Colors.light.error,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 4,
         borderWidth: 2,
-        borderColor: '#FFFFFF',
+        borderColor: Colors.light.white,
     },
     badgeText: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     backButton: {
         width: 40,

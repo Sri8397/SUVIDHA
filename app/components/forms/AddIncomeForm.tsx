@@ -21,6 +21,7 @@ import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { IncomeSource } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddIncomeFormProps {
     visible: boolean;
@@ -105,7 +106,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={24} color="#333" />
+                        <FontAwesome name="times" size={24} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('personal.income.title')}</Text>
                     <View style={styles.placeholder} />
@@ -122,7 +123,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                                 value={amount}
                                 onChangeText={setAmount}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                                 autoFocus
                             />
@@ -139,7 +140,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                             <Text style={styles.selectButtonText}>
                                 {getSourceLabel(source)}
                             </Text>
-                            <FontAwesome name="chevron-down" size={16} color="#666" />
+                            <FontAwesome name="chevron-down" size={16} color={Colors.light.textSecondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -151,7 +152,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                             value={description}
                             onChangeText={setDescription}
                             placeholder={t('personal.income.descriptionPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
                             numberOfLines={3}
                         />
@@ -166,7 +167,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('common.save')}</Text>
                         )}
@@ -209,7 +210,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
                                             {getSourceLabel(sourceOption)}
                                         </Text>
                                         {source === sourceOption && (
-                                            <FontAwesome name="check" size={16} color="#2E7D32" />
+                                            <FontAwesome name="check" size={16} color={Colors.light.primary} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -225,7 +226,7 @@ export function AddIncomeForm({ visible, onClose }: AddIncomeFormProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         padding: 4,
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     placeholder: {
         width: 32,
@@ -257,59 +258,59 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     amountInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
     },
     currencySymbol: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
         marginRight: 8,
     },
     amountInput: {
         flex: 1,
         fontSize: 20,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
         paddingVertical: 12,
     },
     selectButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 16,
     },
     selectButtonText: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     textInput: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         minHeight: 80,
         textAlignVertical: 'top',
     },
     footer: {
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -320,16 +321,16 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     pickerOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     pickerContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 16,
         width: '85%',
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     pickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
         textAlign: 'center',
     },
@@ -351,14 +352,14 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     pickerItemSelected: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.background,
     },
     pickerItemText: {
         fontSize: 16,
-        color: '#424242',
+        color: Colors.light.text,
     },
     pickerItemTextSelected: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
 });

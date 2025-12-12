@@ -5,6 +5,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Transaction } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface NotificationListProps {
     visible: boolean;
@@ -32,38 +33,38 @@ const getTransactionStyle = (type: Transaction['type']) => {
         case 'SALE':
             return {
                 iconName: 'shopping-cart' as const,
-                iconColor: '#E3F2FD',
-                iconTextColor: '#1976D2',
+                iconColor: Colors.light.primaryLight,
+                iconTextColor: Colors.light.primary,
             };
         case 'EXPENSE':
             return {
                 iconName: 'money' as const,
-                iconColor: '#FFF3E0',
-                iconTextColor: '#F57C00',
+                iconColor: Colors.light.secondaryLight,
+                iconTextColor: Colors.light.secondary,
             };
         case 'PRODUCT_ADD':
             return {
                 iconName: 'cube' as const,
-                iconColor: '#E8F5E9',
-                iconTextColor: '#2E7D32',
+                iconColor: Colors.light.primaryLight,
+                iconTextColor: Colors.light.primary,
             };
         case 'PAYMENT_RECEIVED':
             return {
                 iconName: 'rupee' as const,
-                iconColor: '#E8F5E9',
-                iconTextColor: '#2E7D32',
+                iconColor: Colors.light.primaryLight,
+                iconTextColor: Colors.light.primary,
             };
         case 'PAYMENT_GIVEN':
             return {
                 iconName: 'arrow-right' as const,
-                iconColor: '#FFEBEE',
-                iconTextColor: '#D32F2F',
+                iconColor: Colors.light.errorLight,
+                iconTextColor: Colors.light.error,
             };
         default:
             return {
                 iconName: 'bell' as const,
-                iconColor: '#F5F5F5',
-                iconTextColor: '#757575',
+                iconColor: Colors.light.background,
+                iconTextColor: Colors.light.textSecondary,
             };
     }
 };
@@ -97,7 +98,7 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
                                 </TouchableOpacity>
                             )}
                             <TouchableOpacity onPress={onClose}>
-                                <MaterialIcons name="close" size={24} color="#757575" />
+                                <MaterialIcons name="close" size={24} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -105,11 +106,11 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
                     <ScrollView contentContainerStyle={styles.listContainer}>
                         {isLoading ? (
                             <View style={styles.emptyState}>
-                                <ActivityIndicator size="large" color="#2E7D32" />
+                                <ActivityIndicator size="large" color={Colors.light.primary} />
                             </View>
                         ) : visibleTransactions.length === 0 ? (
                             <View style={styles.emptyState}>
-                                <FontAwesome name="bell-o" size={48} color="#BDBDBD" />
+                                <FontAwesome name="bell-o" size={48} color={Colors.light.textTertiary} />
                                 <Text style={styles.emptyTitle}>{t('notifications.noNotifications')}</Text>
                                 <Text style={styles.emptySubtitle}>{t('notifications.emptySubtitle')}</Text>
                             </View>
@@ -139,7 +140,7 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
                                             onPress={() => dismissNotification(item.id)}
                                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                         >
-                                            <MaterialIcons name="close" size={18} color="#9E9E9E" />
+                                            <MaterialIcons name="close" size={18} color={Colors.light.textTertiary} />
                                         </TouchableOpacity>
                                     </View>
                                 );
@@ -155,15 +156,15 @@ export function NotificationList({ visible, onClose }: NotificationListProps) {
 const styles = StyleSheet.create({
     centeredView: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: Colors.light.modalOverlay,
         justifyContent: 'flex-start',
         paddingTop: 60,
     },
     modalView: {
-        backgroundColor: 'white',
+        backgroundColor: Colors.light.card,
         marginHorizontal: 16,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: {
             width: 0,
             height: 2,
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
+        borderBottomColor: Colors.light.border,
     },
     headerActions: {
         flexDirection: 'row',
@@ -192,13 +193,13 @@ const styles = StyleSheet.create({
     },
     clearAllText: {
         fontSize: 12,
-        color: '#D32F2F',
+        color: Colors.light.error,
         fontWeight: '500',
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#000',
+        color: Colors.light.text,
     },
     listContainer: {
         paddingVertical: 0,
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
     },
     borderBottom: {
         borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
+        borderBottomColor: Colors.light.border,
     },
     iconContainer: {
         width: 40,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 14,
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 4,
         lineHeight: 18,
     },
@@ -237,11 +238,11 @@ const styles = StyleSheet.create({
     amount: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
     },
     time: {
         fontSize: 11,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
     dismissButton: {
         padding: 4,
@@ -255,12 +256,12 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginTop: 16,
     },
     emptySubtitle: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 4,
         textAlign: 'center',
     },

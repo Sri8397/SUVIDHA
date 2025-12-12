@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from '@/contexts/auth-context';
+import { Colors } from '@/constants/theme';
 
 export default function OTPScreen() {
     const { t } = useTranslation();
@@ -76,7 +77,7 @@ export default function OTPScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -89,7 +90,7 @@ export default function OTPScreen() {
                     {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                            <FontAwesome name="arrow-left" size={20} color="#FFFFFF" />
+                            <FontAwesome name="arrow-left" size={20} color={Colors.light.white} />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>{t('auth.yourStore')}</Text>
                     </View>
@@ -150,7 +151,7 @@ export default function OTPScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     keyboardView: {
         flex: 1,
@@ -159,7 +160,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     header: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 16,
@@ -172,23 +173,23 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     titleSection: {
         paddingVertical: 24,
         paddingHorizontal: 24,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     titleText: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     subtitleText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         lineHeight: 22,
     },
     formContainer: {
@@ -205,32 +206,32 @@ const styles = StyleSheet.create({
         width: 48,
         height: 56,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 8,
         textAlign: 'center',
         fontSize: 24,
         fontWeight: '600',
-        color: '#212121',
-        backgroundColor: '#FFFFFF',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.white,
     },
     otpInputFilled: {
-        borderColor: '#2E7D32',
-        backgroundColor: '#F1F8E9',
+        borderColor: Colors.light.primary,
+        backgroundColor: Colors.light.primaryContainer,
     },
     verifyButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
         marginBottom: 16,
     },
     verifyButtonDisabled: {
-        backgroundColor: '#A5D6A7',
+        backgroundColor: Colors.light.primaryDisabled,
     },
     verifyButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     resendLink: {
         alignItems: 'center',
@@ -238,13 +239,13 @@ const styles = StyleSheet.create({
     },
     resendLinkText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     resendLinkHighlight: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
     resendDisabled: {
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
 });

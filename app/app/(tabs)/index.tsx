@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StatusBar, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -15,14 +15,15 @@ import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
 import { AddLoanForm } from '@/components/forms/AddLoanForm';
-import { TransactionList } from '@/components/ui/TransactionList';
+import { Colors } from '@/constants/theme';
 
-const { width } = Dimensions.get('window');
+
+
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { isLoading, dashboardStats, weeklyData, lowStockProducts, refreshAll } = useData();
+  const { isLoading, dashboardStats, weeklyData, lowStockProducts } = useData();
   const { appMode } = useAppMode();
   const isPersonalMode = appMode === 'personal';
 
@@ -37,7 +38,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
         <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
@@ -45,7 +46,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
       {/* Header */}
       <Header title="Suvidha" showOnlineStatus={true} showLanguageToggle={true} />
@@ -67,7 +68,7 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.infoLight }]}>
                   <Text style={styles.rupeeIcon}>₹</Text>
                 </View>
               </View>
@@ -80,8 +81,8 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: '#FFEBEE' }]}>
-                  <FontAwesome name="shopping-bag" size={16} color="#D32F2F" />
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
+                  <FontAwesome name="shopping-bag" size={16} color={Colors.light.error} />
                 </View>
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.loanGiven') : t('dashboard.pendingPayments')}</Text>
@@ -93,12 +94,12 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: '#E8F5E9' }]}>
-                  <MaterialIcons name="trending-up" size={18} color="#2E7D32" />
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.primaryLight }]}>
+                  <MaterialIcons name="trending-up" size={18} color={Colors.light.primary} />
                 </View>
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.savings') : t('dashboard.profit')}</Text>
-              <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? '#2E7D32' : '#D32F2F' }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? Colors.light.success : Colors.light.error }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -106,12 +107,12 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: '#FFF8E1' }]}>
-                  <MaterialIcons name="trending-down" size={18} color="#F57C00" />
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.secondaryLight }]}>
+                  <MaterialIcons name="trending-down" size={18} color={Colors.light.secondary} />
                 </View>
               </View>
               <Text style={styles.statLabel}>{t('dashboard.expenses')}</Text>
-              <Text style={[styles.statValue, { color: '#F57C00' }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: Colors.light.secondary }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
             </View>
           </View>
         </View>
@@ -125,7 +126,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/reports?period=weekly')}
             >
               <Text style={styles.viewReportText}>{t('common.viewAll')}</Text>
-              <FontAwesome name="arrow-right" size={12} color="#2E7D32" />
+              <FontAwesome name="arrow-right" size={12} color={Colors.light.primary} />
             </TouchableOpacity>
           </View>
 
@@ -134,8 +135,8 @@ export default function HomeScreen() {
             data1={weeklyData.sales}
             data2={weeklyData.profit}
             labels={weeklyData.labels}
-            color1="#2E7D32"
-            color2="#F57C00"
+            color1={Colors.light.primary}
+            color2={Colors.light.secondary}
             height={140}
             isPersonalMode={isPersonalMode}
           />
@@ -153,7 +154,7 @@ export default function HomeScreen() {
 
             {lowStockProducts.length === 0 ? (
               <View style={styles.emptyLowStock}>
-                <FontAwesome name="check-circle" size={32} color="#2E7D32" />
+                <FontAwesome name="check-circle" size={32} color={Colors.light.primary} />
                 <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
               </View>
             ) : (
@@ -163,7 +164,7 @@ export default function HomeScreen() {
                     <Image source={{ uri: item.image }} style={styles.productImage} />
                   ) : (
                     <View style={[styles.productImage, styles.productImagePlaceholder]}>
-                      <FontAwesome name="cube" size={24} color="#BDBDBD" />
+                      <FontAwesome name="cube" size={24} color={Colors.light.textTertiary} />
                     </View>
                   )}
                   <View style={styles.productInfo}>
@@ -211,18 +212,18 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.light.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#757575',
+    color: Colors.light.textSecondary,
   },
 
 
@@ -249,17 +250,17 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     padding: 24,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: Colors.light.primaryLight,
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2E7D32',
+    color: Colors.light.primary,
     marginBottom: 8,
   },
   welcomeSubtitle: {
     fontSize: 14,
-    color: '#2E7D32',
+    color: Colors.light.primary,
     opacity: 0.9,
   },
   statsGrid: {
@@ -273,10 +274,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   statCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: Colors.light.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -295,25 +296,25 @@ const styles = StyleSheet.create({
   rupeeIcon: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1976D2',
+    color: Colors.light.info,
   },
   statLabel: {
     fontSize: 12,
-    color: '#757575',
+    color: Colors.light.textSecondary,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#212121',
+    color: Colors.light.text,
   },
   chartCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
     marginHorizontal: 16,
     marginTop: 12,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: Colors.light.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -329,7 +330,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#212121',
+    color: Colors.light.text,
   },
   viewReportBtn: {
     flexDirection: 'row',
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
   },
   viewReportText: {
     fontSize: 14,
-    color: '#2E7D32',
+    color: Colors.light.primary,
     fontWeight: '500',
   },
   lowStockSection: {
@@ -354,32 +355,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#212121',
+    color: Colors.light.text,
   },
   viewAllText: {
     fontSize: 14,
-    color: '#2E7D32',
+    color: Colors.light.primary,
     fontWeight: '500',
   },
   emptyLowStock: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
   },
   emptyLowStockText: {
     fontSize: 14,
-    color: '#757575',
+    color: Colors.light.textSecondary,
     marginTop: 12,
   },
   lowStockCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: Colors.light.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 8,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.light.background,
     marginRight: 12,
   },
   productImagePlaceholder: {
@@ -402,21 +403,21 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#212121',
+    color: Colors.light.text,
     marginBottom: 4,
   },
   stockWarning: {
     fontSize: 12,
-    color: '#D32F2F',
+    color: Colors.light.error,
   },
   reorderButton: {
-    backgroundColor: '#D32F2F',
+    backgroundColor: Colors.light.error,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
   reorderButtonText: {
-    color: '#FFFFFF',
+    color: Colors.light.white,
     fontSize: 12,
     fontWeight: '600',
   },

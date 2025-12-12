@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAppMode, AppMode } from '@/contexts/ModeContext';
+import { Colors } from '@/constants/theme';
 
 export default function ModeSelectScreen() {
     const { t } = useTranslation();
@@ -19,7 +20,7 @@ export default function ModeSelectScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             <View style={styles.content}>
                 {/* Logo */}
@@ -43,8 +44,8 @@ export default function ModeSelectScreen() {
                         onPress={() => handleModeSelect('shopkeeper')}
                         activeOpacity={0.8}
                     >
-                        <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-                            <MaterialIcons name="storefront" size={40} color="#1976D2" />
+                        <View style={[styles.iconContainer, { backgroundColor: Colors.light.infoLight || '#E3F2FD' }]}>
+                            <MaterialIcons name="storefront" size={40} color={Colors.light.info || '#1976D2'} />
                         </View>
                         <Text style={styles.optionTitle}>{t('modeSelect.shopkeeper')}</Text>
                         <Text style={styles.optionDescription}>{t('modeSelect.shopkeeperDesc')}</Text>
@@ -56,8 +57,8 @@ export default function ModeSelectScreen() {
                         onPress={() => handleModeSelect('personal')}
                         activeOpacity={0.8}
                     >
-                        <View style={[styles.iconContainer, { backgroundColor: '#E8F5E9' }]}>
-                            <FontAwesome name="user" size={36} color="#2E7D32" />
+                        <View style={[styles.iconContainer, { backgroundColor: Colors.light.primaryLight }]}>
+                            <FontAwesome name="user" size={36} color={Colors.light.primary} />
                         </View>
                         <Text style={styles.optionTitle}>{t('modeSelect.personal')}</Text>
                         <Text style={styles.optionDescription}>{t('modeSelect.personalDesc')}</Text>
@@ -74,7 +75,7 @@ export default function ModeSelectScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     content: {
         flex: 1,
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 20,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
@@ -98,13 +99,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         textAlign: 'center',
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         textAlign: 'center',
         marginBottom: 40,
     },
@@ -113,12 +114,12 @@ const styles = StyleSheet.create({
         gap: 16,
     },
     optionCard: {
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background, // Used FAFAFA which is close to background
         borderRadius: 16,
         padding: 24,
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     iconContainer: {
         width: 80,
@@ -131,12 +132,12 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     optionDescription: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
     },
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 40,
         fontSize: 13,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
         textAlign: 'center',
     },
 });

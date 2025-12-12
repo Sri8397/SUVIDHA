@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 export default function AuthLayout() {
     return (
@@ -19,6 +20,6 @@ export default function AuthLayout() {
 
 const styles = StyleSheet.create({
     content: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
 });

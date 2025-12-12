@@ -21,6 +21,7 @@ import { TransliterationInput } from '../ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
 import { useAppMode } from '@/contexts/ModeContext';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddCustomerFormProps {
     visible: boolean;
@@ -123,7 +124,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>
                         {editCustomer
@@ -141,7 +142,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                     {/* Customer Icon */}
                     <View style={styles.iconSection}>
                         <View style={styles.customerIcon}>
-                            <FontAwesome name="user" size={48} color="#2E7D32" />
+                            <FontAwesome name="user" size={48} color={Colors.light.primary} />
                         </View>
                     </View>
 
@@ -153,7 +154,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                             value={name}
                             onChangeText={setName}
                             placeholder={t(isPersonalMode ? 'personal.friend.namePlaceholder' : 'forms.customer.namePlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                         />
                     </View>
 
@@ -165,7 +166,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                             value={phone}
                             onChangeText={setPhone}
                             placeholder={t(isPersonalMode ? 'personal.friend.phonePlaceholder' : 'forms.customer.phonePlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="phone-pad"
                             maxLength={10}
                         />
@@ -179,7 +180,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                             value={address}
                             onChangeText={setAddress}
                             placeholder={t('forms.customer.addressPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
 
                             numberOfLines={3}
@@ -196,7 +197,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>
                                 {editCustomer ? t('common.save') : t(isPersonalMode ? 'personal.friend.title' : 'customers.addCustomer')}
@@ -212,7 +213,7 @@ export function AddCustomerForm({ visible, onClose, editCustomer }: AddCustomerF
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -256,18 +257,18 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FAFAFA',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.background,
     },
     textArea: {
         height: 100,
@@ -276,12 +277,12 @@ const styles = StyleSheet.create({
     footer: {
         padding: 16,
         paddingBottom: 32,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -292,6 +293,6 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

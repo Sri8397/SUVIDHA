@@ -18,6 +18,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useData } from '@/contexts/DataContext';
 import { Customer } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface ReceivePaymentFormProps {
     visible: boolean;
@@ -98,7 +99,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('forms.payment.title')}</Text>
                     <View style={styles.closeButton} />
@@ -108,7 +109,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                     {/* Customer Info Card - Styled like Selector */}
                     <View style={styles.customerCard}>
                         <View style={styles.customerIcon}>
-                            <FontAwesome name="user" size={20} color="#2E7D32" />
+                            <FontAwesome name="user" size={20} color={Colors.light.primary} />
                         </View>
                         <View style={styles.customerInfo}>
                             <Text style={styles.customerLabel}>{t('forms.payment.customer')}</Text>
@@ -128,7 +129,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                             value={amount}
                             onChangeText={setAmount}
                             placeholder={t('forms.payment.enterAmount')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="numeric"
                             autoFocus
                         />
@@ -166,7 +167,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('forms.payment.receivePayment')}</Text>
                         )}
@@ -180,7 +181,7 @@ export function ReceivePaymentForm({ visible, onClose, customer }: ReceivePaymen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     header: {
         flexDirection: 'row',
@@ -188,9 +189,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
     customerCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         padding: 16,
         borderRadius: 12,
         marginBottom: 24,
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -229,24 +230,24 @@ const styles = StyleSheet.create({
     },
     customerLabel: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     customerName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
     },
     outstandingBadge: {
         alignItems: 'flex-end',
     },
     outstandingLabel: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     outstandingValue: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     inputGroup: {
         marginBottom: 24,
@@ -254,18 +255,18 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FFFFFF',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.card,
     },
     paymentMethods: {
         flexDirection: 'row',
@@ -276,24 +277,24 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
+        borderColor: Colors.light.border,
+        backgroundColor: Colors.light.card,
         alignItems: 'center',
     },
     paymentChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     paymentChipText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#616161',
+        color: Colors.light.textSecondary,
     },
     paymentChipTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -305,6 +306,6 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

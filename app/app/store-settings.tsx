@@ -4,13 +4,15 @@ import { View, Text, ScrollView, StatusBar, TouchableOpacity, StyleSheet, Modal,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
-import { removeData } from '@/services/storage';
+import { removeData, getData, setData } from '@/services/storage';
 import { useData } from '@/contexts/DataContext';
 import { useSettings } from '@/contexts/settings-context';
 import { useAppMode } from '@/contexts/ModeContext';
 import { STORAGE_KEYS, Customer } from '@/types';
-import { getData, setData } from '@/services/storage';
+
 import { TransliterationInput } from '../components/ui/TransliterationInput';
+import { LanguageModal } from '../components/ui/language-modal';
+import { Colors } from '@/constants/theme';
 
 // Data types that can be cleared
 interface ClearOptions {
@@ -28,7 +30,7 @@ interface EditModalProps {
     value: string;
     onSave: (value: string) => void;
     onClose: () => void;
-    keyboardType?: 'default' | 'phone-pad' | 'email-address';
+    keyboardType?: 'default' | 'phone-pad' | 'email-address' | 'numeric';
     placeholder?: string;
 }
 
@@ -67,7 +69,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             value={inputValue}
                             onChangeText={setInputValue}
                             placeholder={placeholder}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             autoFocus
                         />
                     ) : (
@@ -77,7 +79,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             onChangeText={setInputValue}
                             keyboardType={keyboardType}
                             placeholder={placeholder}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             autoFocus
                         />
                     )}
@@ -95,7 +97,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             disabled={isSaving}
                         >
                             {isSaving ? (
-                                <ActivityIndicator size="small" color="#FFFFFF" />
+                                <ActivityIndicator size="small" color={Colors.light.white} />
                             ) : (
                                 <Text style={styles.editSaveButtonText}>{t('common.save')}</Text>
                             )}
@@ -108,14 +110,14 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
 }
 
 export default function StoreSettingsScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { refreshAll } = useData();
     const { storeSettings, updateStoreSettings, isLoading: settingsLoading } = useSettings();
     const { appMode } = useAppMode();
     const isPersonalMode = appMode === 'personal';
     const [showClearDataModal, setShowClearDataModal] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
-    const [editField, setEditField] = useState<'name' | 'address' | 'businessType' | 'gstin' | null>(null);
+    const [editField, setEditField] = useState<'name' | 'address' | 'businessType' | 'gstin' | 'canvasingRate' | 'storeRate' | null>(null);
     const [clearOptions, setClearOptions] = useState<ClearOptions>({
         products: !isPersonalMode, // Products not relevant for personal mode
         customers: true,
@@ -123,6 +125,7 @@ export default function StoreSettingsScreen() {
         expenses: true,
         bakaya: true,
     });
+    const [showLanguageModal, setShowLanguageModal] = useState(false);
 
     const toggleOption = (key: keyof ClearOptions) => {
         setClearOptions(prev => ({ ...prev, [key]: !prev[key] }));
@@ -214,24 +217,26 @@ export default function StoreSettingsScreen() {
     const getStoreAddress = () => storeSettings.address || t('profile.notSet');
     const getBusinessType = () => storeSettings.businessType || t('profile.notSet');
     const getGstin = () => storeSettings.gstin || t('profile.notSet');
+    const getCanvasingRate = () => storeSettings.canvasingRate || t('profile.notSet');
+    const getStoreRate = () => storeSettings.storeRate || t('profile.notSet');
 
     if (settingsLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <FontAwesome name="arrow-left" size={20} color="#212121" />
+                        <FontAwesome name="arrow-left" size={20} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t(isPersonalMode ? 'personal.appSettings' : 'storeSettings.title')}</Text>
                     <View style={styles.backButton} />
@@ -281,29 +286,30 @@ export default function StoreSettingsScreen() {
                             </TouchableOpacity>
 
                             {/* Canvasing Settings */}
-                            <TouchableOpacity style={styles.fieldCard} activeOpacity={0.7}>
+                            {/* Canvasing Settings */}
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('canvasingRate')} activeOpacity={0.7}>
                                 <View style={styles.fieldContent}>
                                     <Text style={styles.fieldLabel}>{t('storeSettings.canvasingRate')}</Text>
-                                    <Text style={styles.fieldValue}>{t('storeSettings.defaultSetting')}</Text>
+                                    <Text style={styles.fieldValue}>{getCanvasingRate()}</Text>
                                 </View>
                             </TouchableOpacity>
 
                             {/* Store Rate */}
-                            <TouchableOpacity style={styles.navigationCard}>
+                            <TouchableOpacity style={styles.fieldCard} onPress={() => setEditField('storeRate')} activeOpacity={0.7}>
                                 <View style={styles.fieldContent}>
                                     <Text style={styles.fieldLabel}>{t('storeSettings.storeRate')}</Text>
+                                    <Text style={styles.fieldValue}>{getStoreRate()}</Text>
                                 </View>
-                                <FontAwesome name="chevron-right" size={18} color="#757575" />
                             </TouchableOpacity>
                         </>
                     )}
 
                     {/* Language - shown in both modes */}
-                    <TouchableOpacity style={styles.navigationCard}>
+                    <TouchableOpacity style={styles.navigationCard} onPress={() => setShowLanguageModal(true)}>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('storeSettings.language')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={18} color="#757575" />
+                        <FontAwesome name="chevron-right" size={18} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     {/* Profit Calculation Method - only for business mode */}
@@ -357,7 +363,7 @@ export default function StoreSettingsScreen() {
                             onPress={() => setShowClearDataModal(true)}
                         >
                             <View style={styles.dangerIconContainer}>
-                                <FontAwesome name="trash" size={20} color="#D32F2F" />
+                                <FontAwesome name="trash" size={20} color={Colors.light.error} />
                             </View>
                             <View style={styles.fieldContent}>
                                 <Text style={styles.dangerLabel}>{t('storeSettings.clearAllData')}</Text>
@@ -365,7 +371,7 @@ export default function StoreSettingsScreen() {
                                     {t('storeSettings.clearDataDesc')}
                                 </Text>
                             </View>
-                            <FontAwesome name="chevron-right" size={18} color="#D32F2F" />
+                            <FontAwesome name="chevron-right" size={18} color={Colors.light.error} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -404,6 +410,24 @@ export default function StoreSettingsScreen() {
                 onClose={() => setEditField(null)}
                 placeholder={t('storeSettings.enterGst')}
             />
+            <EditModal
+                visible={editField === 'canvasingRate'}
+                title={t('storeSettings.changeCanvasingRate')}
+                value={storeSettings.canvasingRate || ''}
+                onSave={(value) => handleFieldSave('canvasingRate', value)}
+                onClose={() => setEditField(null)}
+                placeholder={t('storeSettings.enterCanvasingRate')}
+                keyboardType="numeric"
+            />
+            <EditModal
+                visible={editField === 'storeRate'}
+                title={t('storeSettings.changeStoreRate')}
+                value={storeSettings.storeRate || ''}
+                onSave={(value) => handleFieldSave('storeRate', value)}
+                onClose={() => setEditField(null)}
+                placeholder={t('storeSettings.enterStoreRate')}
+                keyboardType="numeric"
+            />
 
             {/* Clear Data Confirmation Modal */}
             <Modal
@@ -415,7 +439,7 @@ export default function StoreSettingsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalIconContainer}>
-                            <FontAwesome name="trash" size={40} color="#D32F2F" />
+                            <FontAwesome name="trash" size={40} color={Colors.light.error} />
                         </View>
                         <Text style={styles.modalTitle}>{t('storeSettings.clearDataTitle')}</Text>
                         <Text style={styles.modalSubtitle}>
@@ -430,7 +454,7 @@ export default function StoreSettingsScreen() {
                                 onPress={toggleAll}
                             >
                                 <View style={[styles.checkbox, allSelected && styles.checkboxChecked]}>
-                                    {allSelected && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    {allSelected && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                 </View>
                                 <Text style={styles.checkboxLabelBold}>{t('storeSettings.selectAll')}</Text>
                             </TouchableOpacity>
@@ -444,7 +468,7 @@ export default function StoreSettingsScreen() {
                                     onPress={() => toggleOption('products')}
                                 >
                                     <View style={[styles.checkbox, clearOptions.products && styles.checkboxChecked]}>
-                                        {clearOptions.products && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                        {clearOptions.products && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                     </View>
                                     <View style={styles.checkboxContent}>
                                         <Text style={styles.checkboxLabel}>{t('inventory.product')}</Text>
@@ -459,7 +483,7 @@ export default function StoreSettingsScreen() {
                                 onPress={() => toggleOption('customers')}
                             >
                                 <View style={[styles.checkbox, clearOptions.customers && styles.checkboxChecked]}>
-                                    {clearOptions.customers && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    {clearOptions.customers && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                 </View>
                                 <View style={styles.checkboxContent}>
                                     <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'personal.people' : 'customers.customer')}</Text>
@@ -473,7 +497,7 @@ export default function StoreSettingsScreen() {
                                 onPress={() => toggleOption('sales')}
                             >
                                 <View style={[styles.checkbox, clearOptions.sales && styles.checkboxChecked]}>
-                                    {clearOptions.sales && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    {clearOptions.sales && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                 </View>
                                 <View style={styles.checkboxContent}>
                                     <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'reports.income' : 'reports.sales')}</Text>
@@ -487,7 +511,7 @@ export default function StoreSettingsScreen() {
                                 onPress={() => toggleOption('expenses')}
                             >
                                 <View style={[styles.checkbox, clearOptions.expenses && styles.checkboxChecked]}>
-                                    {clearOptions.expenses && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    {clearOptions.expenses && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                 </View>
                                 <View style={styles.checkboxContent}>
                                     <Text style={styles.checkboxLabel}>{t('reports.expenses')}</Text>
@@ -501,7 +525,7 @@ export default function StoreSettingsScreen() {
                                 onPress={() => toggleOption('bakaya')}
                             >
                                 <View style={[styles.checkbox, clearOptions.bakaya && styles.checkboxChecked]}>
-                                    {clearOptions.bakaya && <FontAwesome name="check" size={12} color="#FFFFFF" />}
+                                    {clearOptions.bakaya && <FontAwesome name="check" size={12} color={Colors.light.white} />}
                                 </View>
                                 <View style={styles.checkboxContent}>
                                     <Text style={styles.checkboxLabel}>{t(isPersonalMode ? 'personal.loanGiven' : 'customers.outstanding')}</Text>
@@ -532,7 +556,7 @@ export default function StoreSettingsScreen() {
                                 disabled={isClearing || !anySelected}
                             >
                                 {isClearing ? (
-                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                    <ActivityIndicator size="small" color={Colors.light.white} />
                                 ) : (
                                     <Text style={styles.modalConfirmButtonText}>{t('storeSettings.clear')}</Text>
                                 )}
@@ -541,6 +565,12 @@ export default function StoreSettingsScreen() {
                     </View>
                 </View>
             </Modal>
+            <LanguageModal
+                visible={showLanguageModal}
+                onClose={() => setShowLanguageModal(false)}
+                selectedLanguage={i18n.language}
+                onSelectLanguage={() => setShowLanguageModal(false)}
+            />
         </View>
     );
 }
@@ -548,16 +578,16 @@ export default function StoreSettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     headerSafeArea: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -565,9 +595,9 @@ const styles = StyleSheet.create({
         gap: 16,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         padding: 8,
@@ -575,7 +605,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     scrollView: {
         flex: 1,
@@ -591,11 +621,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -605,11 +635,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -620,45 +650,42 @@ const styles = StyleSheet.create({
     },
     fieldLabel: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         fontWeight: '500',
     },
     fieldValue: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 4,
-    },
-    editIcon: {
-        padding: 8,
     },
     // Danger Section Styles
     dangerSection: {
         marginTop: 24,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
     },
     dangerSectionTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginBottom: 12,
         textTransform: 'uppercase',
     },
     dangerCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFEBEE',
+        backgroundColor: Colors.light.errorLight,
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#FFCDD2',
+        borderColor: Colors.light.border, // Keeping this as it's a specific shade not in MAIN list but is fine or I can add to theme
     },
     dangerIconContainer: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -666,23 +693,23 @@ const styles = StyleSheet.create({
     dangerLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     dangerDescription: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 2,
     },
     // Edit Modal Styles
     editModalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
     },
     editModalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 24,
         width: '100%',
@@ -691,17 +718,17 @@ const styles = StyleSheet.create({
     editModalTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
         textAlign: 'center',
     },
     editModalInput: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 20,
     },
     editModalButtons: {
@@ -713,36 +740,36 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         alignItems: 'center',
     },
     editCancelButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     editSaveButton: {
         flex: 1,
         paddingVertical: 12,
         borderRadius: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         alignItems: 'center',
     },
     editSaveButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     // Clear Data Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 24,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 24,
         width: '100%',
@@ -753,7 +780,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: '#FFEBEE',
+        backgroundColor: Colors.light.errorLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -761,7 +788,7 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 12,
         textAlign: 'center',
     },
@@ -775,19 +802,19 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 14,
         borderRadius: 10,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         alignItems: 'center',
     },
     modalCancelButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#616161',
+        color: Colors.light.textSecondary,
     },
     modalConfirmButton: {
         flex: 1,
         paddingVertical: 14,
         borderRadius: 10,
-        backgroundColor: '#D32F2F',
+        backgroundColor: Colors.light.error,
         alignItems: 'center',
     },
     modalButtonDisabled: {
@@ -796,12 +823,12 @@ const styles = StyleSheet.create({
     modalConfirmButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     // Checkbox Styles
     modalSubtitle: {
         fontSize: 14,
-        color: '#616161',
+        color: Colors.light.textSecondary,
         marginBottom: 16,
         textAlign: 'center',
     },
@@ -819,52 +846,52 @@ const styles = StyleSheet.create({
         height: 22,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: '#BDBDBD',
+        borderColor: Colors.light.border,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
     checkboxChecked: {
-        backgroundColor: '#D32F2F',
-        borderColor: '#D32F2F',
+        backgroundColor: Colors.light.error,
+        borderColor: Colors.light.error,
     },
     checkboxContent: {
         flex: 1,
     },
     checkboxLabel: {
         fontSize: 15,
-        color: '#212121',
+        color: Colors.light.text,
         fontWeight: '500',
     },
     checkboxLabelBold: {
         fontSize: 15,
-        color: '#212121',
+        color: Colors.light.text,
         fontWeight: '700',
     },
     checkboxDesc: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 2,
     },
     checkboxDivider: {
         height: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: Colors.light.border,
         marginVertical: 8,
     },
     warningText: {
         fontSize: 13,
-        color: '#D32F2F',
+        color: Colors.light.error,
         fontWeight: '600',
         marginBottom: 16,
         textAlign: 'center',
     },
     // Profit Calculation Method Styles
     settingSection: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -873,7 +900,7 @@ const styles = StyleSheet.create({
     settingSectionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 12,
     },
     radioGroup: {
@@ -884,27 +911,27 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         padding: 12,
         borderRadius: 8,
-        backgroundColor: '#F9F9F9',
+        backgroundColor: Colors.light.background,
     },
     radioCircle: {
         width: 22,
         height: 22,
         borderRadius: 11,
         borderWidth: 2,
-        borderColor: '#BDBDBD',
+        borderColor: Colors.light.border,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
         marginTop: 2,
     },
     radioCircleSelected: {
-        borderColor: '#2E7D32',
+        borderColor: Colors.light.primary,
     },
     radioInner: {
         width: 12,
         height: 12,
         borderRadius: 6,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
     },
     radioContent: {
         flex: 1,
@@ -912,11 +939,11 @@ const styles = StyleSheet.create({
     radioLabel: {
         fontSize: 15,
         fontWeight: '500',
-        color: '#212121',
+        color: Colors.light.text,
     },
     radioDesc: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 2,
     },
 });

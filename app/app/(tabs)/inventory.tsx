@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, StatusBar, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { StockAdjustmentForm } from '@/components/forms/StockAdjustmentForm';
 import { Product } from '@/types';
+import { Colors } from '@/constants/theme';
 
 export default function InventoryScreen() {
     const { t } = useTranslation();
@@ -105,25 +106,25 @@ export default function InventoryScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <Header title={t('inventory.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
-                <FontAwesome name="search" size={18} color="#9E9E9E" />
+                <FontAwesome name="search" size={18} color={Colors.light.textTertiary} />
                 <TransliterationInput
                     style={styles.searchInput}
                     placeholder={t('common.search')}
-                    placeholderTextColor="#9E9E9E"
+                    placeholderTextColor={Colors.light.textTertiary}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
@@ -178,7 +179,7 @@ export default function InventoryScreen() {
                             <Image source={{ uri: product.image }} style={styles.productImage} />
                         ) : (
                             <View style={[styles.productImage, styles.productImagePlaceholder]}>
-                                <FontAwesome name="cube" size={32} color="#BDBDBD" />
+                                <FontAwesome name="cube" size={32} color={Colors.light.textTertiary} />
                             </View>
                         )}
                         <View style={styles.productInfo}>
@@ -198,21 +199,21 @@ export default function InventoryScreen() {
                                 style={styles.stockButton}
                                 onPress={() => handleStockAdjust(product)}
                             >
-                                <FontAwesome name="cubes" size={14} color="#1976D2" />
+                                <FontAwesome name="cubes" size={14} color={Colors.light.info} />
                                 <Text style={styles.stockButtonText}>{t('inventory.stock')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.editButton}
                                 onPress={() => handleEdit(product)}
                             >
-                                <FontAwesome name="pencil" size={14} color="#2E7D32" />
+                                <FontAwesome name="pencil" size={14} color={Colors.light.primary} />
                                 <Text style={styles.editButtonText}>{t('common.edit')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.deleteButton}
                                 onPress={() => handleDelete(product)}
                             >
-                                <FontAwesome name="trash" size={14} color="#D32F2F" />
+                                <FontAwesome name="trash" size={14} color={Colors.light.error} />
                                 <Text style={styles.deleteButtonText}>{t('common.delete')}</Text>
                             </TouchableOpacity>
                         </View>
@@ -221,7 +222,7 @@ export default function InventoryScreen() {
 
                 {filteredProducts.length === 0 && (
                     <View style={styles.emptyState}>
-                        <FontAwesome name="inbox" size={48} color="#BDBDBD" />
+                        <FontAwesome name="inbox" size={48} color={Colors.light.textTertiary} />
                         <Text style={styles.emptyStateText}>
                             {products.length === 0
                                 ? t('inventory.noProducts')
@@ -232,7 +233,7 @@ export default function InventoryScreen() {
                                 style={styles.addFirstButton}
                                 onPress={() => setShowProductForm(true)}
                             >
-                                <FontAwesome name="plus" size={14} color="#FFFFFF" />
+                                <FontAwesome name="plus" size={14} color={Colors.light.white} />
                                 <Text style={styles.addFirstButtonText}>{t('inventory.addProduct')}</Text>
                             </TouchableOpacity>
                         )}
@@ -269,19 +270,19 @@ export default function InventoryScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
 
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         marginVertical: 12,
         paddingHorizontal: 16,
@@ -289,12 +290,12 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         gap: 12,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     searchInput: {
         flex: 1,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     filterWrapper: {
         height: 48,
@@ -313,28 +314,28 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
+        borderColor: Colors.light.border,
+        backgroundColor: Colors.light.white,
         marginRight: 8,
     },
     filterChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     filterChipText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#616161',
+        color: Colors.light.textSecondary,
     },
     filterChipTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     lowStockChip: {
-        borderColor: '#FFCDD2',
-        backgroundColor: '#FFEBEE',
+        borderColor: Colors.light.errorLight,
+        backgroundColor: Colors.light.errorLight,
     },
     lowStockChipText: {
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     countContainer: {
         paddingHorizontal: 16,
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
     },
     countText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     scrollView: {
         flex: 1,
@@ -352,12 +353,12 @@ const styles = StyleSheet.create({
         paddingTop: 8,
     },
     productCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         marginBottom: 12,
         borderRadius: 12,
         padding: 16,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 8,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         position: 'absolute',
         left: 16,
         top: 16,
@@ -385,16 +386,16 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 4,
     },
     productStock: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginBottom: 4,
     },
     lowStockBadge: {
-        backgroundColor: '#FFEBEE',
+        backgroundColor: Colors.light.errorLight,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 6,
@@ -402,20 +403,20 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     lowStockText: {
-        color: '#D32F2F',
+        color: Colors.light.error,
         fontWeight: '600',
         marginBottom: 0,
     },
     productPrice: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     productActions: {
         flexDirection: 'row',
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#F5F5F5',
+        borderTopColor: Colors.light.background,
         marginTop: 0,
     },
     stockButton: {
@@ -428,7 +429,7 @@ const styles = StyleSheet.create({
     stockButtonText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#1976D2',
+        color: Colors.light.info,
     },
     editButton: {
         flex: 1,
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
     editButtonText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     deleteButton: {
         flex: 1,
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#D32F2F',
+        color: Colors.light.error,
     },
     emptyState: {
         alignItems: 'center',
@@ -461,7 +462,7 @@ const styles = StyleSheet.create({
     },
     emptyStateText: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 16,
         textAlign: 'center',
         paddingHorizontal: 32,
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 8,
@@ -479,6 +480,6 @@ const styles = StyleSheet.create({
     addFirstButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

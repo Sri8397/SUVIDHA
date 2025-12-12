@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/auth-context';
+import { Colors } from '@/constants/theme';
 
 export default function LoginScreen() {
     const { t } = useTranslation();
@@ -33,7 +34,7 @@ export default function LoginScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
@@ -66,7 +67,7 @@ export default function LoginScreen() {
                             <TextInput
                                 style={styles.phoneInput}
                                 placeholder="9876543210"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="phone-pad"
                                 maxLength={10}
                                 value={phone}
@@ -97,7 +98,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     keyboardView: {
         flex: 1,
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     header: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingVertical: 16,
         paddingHorizontal: 20,
         borderBottomLeftRadius: 0,
@@ -115,10 +116,10 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     welcomeSection: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: Colors.light.primaryVariant,
         paddingVertical: 40,
         paddingHorizontal: 24,
         borderBottomLeftRadius: 24,
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     welcomeText: {
         fontSize: 28,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
         lineHeight: 40,
     },
     formContainer: {
@@ -137,13 +138,13 @@ const styles = StyleSheet.create({
     },
     inputLabel: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginBottom: 8,
     },
     phoneInputContainer: {
         flexDirection: 'row',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 8,
         overflow: 'hidden',
         marginBottom: 24,
@@ -152,41 +153,41 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderRightWidth: 1,
-        borderRightColor: '#E0E0E0',
+        borderRightColor: Colors.light.border,
         gap: 4,
     },
     countryCodeText: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#212121',
+        color: Colors.light.text,
     },
     dropdownArrow: {
         fontSize: 10,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     phoneInput: {
         flex: 1,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     loginButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
         marginBottom: 16,
     },
     loginButtonDisabled: {
-        backgroundColor: '#A5D6A7',
+        backgroundColor: Colors.light.primaryDisabled,
     },
     loginButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     signupLink: {
         alignItems: 'center',
@@ -194,10 +195,10 @@ const styles = StyleSheet.create({
     },
     signupLinkText: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     signupLinkHighlight: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
 });

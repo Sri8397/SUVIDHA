@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet, View, Text, Animated, Pressable, Dimensions } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Text, Animated, Pressable } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAppMode } from '@/contexts/ModeContext';
+import { Colors } from '@/constants/theme';
 
 interface FABMenuItem {
     id: string;
@@ -20,8 +21,6 @@ interface FABProps {
     onAddIncome?: () => void;
     onAddLoan?: () => void;
 }
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export function FAB({
     onNewSale,
@@ -105,7 +104,7 @@ export function FAB({
                             onPress={() => handleMenuItemPress(item)}
                             activeOpacity={0.7}
                         >
-                            <MaterialIcons name={item.icon} size={20} color="#333" style={styles.menuIcon} />
+                            <MaterialIcons name={item.icon} size={20} color={Colors.light.text} style={styles.menuIcon} />
                             <Text style={styles.menuLabel}>{item.label}</Text>
                         </TouchableOpacity>
                     ))}
@@ -118,7 +117,7 @@ export function FAB({
                     activeOpacity={0.8}
                 >
                     <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-                        <FontAwesome name="plus" size={24} color="#FFFFFF" />
+                        <FontAwesome name="plus" size={24} color={Colors.light.white} />
                     </Animated.View>
                 </TouchableOpacity>
             </View>
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: Colors.light.modalOverlay,
         zIndex: 99,
     },
     container: {
@@ -147,22 +146,22 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
         elevation: 8,
     },
     menu: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderRadius: 12,
         paddingVertical: 8,
         marginBottom: 16,
         minWidth: 160,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
@@ -179,7 +178,7 @@ const styles = StyleSheet.create({
     },
     menuLabel: {
         fontSize: 16,
-        color: '#333',
+        color: Colors.light.text,
         fontWeight: '500',
     },
 });

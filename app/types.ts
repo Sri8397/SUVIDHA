@@ -174,6 +174,8 @@ export interface StoreSettings {
     ownerName: string;
     currency: string;
     businessType?: string;
+    canvasingRate?: string;
+    storeRate?: string;
     profitCalculationMethod: ProfitCalculationMethod;
 }
 
