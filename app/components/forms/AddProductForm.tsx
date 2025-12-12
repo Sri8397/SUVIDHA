@@ -262,7 +262,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={costPrice}
-                                onChangeText={setCostPrice}
+                                onChangeText={(text) => setCostPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -273,7 +273,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={price}
-                                onChangeText={setPrice}
+                                onChangeText={(text) => setPrice(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -288,7 +288,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={[styles.input, editProduct && styles.inputDisabled]}
                                 value={stock}
-                                onChangeText={editProduct ? undefined : setStock}
+                                onChangeText={editProduct ? undefined : (text) => setStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="0"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
@@ -305,7 +305,7 @@ export function AddProductForm({ visible, onClose, editProduct }: AddProductForm
                             <TextInput
                                 style={styles.input}
                                 value={minStock}
-                                onChangeText={setMinStock}
+                                onChangeText={(text) => setMinStock(text.replace(/[^0-9.]/g, ''))}
                                 placeholder="5"
                                 placeholderTextColor="#9E9E9E"
                                 keyboardType="numeric"
