@@ -94,15 +94,18 @@ export interface SaleItem {
     total: number;
 }
 
-// Sale Type - distinguishes between product sale and bakaya payment
-export type SaleType = 'PRODUCT_SALE' | 'BAKAYA_PAYMENT';
+// Sale Type - distinguishes between product sale, bakaya payment, and personal income
+export type SaleType = 'PRODUCT_SALE' | 'BAKAYA_PAYMENT' | 'INCOME';
+
+// Income Source - for personal finance mode
+export type IncomeSource = 'salary' | 'freelance' | 'business' | 'investment' | 'gift' | 'other';
 
 // Sale/Transaction Entity
 export interface Sale {
     id: string;
     saleType: SaleType;          // NEW: Type of sale
     customerId?: string;          // Optional - for walk-in customers
-    items: SaleItem[];            // Empty for BAKAYA_PAYMENT
+    items: SaleItem[];            // Empty for BAKAYA_PAYMENT and INCOME
     subtotal: number;
     discount: number;
     total: number;
@@ -111,6 +114,7 @@ export interface Sale {
     paymentMethod: 'cash' | 'upi' | 'card' | 'credit';
     date: string;
     createdAt: string;
+    incomeSource?: IncomeSource;  // For INCOME type in personal mode
 }
 
 // Expense Category

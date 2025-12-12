@@ -13,6 +13,8 @@ import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
 import { AddProductForm } from '@/components/forms/AddProductForm';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
+import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
+import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { TransactionList } from '@/components/ui/TransactionList';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +31,9 @@ export default function HomeScreen() {
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+  // Personal mode forms
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
+  const [showLoanForm, setShowLoanForm] = useState(false);
 
   if (isLoading) {
     return (
@@ -181,13 +186,24 @@ export default function HomeScreen() {
         onNewExpense={() => setShowExpenseForm(true)}
         onAddProduct={() => setShowProductForm(true)}
         onAddCustomer={() => setShowCustomerForm(true)}
+        onAddIncome={() => setShowIncomeForm(true)}
+        onAddLoan={() => setShowLoanForm(true)}
+        isPersonalMode={isPersonalMode}
       />
 
-      {/* Forms */}
+      {/* Forms - Shopkeeper Mode */}
       <AddSaleForm visible={showSaleForm} onClose={() => setShowSaleForm(false)} />
       <AddExpenseForm visible={showExpenseForm} onClose={() => setShowExpenseForm(false)} />
       <AddProductForm visible={showProductForm} onClose={() => setShowProductForm(false)} />
       <AddCustomerForm visible={showCustomerForm} onClose={() => setShowCustomerForm(false)} />
+
+      {/* Forms - Personal Mode */}
+      <AddIncomeForm visible={showIncomeForm} onClose={() => setShowIncomeForm(false)} />
+      <AddLoanForm
+        visible={showLoanForm}
+        onClose={() => setShowLoanForm(false)}
+        onAddPerson={() => setShowCustomerForm(true)}
+      />
     </View>
   );
 }

@@ -24,7 +24,40 @@
         "loanGiven": "Loan Given",
         "savings": "Savings",
         "weeklyIncomeSavings": "Weekly Income & Savings",
-        "appSettings": "App Settings"
+        "appSettings": "App Settings",
+        "addIncome": "Add Income",
+        "addLoan": "Add Loan",
+        "addPerson": "Add Person",
+        "incomeSource": "Income Source",
+        "incomeSources": {
+            "salary": "Salary/Wages",
+            "freelance": "Freelance/Contract",
+            "business": "Business Income",
+            "investment": "Investment Returns",
+            "gift": "Gift/Bonus",
+            "other": "Other"
+        },
+        "income": {
+            "title": "Add Income",
+            "amount": "Amount (₹)",
+            "source": "Income Source",
+            "description": "Description (Optional)",
+            "descriptionPlaceholder": "Write income description",
+            "added": "Income recorded successfully",
+            "saveError": "Problem saving income"
+        },
+        "loan": {
+            "title": "Record Loan",
+            "selectFriend": "Select Friend",
+            "noFriends": "Add a friend first to record a loan",
+            "addFriend": "Add Friend",
+            "giveToFriend": "Give to Friend",
+            "receiveFromFriend": "Receive from Friend",
+            "amount": "Amount (₹)",
+            "description": "Description (Optional)",
+            "loanRecorded": "Loan recorded successfully",
+            "saveError": "Problem saving loan"
+        }
     },
     "storeSettings": {
         "title": "Store Settings",

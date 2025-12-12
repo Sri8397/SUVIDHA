@@ -16,21 +16,41 @@ interface FABProps {
     onNewExpense?: () => void;
     onAddProduct?: () => void;
     onAddCustomer?: () => void;
+    // Personal mode callbacks
+    onAddIncome?: () => void;
+    onAddLoan?: () => void;
+    isPersonalMode?: boolean;
 }
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export function FAB({ onNewSale, onNewExpense, onAddProduct, onAddCustomer }: FABProps) {
+export function FAB({
+    onNewSale,
+    onNewExpense,
+    onAddProduct,
+    onAddCustomer,
+    onAddIncome,
+    onAddLoan,
+    isPersonalMode = false,
+}: FABProps) {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [animation] = useState(new Animated.Value(0));
 
-    const menuItems: FABMenuItem[] = [
-        { id: 'sale', label: t('forms.newSale'), icon: 'sell', onPress: onNewSale || (() => { }) },
-        { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
-        { id: 'product', label: t('inventory.addProduct'), icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
-        { id: 'customer', label: t('customers.addCustomer'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
-    ];
+    // Different menu items based on mode
+    const menuItems: FABMenuItem[] = isPersonalMode
+        ? [
+            { id: 'income', label: t('personal.addIncome'), icon: 'attach-money', onPress: onAddIncome || (() => { }) },
+            { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
+            { id: 'loan', label: t('personal.addLoan'), icon: 'swap-horiz', onPress: onAddLoan || (() => { }) },
+            { id: 'person', label: t('personal.addPerson'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
+        ]
+        : [
+            { id: 'sale', label: t('forms.newSale'), icon: 'sell', onPress: onNewSale || (() => { }) },
+            { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
+            { id: 'product', label: t('inventory.addProduct'), icon: 'inventory-2', onPress: onAddProduct || (() => { }) },
+            { id: 'customer', label: t('customers.addCustomer'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
+        ];
 
     const toggleMenu = () => {
         const toValue = isOpen ? 0 : 1;

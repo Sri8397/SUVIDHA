@@ -24,7 +24,40 @@
         "loanGiven": "उधार दिया",
         "savings": "बचत",
         "weeklyIncomeSavings": "साप्ताहिक आमदनी और बचत",
-        "appSettings": "ऐप सेटिंग"
+        "appSettings": "ऐप सेटिंग",
+        "addIncome": "आमदनी जोड़ें",
+        "addLoan": "उधार जोड़ें",
+        "addPerson": "व्यक्ति जोड़ें",
+        "incomeSource": "आमदनी का स्रोत",
+        "incomeSources": {
+            "salary": "वेतन/तनख्वाह",
+            "freelance": "फ्रीलांस/ठेका",
+            "business": "व्यापार से आमदनी",
+            "investment": "निवेश से रिटर्न",
+            "gift": "उपहार/बोनस",
+            "other": "अन्य"
+        },
+        "income": {
+            "title": "आमदनी जोड़ें",
+            "amount": "राशि (₹)",
+            "source": "आमदनी का स्रोत",
+            "description": "विवरण (वैकल्पिक)",
+            "descriptionPlaceholder": "आमदनी का विवरण लिखें",
+            "added": "आमदनी सफलतापूर्वक दर्ज हो गई",
+            "saveError": "आमदनी सेव करने में समस्या हुई"
+        },
+        "loan": {
+            "title": "उधार दर्ज करें",
+            "selectFriend": "मित्र चुनें",
+            "noFriends": "उधार दर्ज करने के लिए पहले मित्र जोड़ें",
+            "addFriend": "मित्र जोड़ें",
+            "giveToFriend": "मित्र को दें",
+            "receiveFromFriend": "मित्र से लें",
+            "amount": "राशि (₹)",
+            "description": "विवरण (वैकल्पिक)",
+            "loanRecorded": "उधार सफलतापूर्वक दर्ज हो गया",
+            "saveError": "उधार सेव करने में समस्या हुई"
+        }
     },
     "storeSettings": {
         "title": "स्टोर की सेटिंग",
