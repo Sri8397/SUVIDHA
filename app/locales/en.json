@@ -19,7 +19,7 @@
         "warning": "Warning"
     },
     "personal": {
-        "people": "People",
+        "friends": "Friends",
         "todaysIncome": "Today's Income",
         "loanGiven": "Loan Given",
         "savings": "Savings",
@@ -27,7 +27,9 @@
         "appSettings": "App Settings",
         "addIncome": "Add Income",
         "addLoan": "Add Loan",
-        "addPerson": "Add Person",
+        "addFriend": "Add Friend",
+        "noFriends": "No friends. Add a friend to get started.",
+        "noFriendsFound": "No friends found",
         "incomeSource": "Income Source",
         "incomeSources": {
             "salary": "Salary/Wages",

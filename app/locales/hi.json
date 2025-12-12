@@ -19,7 +19,7 @@
         "warning": "चेतावनी"
     },
     "personal": {
-        "people": "लोग",
+        "friends": "मित्र",
         "todaysIncome": "आज की आमदनी",
         "loanGiven": "उधार दिया",
         "savings": "बचत",
@@ -27,7 +27,9 @@
         "appSettings": "ऐप सेटिंग",
         "addIncome": "आमदनी जोड़ें",
         "addLoan": "उधार जोड़ें",
-        "addPerson": "व्यक्ति जोड़ें",
+        "addFriend": "मित्र जोड़ें",
+        "noFriends": "कोई मित्र नहीं। शुरू करने के लिए मित्र जोड़ें।",
+        "noFriendsFound": "कोई मित्र नहीं मिला",
         "incomeSource": "आमदनी का स्रोत",
         "incomeSources": {
             "salary": "वेतन/तनख्वाह",

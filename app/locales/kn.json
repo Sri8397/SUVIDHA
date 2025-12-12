@@ -18,6 +18,49 @@
         "today": "ಇಂದು",
         "warning": "ಎಚ್ಚರಿಕೆ"
     },
+    "personal": {
+        "friends": "ಸ್ನೇಹಿತರು",
+        "todaysIncome": "ಇಂದಿನ ಆದಾಯ",
+        "loanGiven": "ಸಾಲ ನೀಡಿದೆ",
+        "savings": "ಉಳಿತಾಯ",
+        "weeklyIncomeSavings": "ವಾರದ ಆದಾಯ ಮತ್ತು ಉಳಿತಾಯ",
+        "appSettings": "ಆಪ್ ಸೆಟ್ಟಿಂಗ್ಸ್",
+        "addIncome": "ಆದಾಯ ಸೇರಿಸಿ",
+        "addLoan": "ಸಾಲ ಸೇರಿಸಿ",
+        "addFriend": "ಸ್ನೇಹಿತರನ್ನು ಸೇರಿಸಿ",
+        "noFriends": "ಯಾವುದೇ ಸ್ನೇಹಿತರಿಲ್ಲ. ಪ್ರಾರಂಭಿಸಲು ಸ್ನೇಹಿತರನ್ನು ಸೇರಿಸಿ.",
+        "noFriendsFound": "ಯಾವುದೇ ಸ್ನೇಹಿತರು ಕಂಡುಬಂದಿಲ್ಲ",
+        "incomeSource": "ಆದಾಯ ಮೂಲ",
+        "incomeSources": {
+            "salary": "ಸಂಬಳ/ಕೂಲಿ",
+            "freelance": "ಫ್ರೀಲ್ಯಾನ್ಸ್/ಗುತ್ತಿಗೆ",
+            "business": "ವ್ಯಾಪಾರ ಆದಾಯ",
+            "investment": "ಹೂಡಿಕೆ ಲಾಭ",
+            "gift": "ಉಡುಗೊರೆ/ಬೋನಸ್",
+            "other": "ಇತರೆ"
+        },
+        "income": {
+            "title": "ಆದಾಯ ಸೇರಿಸಿ",
+            "amount": "ಮೊತ್ತ (₹)",
+            "source": "ಆದಾಯ ಮೂಲ",
+            "description": "ವಿವರಣೆ (ಐಚ್ಛಿಕ)",
+            "descriptionPlaceholder": "ಆದಾಯದ ವಿವರಣೆ ಬರೆಯಿರಿ",
+            "added": "ಆದಾಯ ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಿಸಲಾಗಿದೆ",
+            "saveError": "ಆದಾಯ ಉಳಿಸಲು ಸಮಸ್ಯೆ"
+        },
+        "loan": {
+            "title": "ಸಾಲ ದಾಖಲಿಸಿ",
+            "selectFriend": "ಸ್ನೇಹಿತನನ್ನು ಆರಿಸಿ",
+            "noFriends": "ಸಾಲ ದಾಖಲಿಸಲು ಮೊದಲು ಸ್ನೇಹಿತನನ್ನು ಸೇರಿಸಿ",
+            "addFriend": "ಸ್ನೇಹಿತನನ್ನು ಸೇರಿಸಿ",
+            "giveToFriend": "ಸ್ನೇಹಿತನಿಗೆ ನೀಡಿ",
+            "receiveFromFriend": "ಸ್ನೇಹಿತನಿಂದ ಪಡೆಯಿರಿ",
+            "amount": "ಮೊತ್ತ (₹)",
+            "description": "ವಿವರಣೆ (ಐಚ್ಛಿಕ)",
+            "loanRecorded": "ಸಾಲ ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಿಸಲಾಗಿದೆ",
+            "saveError": "ಸಾಲ ಉಳಿಸಲು ಸಮಸ್ಯೆ"
+        }
+    },
     "storeSettings": {
         "title": "ಅಂಗಡಿಯ ಸೆಟ್ಟಿಂಗ್ಸ್",
         "storeName": "ಅಂಗಡಿ ಹೆಸರು",

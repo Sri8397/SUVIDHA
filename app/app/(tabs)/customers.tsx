@@ -6,6 +6,7 @@ import { Header } from '@/components/ui/header';
 import { FAB } from '@/components/ui/fab';
 import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
+import { useAppMode } from '@/contexts/ModeContext';
 import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddSaleForm } from '@/components/forms/AddSaleForm';
 import { AddExpenseForm } from '@/components/forms/AddExpenseForm';
@@ -15,6 +16,8 @@ import { Customer } from '@/types';
 
 export default function CustomersScreen() {
     const { t } = useTranslation();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
     const { isLoading, customers, deleteCustomer, updateCustomer } = useData();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -96,7 +99,7 @@ export default function CustomersScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             {/* Header */}
-            <Header title={t('customers.title')} showLanguageToggle={true} />
+            <Header title={isPersonalMode ? t('personal.friends') : t('customers.title')} showLanguageToggle={true} />
 
             {/* Search Bar */}
             <View style={styles.searchContainer}>
@@ -183,8 +186,8 @@ export default function CustomersScreen() {
                         <FontAwesome name="users" size={48} color="#BDBDBD" />
                         <Text style={styles.emptyStateText}>
                             {customers.length === 0
-                                ? t('customers.noCustomers')
-                                : t('customers.noCustomersFound')}
+                                ? (isPersonalMode ? t('personal.noFriends') : t('customers.noCustomers'))
+                                : (isPersonalMode ? t('personal.noFriendsFound') : t('customers.noCustomersFound'))}
                         </Text>
                         {customers.length === 0 && (
                             <TouchableOpacity
@@ -192,7 +195,7 @@ export default function CustomersScreen() {
                                 onPress={() => setShowCustomerForm(true)}
                             >
                                 <FontAwesome name="plus" size={14} color="#FFFFFF" />
-                                <Text style={styles.addFirstButtonText}>{t('customers.addCustomer')}</Text>
+                                <Text style={styles.addFirstButtonText}>{isPersonalMode ? t('personal.addFriend') : t('customers.addCustomer')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>

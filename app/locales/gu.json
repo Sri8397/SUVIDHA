@@ -18,6 +18,49 @@
         "today": "આજે",
         "warning": "ચેતવણી"
     },
+    "personal": {
+        "friends": "મિત્રો",
+        "todaysIncome": "આજની આવક",
+        "loanGiven": "લોન આપી",
+        "savings": "બચત",
+        "weeklyIncomeSavings": "સાપ્તાહિક આવક અને બચત",
+        "appSettings": "એપ સેટિંગ્સ",
+        "addIncome": "આવક ઉમેરો",
+        "addLoan": "લોન ઉમેરો",
+        "addFriend": "મિત્ર ઉમેરો",
+        "noFriends": "કોઈ મિત્ર નથી. શરૂ કરવા માટે મિત્ર ઉમેરો.",
+        "noFriendsFound": "કોઈ મિત્ર મળ્યા નથી",
+        "incomeSource": "આવક સ્ત્રોત",
+        "incomeSources": {
+            "salary": "પગાર/વેતન",
+            "freelance": "ફ્રીલાન્સ/કોન્ટ્રાક્ટ",
+            "business": "વ્યવસાય આવક",
+            "investment": "રોકાણ વળતર",
+            "gift": "ભેટ/બોનસ",
+            "other": "અન્ય"
+        },
+        "income": {
+            "title": "આવક ઉમેરો",
+            "amount": "રકમ (₹)",
+            "source": "આવક સ્ત્રોત",
+            "description": "વર્ણન (વૈકલ્પિક)",
+            "descriptionPlaceholder": "આવકનું વર્ણન લખો",
+            "added": "આવક સફળતાપૂર્વક રેકોર્ડ કરવામાં આવી",
+            "saveError": "આવક સાચવવામાં સમસ્યા"
+        },
+        "loan": {
+            "title": "લોન રેકોર્ડ કરો",
+            "selectFriend": "મિત્ર પસંદ કરો",
+            "noFriends": "લોન રેકોર્ડ કરવા માટે પહેલા મિત્ર ઉમેરો",
+            "addFriend": "મિત્ર ઉમેરો",
+            "giveToFriend": "મિત્રને આપો",
+            "receiveFromFriend": "મિત્ર પાસેથી મેળવો",
+            "amount": "રકમ (₹)",
+            "description": "વર્ણન (વૈકલ્પિક)",
+            "loanRecorded": "લોન સફળતાપૂર્વક રેકોર્ડ કરવામાં આવી",
+            "saveError": "લોન સાચવવામાં સમસ્યા"
+        }
+    },
     "storeSettings": {
         "title": "સ્ટોર સેટિંગ્સ",
         "storeName": "દુકાનનું નામ",

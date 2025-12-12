@@ -18,6 +18,49 @@
         "today": "आज",
         "warning": "चेतावणी"
     },
+    "personal": {
+        "friends": "मित्र",
+        "todaysIncome": "आजचे उत्पन्न",
+        "loanGiven": "दिलेले कर्ज",
+        "savings": "बचत",
+        "weeklyIncomeSavings": "साप्ताहिक उत्पन्न आणि बचत",
+        "appSettings": "ॲप सेटिंग्ज",
+        "addIncome": "उत्पन्न जोडा",
+        "addLoan": "कर्ज जोडा",
+        "addFriend": "मित्र जोडा",
+        "noFriends": "कोणीही मित्र नाहीत. सुरू करण्यासाठी मित्र जोडा.",
+        "noFriendsFound": "कोणतेही मित्र सापडले नाहीत",
+        "incomeSource": "उत्पन्नाचा स्रोत",
+        "incomeSources": {
+            "salary": "पगार/वेतन",
+            "freelance": "फ्रीलान्स/कंत्राट",
+            "business": "व्यवसाय उत्पन्न",
+            "investment": "गुंतवणुकीचा परतावा",
+            "gift": "भेट/बोनस",
+            "other": "इतर"
+        },
+        "income": {
+            "title": "उत्पन्न जोडा",
+            "amount": "रक्कम (₹)",
+            "source": "उत्पन्नाचा स्रोत",
+            "description": "वर्णन (पर्यायी)",
+            "descriptionPlaceholder": "उत्पन्नाचे वर्णन लिहा",
+            "added": "उत्पन्न यशस्वीरित्या नोंदवले",
+            "saveError": "उत्पन्न सेव्ह करताना समस्या"
+        },
+        "loan": {
+            "title": "कर्ज नोंदवा",
+            "selectFriend": "मित्र निवडा",
+            "noFriends": "कर्ज नोंदवण्यासाठी आधी मित्र जोडा",
+            "addFriend": "मित्र जोडा",
+            "giveToFriend": "मित्राला द्या",
+            "receiveFromFriend": "मित्राकडून घ्या",
+            "amount": "रक्कम (₹)",
+            "description": "वर्णन (पर्यायी)",
+            "loanRecorded": "कर्ज यशस्वीरित्या नोंदवले",
+            "saveError": "कर्ज सेव्ह करताना समस्या"
+        }
+    },
     "storeSettings": {
         "title": "स्टोअर सेटिंग्ज",
         "storeName": "दुकानाचे नाव",

@@ -18,6 +18,49 @@
         "today": "আজ",
         "warning": "সতর্কতা"
     },
+    "personal": {
+        "friends": "বন্ধুরা",
+        "todaysIncome": "আজকের আয়",
+        "loanGiven": "ঋণ প্রদান",
+        "savings": "সঞ্চয়",
+        "weeklyIncomeSavings": "সাপ্তাহিক আয় ও সঞ্চয়",
+        "appSettings": "অ্যাপ সেটিংস",
+        "addIncome": "আয় যোগ করুন",
+        "addLoan": "ঋণ যোগ করুন",
+        "addFriend": "বন্ধু যোগ করুন",
+        "noFriends": "কোনো বন্ধু নেই। শুরু করতে বন্ধু যোগ করুন।",
+        "noFriendsFound": "কোনো বন্ধু পাওয়া যায়নি",
+        "incomeSource": "আয়ের উৎস",
+        "incomeSources": {
+            "salary": "বেতন/মজুরি",
+            "freelance": "ফ্রিল্যান্স/চুক্তি",
+            "business": "ব্যবসা আয়",
+            "investment": "বিনিয়োগ থেকে আয়",
+            "gift": "উপহার/বোনাস",
+            "other": "অন্যান্য"
+        },
+        "income": {
+            "title": "আয় যোগ করুন",
+            "amount": "পরিমাণ (₹)",
+            "source": "আয়ের উৎস",
+            "description": "বিবরণ (ঐচ্ছিক)",
+            "descriptionPlaceholder": "আয়ের বিবরণ লিখুন",
+            "added": "আয় সফলভাবে রেকর্ড করা হয়েছে",
+            "saveError": "আয় সেভ করতে সমস্যা হয়েছে"
+        },
+        "loan": {
+            "title": "ঋণ রেকর্ড করুন",
+            "selectFriend": "বন্ধু নির্বাচন করুন",
+            "noFriends": "ঋণ রেকর্ড করতে প্রথমে একজন বন্ধু যোগ করুন",
+            "addFriend": "বন্ধু যোগ করুন",
+            "giveToFriend": "বন্ধুকে দিন",
+            "receiveFromFriend": "বন্ধুর কাছ থেকে নিন",
+            "amount": "পরিমাণ (₹)",
+            "description": "বিবরণ (ঐচ্ছিক)",
+            "loanRecorded": "ঋণ সফলভাবে রেকর্ড করা হয়েছে",
+            "saveError": "ঋণ সেভ করতে সমস্যা হয়েছে"
+        }
+    },
     "storeSettings": {
         "title": "স্টোর সেটিংস",
         "storeName": "দোকানের নাম",

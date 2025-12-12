@@ -18,6 +18,49 @@
         "today": "ଆଜି",
         "warning": "ସତର୍କତା"
     },
+    "personal": {
+        "friends": "ବନ୍ଧୁମାନେ",
+        "todaysIncome": "ଆଜିର ଆୟ",
+        "loanGiven": "ଋଣ ଦିଆଯାଇଛି",
+        "savings": "ସଞ୍ଚୟ",
+        "weeklyIncomeSavings": "ସାପ୍ତାହିକ ଆୟ ଏବଂ ସଞ୍ଚୟ",
+        "appSettings": "ଆପ୍ ସେଟିଂସ୍",
+        "addIncome": "ଆୟ ଯୋଡନ୍ତୁ",
+        "addLoan": "ଋଣ ଯୋଡନ୍ତୁ",
+        "addFriend": "ବନ୍ଧୁ ଯୋଡନ୍ତୁ",
+        "noFriends": "କୌଣସି ବନ୍ଧୁ ନାହାଁନ୍ତି | ଆରମ୍ଭ କରିବାକୁ ବନ୍ଧୁ ଯୋଡନ୍ତୁ |",
+        "noFriendsFound": "କୌଣସି ବନ୍ଧୁ ମିଳିଲେ ନାହିଁ",
+        "incomeSource": "ଆୟର ଉତ୍ସ",
+        "incomeSources": {
+            "salary": "ଦରମା/ମଜୁରୀ",
+            "freelance": "ଫ୍ରିଲାନ୍ସ/ଚୁକ୍ତିନାମା",
+            "business": "ବ୍ୟବସାୟ ଆୟ",
+            "investment": "ନିବେଶ ରିଟର୍ଣ୍ଣ",
+            "gift": "ଉପହାର/ବୋନସ୍",
+            "other": "ଅନ୍ୟାନ୍ୟ"
+        },
+        "income": {
+            "title": "ଆୟ ଯୋଡନ୍ତୁ",
+            "amount": "ପରିମାଣ (₹)",
+            "source": "ଆୟର ଉତ୍ସ",
+            "description": "ବିବରଣୀ (ବୈକଳ୍ପିକ)",
+            "descriptionPlaceholder": "ଆୟର ବିବରଣୀ ଲେଖନ୍ତୁ",
+            "added": "ଆୟ ସଫଳତାର ସହ ରେକର୍ଡ କରାଗଲା",
+            "saveError": "ଆୟ ସେଭ୍ କରିବାରେ ସମସ୍ୟା"
+        },
+        "loan": {
+            "title": "ଋଣ ରେକର୍ଡ କରନ୍ତୁ",
+            "selectFriend": "ବନ୍ଧୁ ବାଛନ୍ତୁ",
+            "noFriends": "ଋଣ ରେକର୍ଡ କରିବା ପାଇଁ ପ୍ରଥମେ ବନ୍ଧୁ ଯୋଡନ୍ତୁ",
+            "addFriend": "ବନ୍ଧୁ ଯୋଡନ୍ତୁ",
+            "giveToFriend": "ବନ୍ଧୁଙ୍କୁ ଦିଅନ୍ତୁ",
+            "receiveFromFriend": "ବନ୍ଧୁଙ୍କ ଠାରୁ ଗ୍ରହଣ କରନ୍ତୁ",
+            "amount": "ପରିମାଣ (₹)",
+            "description": "ବିବରଣୀ (ବୈକଳ୍ପିକ)",
+            "loanRecorded": "ଋଣ ସଫଳତାର ସହ ରେକର୍ଡ କରାଗଲା",
+            "saveError": "ଋଣ ସେଭ୍ କରିବାରେ ସମସ୍ୟା"
+        }
+    },
     "storeSettings": {
         "title": "ଷ୍ଟୋର ସେଟିଂସ",
         "storeName": "ଦୋକାନର ନାମ",

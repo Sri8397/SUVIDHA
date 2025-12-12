@@ -12,10 +12,10 @@ export default function TabLayout() {
   const { appMode } = useAppMode();
   const isPersonalMode = appMode === 'personal';
   const insets = useSafeAreaInsets();
-  
+
   // Use the device's bottom safe area inset to properly account for home indicator
   const bottomInset = insets.bottom;
-  
+
   return (
     <Tabs
       screenOptions={{
@@ -74,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="customers"
         options={{
-          title: isPersonalMode ? t('personal.people') : t('customers.title'),
+          title: isPersonalMode ? t('personal.friends') : t('customers.title'),
           tabBarIcon: ({ color }) => (
             <FontAwesome name="users" size={20} color={color} />
           ),

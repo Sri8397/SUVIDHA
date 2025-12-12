@@ -43,7 +43,7 @@ export function FAB({
             { id: 'income', label: t('personal.addIncome'), icon: 'attach-money', onPress: onAddIncome || (() => { }) },
             { id: 'expense', label: t('forms.newExpense'), icon: 'receipt-long', onPress: onNewExpense || (() => { }) },
             { id: 'loan', label: t('personal.addLoan'), icon: 'swap-horiz', onPress: onAddLoan || (() => { }) },
-            { id: 'person', label: t('personal.addPerson'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
+            { id: 'person', label: t('personal.addFriend'), icon: 'person-add', onPress: onAddCustomer || (() => { }) },
         ]
         : [
             { id: 'sale', label: t('forms.newSale'), icon: 'sell', onPress: onNewSale || (() => { }) },

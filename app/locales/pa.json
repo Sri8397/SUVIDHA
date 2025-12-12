@@ -18,6 +18,49 @@
         "today": "ਅੱਜ",
         "warning": "ਚੇਤਾਵਨੀ"
     },
+    "personal": {
+        "friends": "ਦੋਸਤ",
+        "todaysIncome": "ਅੱਜ ਦੀ ਆਮਦਨ",
+        "loanGiven": "ਦਿੱਤਾ ਕਰਜ਼ਾ",
+        "savings": "ਬੱਚਤ",
+        "weeklyIncomeSavings": "ਹਫਤਾਵਾਰੀ ਆਮਦਨ ਅਤੇ ਬੱਚਤ",
+        "appSettings": "ਐਪ ਸੈਟਿੰਗਜ਼",
+        "addIncome": "ਆਮਦਨ ਜੋੜੋ",
+        "addLoan": "ਕਰਜ਼ਾ ਜੋੜੋ",
+        "addFriend": "ਦੋਸਤ ਜੋੜੋ",
+        "noFriends": "ਕੋਈ ਦੋਸਤ ਨਹੀਂ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਦੋਸਤ ਜੋੜੋ।",
+        "noFriendsFound": "ਕੋਈ ਦੋਸਤ ਨਹੀਂ ਲੱਭੇ",
+        "incomeSource": "ਆਮਦਨ ਦਾ ਸਰੋਤ",
+        "incomeSources": {
+            "salary": "ਤਨਖਾਹ/ਉਜਰਤ",
+            "freelance": "ਫ੍ਰੀਲਾਂਸ/ਠੇਕਾ",
+            "business": "ਕਾਰੋਬਾਰੀ ਆਮਦਨ",
+            "investment": "ਨਿਵੇਸ਼ ਤੋਂ ਵਾਪਸੀ",
+            "gift": "ਤੋਹਫ਼ਾ/ਬੋਨਸ",
+            "other": "ਹੋਰ"
+        },
+        "income": {
+            "title": "ਆਮਦਨ ਜੋੜੋ",
+            "amount": "ਰਕਮ (₹)",
+            "source": "ਆਮਦਨ ਦਾ ਸਰੋਤ",
+            "description": "ਵੇਰਵਾ (ਵਿਕਲਪਿਕ)",
+            "descriptionPlaceholder": "ਆਮਦਨ ਦਾ ਵੇਰਵਾ ਲਿਖੋ",
+            "added": "ਆਮਦਨ ਸਫਲਤਾਪੂਰਵਕ ਦਰਜ ਕੀਤੀ ਗਈ",
+            "saveError": "ਆਮਦਨ ਸੇਵ ਕਰਨ ਵਿੱਚ ਸਮੱਸਿਆ"
+        },
+        "loan": {
+            "title": "ਕਰਜ਼ਾ ਦਰਜ ਕਰੋ",
+            "selectFriend": "ਦੋਸਤ ਚੁਣੋ",
+            "noFriends": "ਕਰਜ਼ਾ ਦਰਜ ਕਰਨ ਲਈ ਪਹਿਲਾਂ ਦੋਸਤ ਜੋੜੋ",
+            "addFriend": "ਦੋਸਤ ਜੋੜੋ",
+            "giveToFriend": "ਦੋਸਤ ਨੂੰ ਦਿਓ",
+            "receiveFromFriend": "ਦੋਸਤ ਤੋਂ ਲਓ",
+            "amount": "ਰਕਮ (₹)",
+            "description": "ਵੇਰਵਾ (ਵਿਕਲਪਿਕ)",
+            "loanRecorded": "ਕਰਜ਼ਾ ਸਫਲਤਾਪੂਰਵਕ ਦਰਜ ਕੀਤਾ ਗਿਆ",
+            "saveError": "ਕਰਜ਼ਾ ਸੇਵ ਕਰਨ ਵਿੱਚ ਸਮੱਸਿਆ"
+        }
+    },
     "storeSettings": {
         "title": "ਸਟੋਰ ਸੈਟਿੰਗਾਂ",
         "storeName": "ਦੁਕਾਨ ਦਾ ਨਾਮ",
