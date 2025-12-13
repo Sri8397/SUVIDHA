@@ -134,7 +134,9 @@ export default function MoreScreen() {
                     </View>
                     <View style={styles.profileInfo}>
                         <Text style={styles.userName}>{getDisplayName()}</Text>
-                        <Text style={styles.storeName}>{getStoreName()}</Text>
+                        {!isPersonalMode && (
+                            <Text style={styles.storeName}>{getStoreName()}</Text>
+                        )}
                     </View>
                 </View>
 

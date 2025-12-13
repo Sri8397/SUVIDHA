@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useSettings } from '@/contexts/settings-context';
 import { useAuth } from '@/contexts/auth-context';
 import * as ImagePicker from 'expo-image-picker';
+import { useAppMode } from '@/contexts/ModeContext';
 import { TransliterationInput } from '../components/ui/TransliterationInput';
 import { Colors } from '@/constants/theme';
 
@@ -99,6 +100,8 @@ export default function ProfileScreen() {
     const { t } = useTranslation();
     const { userProfile, storeSettings, updateUserProfile, updateStoreSettings, isLoading } = useSettings();
     const { user } = useAuth();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
 
     const [editField, setEditField] = useState<'name' | 'phone' | 'email' | 'address' | null>(null);
     const [showImagePicker, setShowImagePicker] = useState(false);
@@ -227,7 +230,9 @@ export default function ProfileScreen() {
                     <TouchableOpacity onPress={() => setEditField('name')} style={styles.nameContainer}>
                         <Text style={styles.userName}>{getDisplayName()}</Text>
                     </TouchableOpacity>
-                    <Text style={styles.storeName}>{getStoreName()}</Text>
+                    {!isPersonalMode && (
+                        <Text style={styles.storeName}>{getStoreName()}</Text>
+                    )}
                 </View>
 
                 {/* Editable Fields */}

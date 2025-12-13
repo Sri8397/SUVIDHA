@@ -8,7 +8,7 @@ import { removeData, getData, setData } from '@/services/storage';
 import { useData } from '@/contexts/DataContext';
 import { useSettings } from '@/contexts/settings-context';
 import { useAppMode } from '@/contexts/ModeContext';
-import { STORAGE_KEYS, Customer } from '@/types';
+import { getStorageKeys, Customer } from '@/types';
 
 import { TransliterationInput } from '../components/ui/TransliterationInput';
 import { LanguageModal } from '../components/ui/language-modal';
@@ -158,32 +158,33 @@ export default function StoreSettingsScreen() {
 
         setIsClearing(true);
         try {
+            const keys = getStorageKeys(appMode);
             const promises: Promise<boolean>[] = [];
 
             if (clearOptions.products) {
-                promises.push(removeData(STORAGE_KEYS.PRODUCTS));
-                promises.push(removeData(STORAGE_KEYS.CATEGORIES));
+                promises.push(removeData(keys.PRODUCTS));
+                promises.push(removeData(keys.CATEGORIES));
             }
             if (clearOptions.customers) {
-                promises.push(removeData(STORAGE_KEYS.CUSTOMERS));
+                promises.push(removeData(keys.CUSTOMERS));
             }
             if (clearOptions.sales) {
-                promises.push(removeData(STORAGE_KEYS.SALES));
+                promises.push(removeData(keys.SALES));
             }
             if (clearOptions.expenses) {
-                promises.push(removeData(STORAGE_KEYS.EXPENSES));
+                promises.push(removeData(keys.EXPENSES));
             }
 
             // Clear bakaya (outstanding balances) - reset all customer balances to 0
             if (clearOptions.bakaya && !clearOptions.customers) {
                 // Only clear bakaya if not already deleting all customers
-                const customers = await getData<Customer[]>(STORAGE_KEYS.CUSTOMERS);
+                const customers = await getData<Customer[]>(keys.CUSTOMERS);
                 if (customers && customers.length > 0) {
                     const updatedCustomers = customers.map(c => ({
                         ...c,
                         outstandingBalance: 0
                     }));
-                    await setData(STORAGE_KEYS.CUSTOMERS, updatedCustomers);
+                    await setData(keys.CUSTOMERS, updatedCustomers);
                 }
             }
 
