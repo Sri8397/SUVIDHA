@@ -58,7 +58,9 @@
                 "taken": "Loan Taken"
             },
             "giveToFriend": "Give to Friend",
-            "receiveFromFriend": "Receive from Friend"
+            "receiveFromFriend": "Receive from Friend",
+            "noFriends": "No friends. Add a new friend.",
+            "addFriend": "Add Friend"
         },
         "friend": {
             "title": "Add Friend",

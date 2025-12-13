@@ -68,12 +68,12 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: Colors.light.infoLight }]}>
-                  <Text style={styles.rupeeIcon}>₹</Text>
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.primaryLight }]}>
+                  <Text style={[styles.rupeeIcon, { color: Colors.light.primary }]}>₹</Text>
                 </View>
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.todaysIncome') : t('dashboard.todaysSales')}</Text>
-              <Text style={styles.statValue}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: Colors.light.primary }]}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -94,12 +94,12 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: Colors.light.primaryLight }]}>
-                  <MaterialIcons name="trending-up" size={18} color={Colors.light.primary} />
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.secondaryLight }]}>
+                  <MaterialIcons name="trending-up" size={18} color={Colors.light.secondary} />
                 </View>
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.savings') : t('dashboard.profit')}</Text>
-              <Text style={[styles.statValue, { color: dashboardStats.profit >= 0 ? Colors.light.success : Colors.light.error }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: Colors.light.secondary }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
@@ -107,12 +107,12 @@ export default function HomeScreen() {
           <View style={styles.statCardWrapper}>
             <View style={styles.statCard}>
               <View style={styles.statHeader}>
-                <View style={[styles.statIcon, { backgroundColor: Colors.light.secondaryLight }]}>
-                  <MaterialIcons name="trending-down" size={18} color={Colors.light.secondary} />
+                <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
+                  <MaterialIcons name="trending-down" size={18} color={Colors.light.error} />
                 </View>
               </View>
               <Text style={styles.statLabel}>{t('dashboard.expenses')}</Text>
-              <Text style={[styles.statValue, { color: Colors.light.secondary }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statValue, { color: Colors.light.error }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
             </View>
           </View>
         </View>

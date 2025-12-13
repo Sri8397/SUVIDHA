@@ -132,18 +132,23 @@ export default function StoreSettingsScreen() {
     };
 
     const toggleAll = () => {
-        const allSelected = Object.values(clearOptions).every(v => v);
+        const currentAllSelected = isPersonalMode
+            ? clearOptions.customers && clearOptions.sales && clearOptions.expenses && clearOptions.bakaya
+            : Object.values(clearOptions).every(v => v);
+
         setClearOptions({
-            products: isPersonalMode ? false : !allSelected, // Products not relevant for personal mode
-            customers: !allSelected,
-            sales: !allSelected,
-            expenses: !allSelected,
-            bakaya: !allSelected,
+            products: isPersonalMode ? false : !currentAllSelected,
+            customers: !currentAllSelected,
+            sales: !currentAllSelected,
+            expenses: !currentAllSelected,
+            bakaya: !currentAllSelected,
         });
     };
 
     const anySelected = Object.values(clearOptions).some(v => v);
-    const allSelected = Object.values(clearOptions).every(v => v);
+    const allSelected = isPersonalMode
+        ? clearOptions.customers && clearOptions.sales && clearOptions.expenses && clearOptions.bakaya
+        : Object.values(clearOptions).every(v => v);
 
     const handleClearData = async () => {
         if (!anySelected) {

@@ -257,18 +257,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Account Settings Section */}
-                <View style={styles.settingsSection}>
-                    <Text style={styles.sectionTitle}>{t('profile.accountSettings')}</Text>
 
-                    <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>{t('profile.changePassword')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>{t('profile.appSettings')}</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
 
             {/* Edit Modals */}
@@ -324,6 +313,13 @@ export default function ProfileScreen() {
                 <View style={styles.imagePickerOverlay}>
                     <View style={styles.imagePickerContent}>
                         <Text style={styles.imagePickerTitle}>{t('profile.changeProfilePhoto')}</Text>
+                        <TouchableOpacity
+                            style={styles.imagePickerOption}
+                            onPress={() => pickImage(true)}
+                        >
+                            <FontAwesome name="camera" size={20} color={Colors.light.primary} />
+                            <Text style={styles.imagePickerOptionText}>{t('profile.takePhoto')}</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.imagePickerOption}
                             onPress={() => pickImage(false)}
@@ -460,32 +456,6 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     fieldValue: {
-        fontSize: 16,
-        color: Colors.light.text,
-        fontWeight: '500',
-    },
-    settingsSection: {
-        paddingHorizontal: 16,
-        marginTop: 24,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: Colors.light.text,
-        marginBottom: 16,
-    },
-    settingCard: {
-        backgroundColor: Colors.light.white,
-        padding: 16,
-        marginBottom: 12,
-        borderRadius: 12,
-        shadowColor: Colors.light.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    settingText: {
         fontSize: 16,
         color: Colors.light.text,
         fontWeight: '500',

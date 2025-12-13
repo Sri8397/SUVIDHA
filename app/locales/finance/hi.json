@@ -58,7 +58,9 @@
                 "taken": "उधार लिया"
             },
             "giveToFriend": "दोस्त को दें",
-            "receiveFromFriend": "दोस्त से लें"
+            "receiveFromFriend": "दोस्त से लें",
+            "noFriends": "कोई दोस्त नहीं। एक नया दोस्त जोड़ें।",
+            "addFriend": "दोस्त जोड़ें"
         },
         "friend": {
             "title": "दोस्त जोड़ें",
