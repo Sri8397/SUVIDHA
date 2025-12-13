@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Dimensions, StyleSheet, LayoutChangeEvent, TouchableWithoutFeedback, GestureResponderEvent } from 'react-native';
+import { View, Text, Dimensions, StyleSheet, LayoutChangeEvent, Pressable, GestureResponderEvent, Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Svg, { Path, Line, Text as SvgText, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
@@ -94,139 +94,148 @@ export function DualLineChart({
     const area2 = createArea(data2);
 
     const handlePress = (event: GestureResponderEvent) => {
-        const x = event.nativeEvent.locationX;
-        const index = Math.round(((x - paddingLeft) / drawingWidth) * (labels.length - 1));
-        if (index >= 0 && index < labels.length) {
-            setSelectedIndex(index);
+        let x = event.nativeEvent.locationX;
+
+        // Web fallback if locationX is undefined
+        if (Platform.OS === 'web' && x === undefined) {
+            x = (event.nativeEvent as any).offsetX;
+        }
+
+        if (typeof x === 'number') {
+            const index = Math.round(((x - paddingLeft) / drawingWidth) * (labels.length - 1));
+            if (index >= 0 && index < labels.length) {
+                setSelectedIndex(index);
+            }
         }
     };
 
     return (
         <View style={styles.container} onLayout={onLayout}>
-            <TouchableWithoutFeedback onPress={handlePress}>
-                <View>
-                    <Svg width={chartWidth} height={chartHeight}>
-                        <Defs>
-                            <LinearGradient id="gradient1" x1="0" y1="0" x2="0" y2="1">
-                                <Stop offset="0" stopColor={color1} stopOpacity="0.2" />
-                                <Stop offset="1" stopColor={color1} stopOpacity="0" />
-                            </LinearGradient>
-                            <LinearGradient id="gradient2" x1="0" y1="0" x2="0" y2="1">
-                                <Stop offset="0" stopColor={color2} stopOpacity="0.2" />
-                                <Stop offset="1" stopColor={color2} stopOpacity="0" />
-                            </LinearGradient>
-                        </Defs>
+            <View style={{ width: chartWidth, height: chartHeight }}>
+                <Svg width={chartWidth} height={chartHeight}>
+                    <Defs>
+                        <LinearGradient id="gradient1" x1="0" y1="0" x2="0" y2="1">
+                            <Stop offset="0" stopColor={color1} stopOpacity="0.2" />
+                            <Stop offset="1" stopColor={color1} stopOpacity="0" />
+                        </LinearGradient>
+                        <LinearGradient id="gradient2" x1="0" y1="0" x2="0" y2="1">
+                            <Stop offset="0" stopColor={color2} stopOpacity="0.2" />
+                            <Stop offset="1" stopColor={color2} stopOpacity="0" />
+                        </LinearGradient>
+                    </Defs>
 
-                        {/* Grid Lines (Horizontal) */}
-                        {[0, 0.5, 1].map((t) => {
-                            const y = paddingTop + drawingHeight - t * drawingHeight;
-                            return (
-                                <Line
-                                    key={t}
-                                    x1={paddingLeft}
-                                    y1={y}
-                                    x2={chartWidth - paddingRight}
-                                    y2={y}
-                                    stroke={Colors.light.border}
-                                    strokeDasharray="4 4"
-                                    strokeWidth="1"
-                                />
-                            );
-                        })}
-
-                        {/* Zero Line */}
-                        {minValue < 0 && maxValue > 0 && (
+                    {/* Grid Lines (Horizontal) */}
+                    {[0, 0.5, 1].map((t) => {
+                        const y = paddingTop + drawingHeight - t * drawingHeight;
+                        return (
                             <Line
+                                key={t}
                                 x1={paddingLeft}
-                                y1={getCoordinate(0, 0).y}
+                                y1={y}
                                 x2={chartWidth - paddingRight}
-                                y2={getCoordinate(0, 0).y}
-                                stroke={Colors.light.textSecondary}
+                                y2={y}
+                                stroke={Colors.light.border}
+                                strokeDasharray="4 4"
                                 strokeWidth="1"
-                                strokeOpacity="0.3"
                             />
-                        )}
+                        );
+                    })}
 
-                        {/* Areas */}
-                        <Path d={area1} fill="url(#gradient1)" />
-                        <Path d={area2} fill="url(#gradient2)" />
+                    {/* Zero Line */}
+                    {minValue < 0 && maxValue > 0 && (
+                        <Line
+                            x1={paddingLeft}
+                            y1={getCoordinate(0, 0).y}
+                            x2={chartWidth - paddingRight}
+                            y2={getCoordinate(0, 0).y}
+                            stroke={Colors.light.textSecondary}
+                            strokeWidth="1"
+                            strokeOpacity="0.3"
+                        />
+                    )}
 
-                        {/* Lines */}
-                        <Path d={path1} stroke={color1} strokeWidth="3" fill="none" />
-                        <Path d={path2} stroke={color2} strokeWidth="3" fill="none" />
+                    {/* Areas */}
+                    <Path d={area1} fill="url(#gradient1)" />
+                    <Path d={area2} fill="url(#gradient2)" />
 
-                        {/* Data Points */}
-                        {data1.map((value, index) => {
-                            const { x, y } = getCoordinate(value, index);
-                            return (
-                                <Circle
-                                    key={`d1-${index}`}
-                                    cx={x}
-                                    cy={y}
-                                    r="4"
-                                    fill={Colors.light.white}
-                                    stroke={color1}
-                                    strokeWidth="2"
-                                />
-                            );
-                        })}
-                        {data2.map((value, index) => {
-                            const { x, y } = getCoordinate(value, index);
-                            return (
-                                <Circle
-                                    key={`d2-${index}`}
-                                    cx={x}
-                                    cy={y}
-                                    r="4"
-                                    fill={Colors.light.white}
-                                    stroke={color2}
-                                    strokeWidth="2"
-                                />
-                            );
-                        })}
+                    {/* Lines */}
+                    <Path d={path1} stroke={color1} strokeWidth="3" fill="none" />
+                    <Path d={path2} stroke={color2} strokeWidth="3" fill="none" />
+
+                    {/* Data Points */}
+                    {data1.map((value, index) => {
+                        const { x, y } = getCoordinate(value, index);
+                        return (
+                            <Circle
+                                key={`d1-${index}`}
+                                cx={x}
+                                cy={y}
+                                r="4"
+                                fill={Colors.light.white}
+                                stroke={color1}
+                                strokeWidth="2"
+                            />
+                        );
+                    })}
+                    {data2.map((value, index) => {
+                        const { x, y } = getCoordinate(value, index);
+                        return (
+                            <Circle
+                                key={`d2-${index}`}
+                                cx={x}
+                                cy={y}
+                                r="4"
+                                fill={Colors.light.white}
+                                stroke={color2}
+                                strokeWidth="2"
+                            />
+                        );
+                    })}
 
 
-                        {/* Labels */}
-                        {labels.map((label, index) => {
-                            const x = paddingLeft + (index / (labels.length - 1)) * drawingWidth;
-                            return (
-                                <SvgText
-                                    key={index}
-                                    x={x}
-                                    y={chartHeight - 4}
-                                    fontSize="10"
-                                    fill={Colors.light.textSecondary}
-                                    textAnchor="middle"
-                                >
-                                    {label}
-                                </SvgText>
-                            );
-                        })}
-                    </Svg>
-                    {selectedIndex !== null && (
-                        <View style={styles.selectedInfoContainer}>
-                            {/* <Text style={styles.selectedLabel}>{labels[selectedIndex]}</Text> */}
-                            <View style={styles.summaryRow}>
-                                <View style={styles.summaryItem}>
-                                    <View style={[styles.summaryDot, { backgroundColor: color1 }]} />
-                                    <Text style={styles.summaryLabel}>{isPersonalMode ? t('reports.income') : t('reports.sales')}:</Text>
-                                    <Text style={[styles.summaryValue, { color: color1 }]}>
-                                        ₹{data1[selectedIndex]?.toLocaleString('en-IN') || 0}
-                                    </Text>
-                                </View>
-                                <View style={styles.summaryItem}>
-                                    <View style={[styles.summaryDot, { backgroundColor: color2 }]} />
-                                    <Text style={styles.summaryLabel}>{isPersonalMode ? t('personal.savings') : t('reports.profit')}:</Text>
+                    {/* Labels */}
+                    {labels.map((label, index) => {
+                        const x = paddingLeft + (index / (labels.length - 1)) * drawingWidth;
+                        return (
+                            <SvgText
+                                key={index}
+                                x={x}
+                                y={chartHeight - 4}
+                                fontSize="10"
+                                fill={Colors.light.textSecondary}
+                                textAnchor="middle"
+                            >
+                                {label}
+                            </SvgText>
+                        );
+                    })}
+                </Svg>
 
-                                    <Text style={[styles.summaryValue, { color: data2[selectedIndex] >= 0 ? color2 : Colors.light.error }]}>
-                                        ₹{data2[selectedIndex]?.toLocaleString('en-IN') || 0}
-                                    </Text>
-                                </View>
+                <Pressable onPress={handlePress} style={StyleSheet.absoluteFill} />
+
+                {selectedIndex !== null && (
+                    <View style={styles.selectedInfoContainer}>
+                        {/* <Text style={styles.selectedLabel}>{labels[selectedIndex]}</Text> */}
+                        <View style={styles.summaryRow}>
+                            <View style={styles.summaryItem}>
+                                <View style={[styles.summaryDot, { backgroundColor: color1 }]} />
+                                <Text style={styles.summaryLabel}>{isPersonalMode ? t('reports.income') : t('reports.sales')}:</Text>
+                                <Text style={[styles.summaryValue, { color: color1 }]}>
+                                    ₹{data1[selectedIndex]?.toLocaleString('en-IN') || 0}
+                                </Text>
+                            </View>
+                            <View style={styles.summaryItem}>
+                                <View style={[styles.summaryDot, { backgroundColor: color2 }]} />
+                                <Text style={styles.summaryLabel}>{isPersonalMode ? t('personal.savings') : t('reports.profit')}:</Text>
+
+                                <Text style={[styles.summaryValue, { color: data2[selectedIndex] >= 0 ? color2 : Colors.light.error }]}>
+                                    ₹{data2[selectedIndex]?.toLocaleString('en-IN') || 0}
+                                </Text>
                             </View>
                         </View>
-                    )}
-                </View>
-            </TouchableWithoutFeedback>
+                    </View>
+                )}
+            </View>
         </View>
     );
 }
