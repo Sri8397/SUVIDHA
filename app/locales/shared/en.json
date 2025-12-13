@@ -16,7 +16,8 @@
         "offline": "Offline",
         "permission": "Permission Required",
         "today": "Today",
-        "warning": "Warning"
+        "warning": "Warning",
+        "info": "Info"
     },
     "languages": {
         "selectLanguage": "Select Language",

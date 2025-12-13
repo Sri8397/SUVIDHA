@@ -2,7 +2,7 @@
     "personal": {
         "people": "People",
         "todaysIncome": "Today's Income",
-        "loanGiven": "Loan Given",
+        "loanGiven": "Net Loan",
         "savings": "Savings",
         "weeklyIncomeSavings": "Weekly Income and Savings",
         "appSettings": "App Settings",
@@ -81,7 +81,13 @@
         },
         "dashboard": {
             "greeting": "Hello!",
-            "greetingSummary": "Here is your financial summary for today."
+            "greetingSummary": "Here is your financial summary for today.",
+            "tooltips": {
+                "income": "Income = Salary + Business + Loan Taken",
+                "loan": "Net Loan = Total Loan Given - Total Loan Taken",
+                "savings": "Savings = Income - Expenses - Loan Given",
+                "expenses": "Expenses = Total Spending"
+            }
         }
     }
 }

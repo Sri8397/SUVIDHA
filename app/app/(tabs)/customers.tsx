@@ -122,7 +122,14 @@ export default function CustomersScreen() {
                                 </Text>
                             </View>
                             <View style={styles.customerInfo}>
-                                <Text style={styles.customerName}>{customer.name}</Text>
+                                <View style={styles.customerNameRow}>
+                                    <Text style={styles.customerName}>{customer.name}</Text>
+                                    {isPersonalMode && customer.outstanding > 0 && (
+                                        <Text style={styles.inlineOutstanding}>
+                                            (₹{customer.outstanding.toLocaleString('en-IN')})
+                                        </Text>
+                                    )}
+                                </View>
                                 <Text style={styles.customerPhone}>{customer.phone}</Text>
                             </View>
                             <TouchableOpacity
@@ -133,7 +140,7 @@ export default function CustomersScreen() {
                             </TouchableOpacity>
                         </View>
 
-                        {customer.outstanding > 0 && (
+                        {customer.outstanding > 0 && !isPersonalMode && (
                             <View style={styles.outstandingBadge}>
                                 <Text style={styles.customerOutstanding}>
                                     बकाया: <Text style={styles.outstandingAmount}>₹{customer.outstanding.toLocaleString('en-IN')}</Text>
@@ -156,7 +163,7 @@ export default function CustomersScreen() {
                                 <FontAwesome name="whatsapp" size={14} color={Colors.light.white} />
                                 <Text style={styles.messageButtonText}>WhatsApp</Text>
                             </TouchableOpacity>
-                            {customer.outstanding > 0 && (
+                            {customer.outstanding > 0 && !isPersonalMode && (
                                 <TouchableOpacity
                                     style={styles.clearBakayaButton}
                                     onPress={() => handleReceivePayment(customer)}
@@ -310,7 +317,17 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: Colors.light.text,
+    },
+    customerNameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 2,
+        gap: 8,
+    },
+    inlineOutstanding: {
+        fontSize: 14,
+        color: Colors.light.error,
+        fontWeight: '600',
     },
     customerPhone: {
         fontSize: 14,

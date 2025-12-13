@@ -5,7 +5,7 @@
 // This module provides mode-prefixed storage keys so that
 // 'shopkeeper' and 'personal' modes have completely separate data.
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getData, setData } from './storage';
 import { getStorageKeys } from '@/types';
 
 export type AppMode = 'shopkeeper' | 'personal';
@@ -20,13 +20,9 @@ let cachedMode: AppMode | null = null;
  */
 export async function getCurrentMode(): Promise<AppMode | null> {
     if (cachedMode) return cachedMode;
-    try {
-        const mode = await AsyncStorage.getItem(MODE_STORAGE_KEY);
-        cachedMode = mode as AppMode | null;
-        return cachedMode;
-    } catch {
-        return null;
-    }
+    const mode = await getData<AppMode>(MODE_STORAGE_KEY);
+    cachedMode = mode;
+    return mode;
 }
 
 /**
@@ -34,7 +30,7 @@ export async function getCurrentMode(): Promise<AppMode | null> {
  */
 export async function setCurrentMode(mode: AppMode): Promise<void> {
     cachedMode = mode;
-    await AsyncStorage.setItem(MODE_STORAGE_KEY, mode);
+    await setData(MODE_STORAGE_KEY, mode);
 }
 
 /**

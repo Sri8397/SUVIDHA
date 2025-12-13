@@ -16,9 +16,7 @@ import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
 import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { Colors } from '@/constants/theme';
-
-
-
+import { InfoModal } from '@/components/ui/info-modal';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -34,6 +32,25 @@ export default function HomeScreen() {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
+
+  // Info Modal state
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoModalTitle, setInfoModalTitle] = useState('');
+  const [infoModalMessage, setInfoModalMessage] = useState('');
+
+  const showFormula = (type: 'income' | 'loan' | 'savings' | 'expenses') => {
+    const formulas = {
+      income: t('personal.dashboard.tooltips.income'),
+      loan: t('personal.dashboard.tooltips.loan'),
+      savings: t('personal.dashboard.tooltips.savings'),
+      expenses: t('personal.dashboard.tooltips.expenses'),
+    };
+
+
+    setInfoModalTitle(t('common.info'));
+    setInfoModalMessage(formulas[type]);
+    setShowInfoModal(true);
+  };
 
   if (isLoading) {
     return (
@@ -58,8 +75,8 @@ export default function HomeScreen() {
       >
         {/* Welcome Card */}
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>{t('dashboard.greeting')}</Text>
-          <Text style={styles.welcomeSubtitle}>{t('dashboard.greetingSummary')}</Text>
+          <Text style={styles.welcomeTitle}>{isPersonalMode ? t('personal.dashboard.greeting') : t('dashboard.greeting')}</Text>
+          <Text style={styles.welcomeSubtitle}>{isPersonalMode ? t('personal.dashboard.greetingSummary') : t('dashboard.greetingSummary')}</Text>
         </View>
 
         {/* Stats Grid */}
@@ -71,6 +88,11 @@ export default function HomeScreen() {
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.primaryLight }]}>
                   <Text style={[styles.rupeeIcon, { color: Colors.light.primary }]}>₹</Text>
                 </View>
+                {isPersonalMode && (
+                  <TouchableOpacity onPress={() => showFormula('income')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.todaysIncome') : t('dashboard.todaysSales')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.primary }]}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
@@ -84,6 +106,11 @@ export default function HomeScreen() {
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
                   <FontAwesome name="shopping-bag" size={16} color={Colors.light.error} />
                 </View>
+                {isPersonalMode && (
+                  <TouchableOpacity onPress={() => showFormula('loan')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.loanGiven') : t('dashboard.pendingPayments')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.pendingPayments.toLocaleString('en-IN')}</Text>
@@ -97,6 +124,11 @@ export default function HomeScreen() {
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.secondaryLight }]}>
                   <MaterialIcons name="trending-up" size={18} color={Colors.light.secondary} />
                 </View>
+                {isPersonalMode && (
+                  <TouchableOpacity onPress={() => showFormula('savings')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.savings') : t('dashboard.profit')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.secondary }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
@@ -110,6 +142,11 @@ export default function HomeScreen() {
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
                   <MaterialIcons name="trending-down" size={18} color={Colors.light.error} />
                 </View>
+                {isPersonalMode && (
+                  <TouchableOpacity onPress={() => showFormula('expenses')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </View>
               <Text style={styles.statLabel}>{t('dashboard.expenses')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.error }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
@@ -143,46 +180,48 @@ export default function HomeScreen() {
         </View>
 
         {/* Low Stock Alerts - only show in shopkeeper mode */}
-        {!isPersonalMode && (
-          <View style={styles.lowStockSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('dashboard.lowStockAlerts')}</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
-                <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {lowStockProducts.length === 0 ? (
-              <View style={styles.emptyLowStock}>
-                <FontAwesome name="check-circle" size={32} color={Colors.light.primary} />
-                <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
+        {
+          !isPersonalMode && (
+            <View style={styles.lowStockSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{t('dashboard.lowStockAlerts')}</Text>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/inventory?filter=low-stock')}>
+                  <Text style={styles.viewAllText}>{t('common.viewAll')}</Text>
+                </TouchableOpacity>
               </View>
-            ) : (
-              lowStockProducts.slice(0, 3).map((item) => (
-                <View key={item.id} style={styles.lowStockCard}>
-                  {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.productImage} />
-                  ) : (
-                    <View style={[styles.productImage, styles.productImagePlaceholder]}>
-                      <FontAwesome name="cube" size={24} color={Colors.light.textTertiary} />
-                    </View>
-                  )}
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{item.name}</Text>
-                    <Text style={styles.stockWarning}>{t('inventory.lowStock', { count: item.stock })}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.reorderButton}>
-                    <Text style={styles.reorderButtonText}>{t('inventory.reorder')}</Text>
-                  </TouchableOpacity>
+
+              {lowStockProducts.length === 0 ? (
+                <View style={styles.emptyLowStock}>
+                  <FontAwesome name="check-circle" size={32} color={Colors.light.primary} />
+                  <Text style={styles.emptyLowStockText}>{t('dashboard.allProductsInStock')}</Text>
                 </View>
-              ))
-            )}
-          </View>
-        )}
-      </ScrollView>
+              ) : (
+                lowStockProducts.slice(0, 3).map((item) => (
+                  <View key={item.id} style={styles.lowStockCard}>
+                    {item.image ? (
+                      <Image source={{ uri: item.image }} style={styles.productImage} />
+                    ) : (
+                      <View style={[styles.productImage, styles.productImagePlaceholder]}>
+                        <FontAwesome name="cube" size={24} color={Colors.light.textTertiary} />
+                      </View>
+                    )}
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productName}>{item.name}</Text>
+                      <Text style={styles.stockWarning}>{t('inventory.lowStock', { count: item.stock })}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.reorderButton}>
+                      <Text style={styles.reorderButtonText}>{t('inventory.reorder')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+          )
+        }
+      </ScrollView >
 
       {/* FAB */}
-      <FAB
+      < FAB
         onNewSale={() => setShowSaleForm(true)}
         onNewExpense={() => setShowExpenseForm(true)}
         onAddProduct={() => setShowProductForm(true)}
@@ -205,7 +244,14 @@ export default function HomeScreen() {
           setTimeout(() => setShowCustomerForm(true), 500); // Small delay to allow modal to close
         }}
       />
-    </View>
+
+      <InfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title={infoModalTitle}
+        message={infoModalMessage}
+      />
+    </View >
   );
 }
 
@@ -225,20 +271,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.textSecondary,
   },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   scrollView: {
     flex: 1,
   },
@@ -284,6 +316,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   statHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
   statIcon: {

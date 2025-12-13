@@ -73,7 +73,9 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
             // Give = add to outstanding (they owe us)
             // Receive = subtract from outstanding (we paid back or they gave us)
             const outstandingChange = loanType === 'give' ? loanAmount : -loanAmount;
-            const newOutstanding = Math.max(0, selectedFriend.outstanding + outstandingChange);
+
+            // Allow negative outstanding (indicating we owe them)
+            const newOutstanding = selectedFriend.outstanding + outstandingChange;
 
             await updateCustomer(selectedFriend.id, { outstanding: newOutstanding });
 

@@ -10,7 +10,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export async function getData<T>(key: string): Promise<T | null> {
     try {
         const jsonValue = await AsyncStorage.getItem(key);
-        return jsonValue != null ? JSON.parse(jsonValue) : null;
+        // Try parsing JSON, but if it fails (e.g. simple string stored without quotes), return raw value
+        try {
+            return jsonValue != null ? JSON.parse(jsonValue) : null;
+        } catch {
+            return jsonValue as unknown as T;
+        }
     } catch (error) {
         console.error(`Error reading ${key}:`, error);
         return null;

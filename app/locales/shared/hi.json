@@ -16,7 +16,8 @@
         "offline": "ऑफलाइन",
         "permission": "अनुमति आवश्यक",
         "today": "आज",
-        "warning": "चेतावनी"
+        "warning": "चेतावनी",
+        "info": "जानकारी"
     },
     "languages": {
         "selectLanguage": "भाषा चुनें",

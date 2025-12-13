@@ -104,7 +104,8 @@ export async function getCustomersWithOutstanding(): Promise<Customer[]> {
  */
 export async function getTotalOutstanding(): Promise<number> {
     const customers = await getCustomers();
-    return customers.reduce((sum, c) => sum + Math.max(0, c.outstanding), 0);
+    // Allow negative outstanding (Loan Taken) to subtract from total
+    return customers.reduce((sum, c) => sum + c.outstanding, 0);
 }
 
 /**

@@ -2,7 +2,7 @@
     "personal": {
         "people": "लोग",
         "todaysIncome": "आज की आमदनी",
-        "loanGiven": "उधार दिया",
+        "loanGiven": "कुल उधार",
         "savings": "बचत",
         "weeklyIncomeSavings": "साप्ताहिक आमदनी और बचत",
         "appSettings": "ऐप सेटिंग",
@@ -81,7 +81,13 @@
         },
         "dashboard": {
             "greeting": "नमस्ते!",
-            "greetingSummary": "आज का आपका वित्तीय सारांश यहाँ है।"
+            "greetingSummary": "आज के लिए आपका वित्तीय सारांश यहाँ है।",
+            "tooltips": {
+                "income": "आय = वेतन + व्यवसाय + लिया गया उधार",
+                "loan": "शुद्ध उधार = कुल दिया गया उधार - कुल लिया गया उधार",
+                "savings": "बचत = आय - खर्च - दिया गया उधार",
+                "expenses": "खर्च = कुल खर्च"
+            }
         }
     }
 }
