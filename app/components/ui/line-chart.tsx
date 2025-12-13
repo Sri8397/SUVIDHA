@@ -35,7 +35,7 @@ export function DualLineChart({
 
     // Calculate dimensions
     const paddingRight = 20;
-    const paddingLeft = 10;
+    const paddingLeft = 15;
     const paddingBottom = 24;
     const paddingTop = 20;
     const chartHeight = height;

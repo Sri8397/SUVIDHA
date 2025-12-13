@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Suvidha",
+    "slug": "suvidha-app",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.just_sri.suvidhaapp"
+    }
+  }
+}

@@ -24,7 +24,7 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         if (phone.length >= 10) {
             await login(phone);
-            router.replace('/(tabs)');
+            router.replace('/mode-select');
         }
     };
 

@@ -93,7 +93,7 @@ export function AddLoanForm({ visible, onClose, onAddPerson }: AddLoanFormProps)
                 date: today,
             });
 
-            Alert.alert(t('common.success'), t('personal.loan.loanRecorded'));
+            Alert.alert(t('common.success'), t('personal.loan.received'));
             resetForm();
             onClose();
         } catch (error) {
