@@ -16,7 +16,6 @@ import { AddCustomerForm } from '@/components/forms/AddCustomerForm';
 import { AddIncomeForm } from '@/components/forms/AddIncomeForm';
 import { AddLoanForm } from '@/components/forms/AddLoanForm';
 import { Colors } from '@/constants/theme';
-import { InfoModal } from '@/components/ui/info-modal';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -32,25 +31,6 @@ export default function HomeScreen() {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showLoanForm, setShowLoanForm] = useState(false);
-
-  // Info Modal state
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [infoModalTitle, setInfoModalTitle] = useState('');
-  const [infoModalMessage, setInfoModalMessage] = useState('');
-
-  const showFormula = (type: 'income' | 'loan' | 'savings' | 'expenses') => {
-    const formulas = {
-      income: t('personal.dashboard.tooltips.income'),
-      loan: t('personal.dashboard.tooltips.loan'),
-      savings: t('personal.dashboard.tooltips.savings'),
-      expenses: t('personal.dashboard.tooltips.expenses'),
-    };
-
-
-    setInfoModalTitle(t('common.info'));
-    setInfoModalMessage(formulas[type]);
-    setShowInfoModal(true);
-  };
 
   if (isLoading) {
     return (
@@ -83,38 +63,36 @@ export default function HomeScreen() {
         <View style={styles.statsGrid}>
           {/* Today's Sales */}
           <View style={styles.statCardWrapper}>
-            <View style={styles.statCard}>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => isPersonalMode ? setShowIncomeForm(true) : setShowSaleForm(true)}
+              activeOpacity={0.7}
+            >
               <View style={styles.statHeader}>
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.primaryLight }]}>
                   <Text style={[styles.rupeeIcon, { color: Colors.light.primary }]}>₹</Text>
                 </View>
-                {isPersonalMode && (
-                  <TouchableOpacity onPress={() => showFormula('income')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
-                  </TouchableOpacity>
-                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.todaysIncome') : t('dashboard.todaysSales')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.primary }]}>₹ {dashboardStats.todaySales.toLocaleString('en-IN')}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Pending Payments */}
           <View style={styles.statCardWrapper}>
-            <View style={styles.statCard}>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => isPersonalMode && setShowLoanForm(true)}
+              activeOpacity={0.7}
+            >
               <View style={styles.statHeader}>
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
                   <FontAwesome name="shopping-bag" size={16} color={Colors.light.error} />
                 </View>
-                {isPersonalMode && (
-                  <TouchableOpacity onPress={() => showFormula('loan')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
-                  </TouchableOpacity>
-                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.loanGiven') : t('dashboard.pendingPayments')}</Text>
               <Text style={styles.statValue}>₹ {dashboardStats.pendingPayments.toLocaleString('en-IN')}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Profit */}
@@ -124,11 +102,6 @@ export default function HomeScreen() {
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.secondaryLight }]}>
                   <MaterialIcons name="trending-up" size={18} color={Colors.light.secondary} />
                 </View>
-                {isPersonalMode && (
-                  <TouchableOpacity onPress={() => showFormula('savings')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
-                  </TouchableOpacity>
-                )}
               </View>
               <Text style={styles.statLabel}>{isPersonalMode ? t('personal.savings') : t('dashboard.profit')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.secondary }]}>₹ {dashboardStats.profit.toLocaleString('en-IN')}</Text>
@@ -137,20 +110,19 @@ export default function HomeScreen() {
 
           {/* Expenses */}
           <View style={styles.statCardWrapper}>
-            <View style={styles.statCard}>
+            <TouchableOpacity
+              style={styles.statCard}
+              onPress={() => setShowExpenseForm(true)}
+              activeOpacity={0.7}
+            >
               <View style={styles.statHeader}>
                 <View style={[styles.statIcon, { backgroundColor: Colors.light.errorLight }]}>
                   <MaterialIcons name="trending-down" size={18} color={Colors.light.error} />
                 </View>
-                {isPersonalMode && (
-                  <TouchableOpacity onPress={() => showFormula('expenses')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <MaterialIcons name="help-outline" size={16} color={Colors.light.textTertiary} />
-                  </TouchableOpacity>
-                )}
               </View>
               <Text style={styles.statLabel}>{t('dashboard.expenses')}</Text>
               <Text style={[styles.statValue, { color: Colors.light.error }]}>₹ {dashboardStats.expenses.toLocaleString('en-IN')}</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -241,15 +213,8 @@ export default function HomeScreen() {
         onClose={() => setShowLoanForm(false)}
         onAddPerson={() => {
           setShowLoanForm(false);
-          setTimeout(() => setShowCustomerForm(true), 500); // Small delay to allow modal to close
+          setTimeout(() => setShowCustomerForm(true), 500);
         }}
-      />
-
-      <InfoModal
-        visible={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-        title={infoModalTitle}
-        message={infoModalMessage}
       />
     </View >
   );

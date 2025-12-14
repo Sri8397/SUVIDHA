@@ -105,6 +105,14 @@ export default function CustomersScreen() {
                 <Text style={styles.countText}>
                     {t(isPersonalMode ? 'personal.friend.friends_count' : 'customers.customers_count', { count: filteredCustomers.length })}
                 </Text>
+                <TouchableOpacity
+                    style={styles.addCustomerButton}
+                    onPress={() => setShowCustomerForm(true)}
+                >
+                    <Text style={styles.addCustomerButtonText}>
+                        {t(isPersonalMode ? 'personal.friend.addFriend' : 'customers.addCustomer')}
+                    </Text>
+                </TouchableOpacity>
             </View>
 
             {/* Customer List */}
@@ -115,7 +123,10 @@ export default function CustomersScreen() {
             >
                 {filteredCustomers.map((customer) => (
                     <View key={customer.id} style={styles.customerCard}>
-                        <View style={styles.customerHeader}>
+                        <TouchableOpacity
+                            style={styles.customerHeader}
+                            onPress={() => handleEdit(customer)}
+                        >
                             <View style={styles.customerAvatar}>
                                 <Text style={styles.avatarText}>
                                     {customer.name.charAt(0).toUpperCase()}
@@ -132,13 +143,7 @@ export default function CustomersScreen() {
                                 </View>
                                 <Text style={styles.customerPhone}>{customer.phone}</Text>
                             </View>
-                            <TouchableOpacity
-                                style={styles.moreButton}
-                                onPress={() => handleEdit(customer)}
-                            >
-                                <FontAwesome name="pencil" size={16} color={Colors.light.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
 
                         {customer.outstanding > 0 && !isPersonalMode && (
                             <View style={styles.outstandingBadge}>
@@ -264,12 +269,27 @@ const styles = StyleSheet.create({
         color: Colors.light.text,
     },
     countContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginHorizontal: 16,
+        marginVertical: 12,
     },
     countText: {
-        fontSize: 14,
-        color: Colors.light.textSecondary,
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: Colors.light.textTertiary,
+    },
+    addCustomerButton: {
+        backgroundColor: Colors.light.primary,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+    },
+    addCustomerButtonText: {
+        color: Colors.light.white,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     scrollView: {
         flex: 1,
@@ -332,9 +352,6 @@ const styles = StyleSheet.create({
     customerPhone: {
         fontSize: 14,
         color: Colors.light.textSecondary,
-    },
-    moreButton: {
-        padding: 8,
     },
     outstandingBadge: {
         backgroundColor: Colors.light.secondaryLight,
