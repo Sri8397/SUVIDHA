@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 interface SuggestionBarProps {
     suggestions: string[];
@@ -44,9 +45,9 @@ export function SuggestionBar({ suggestions, onSelect, visible }: SuggestionBarP
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
+        borderTopColor: Colors.light.border,
         paddingVertical: 8,
         paddingHorizontal: 12,
     },
@@ -58,30 +59,30 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         minWidth: 80,
         alignItems: 'center',
     },
     englishChip: {
-        backgroundColor: '#F0F0F0',
-        borderColor: '#D0D0D0',
+        backgroundColor: Colors.light.background,
+        borderColor: Colors.light.border,
     },
     primaryChip: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     suggestionText: {
         fontSize: 16,
-        color: '#333333',
+        color: Colors.light.text,
     },
     englishText: {
-        color: '#666666',
+        color: Colors.light.textSecondary,
         fontStyle: 'italic',
     },
     primaryText: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
         fontWeight: '600',
     },
 });

@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../ui/TransliterationInput';
 import * as employeeService from '@/services/employeeService';
+import { Colors } from '@/constants/theme';
 
 // Predefined roles for employees
 const getEmployeeRoles = (t: any) => [
@@ -144,7 +145,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>
                         {editEmployee ? t('forms.employee.editTitle') : t('forms.employee.addTitle')}
@@ -156,7 +157,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                     {/* Employee Icon */}
                     <View style={styles.iconSection}>
                         <View style={styles.employeeIcon}>
-                            <FontAwesome name="user" size={48} color="#2E7D32" />
+                            <FontAwesome name="user" size={48} color={Colors.light.primary} />
                         </View>
                     </View>
 
@@ -168,7 +169,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                             value={name}
                             onChangeText={setName}
                             placeholder={t('forms.employee.namePlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                         />
                     </View>
 
@@ -182,7 +183,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                             <Text style={[styles.selectButtonText, !role && styles.selectPlaceholder]}>
                                 {role || t('forms.employee.selectRole')}
                             </Text>
-                            <FontAwesome name="chevron-down" size={14} color="#757575" />
+                            <FontAwesome name="chevron-down" size={14} color={Colors.light.textSecondary} />
                         </TouchableOpacity>
                     </View>
 
@@ -194,7 +195,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                             value={phone}
                             onChangeText={setPhone}
                             placeholder={t('forms.employee.phonePlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="phone-pad"
                             maxLength={10}
                         />
@@ -208,7 +209,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                             value={salary}
                             onChangeText={setSalary}
                             placeholder={t('forms.employee.salaryPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="numeric"
                         />
                     </View>
@@ -220,7 +221,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>
                                 {editEmployee ? t('common.update') : t('forms.employee.addTitle')}
@@ -242,7 +243,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                         <View style={styles.pickerHeader}>
                             <Text style={styles.pickerTitle}>{t('forms.employee.selectRole')}</Text>
                             <TouchableOpacity onPress={() => setShowRolePicker(false)}>
-                                <FontAwesome name="times" size={20} color="#757575" />
+                                <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView style={styles.pickerList}>
@@ -264,7 +265,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
                                         {roleItem.label}
                                     </Text>
                                     {role === roleItem.label && (
-                                        <FontAwesome name="check" size={16} color="#2E7D32" />
+                                        <FontAwesome name="check" size={16} color={Colors.light.primary} />
                                     )}
                                 </TouchableOpacity>
                             ))}
@@ -279,7 +280,7 @@ export function AddEmployeeForm({ visible, onClose, onSuccess, editEmployee }: A
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -323,39 +324,39 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FAFAFA',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.background,
     },
     selectButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: Colors.light.background,
     },
     selectButtonText: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     selectPlaceholder: {
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -368,16 +369,16 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     // Role Picker Modal Styles
     pickerOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'flex-end',
     },
     pickerContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         maxHeight: '60%',
@@ -389,12 +390,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     pickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerList: {
         paddingVertical: 8,
@@ -406,17 +407,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
+        borderBottomColor: Colors.light.background,
     },
     pickerOptionSelected: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
     },
     pickerOptionText: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerOptionTextSelected: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontWeight: '600',
     },
 });

@@ -3,7 +3,6 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import '@/utils/i18n'; // Initialize i18n
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
@@ -11,6 +10,7 @@ import { DataProvider } from '@/contexts/DataContext';
 import { SettingsProvider } from '@/contexts/settings-context';
 import { ModeProvider, useAppMode } from '@/contexts/ModeContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
   initialRouteName: '(auth)',
@@ -24,7 +24,7 @@ function RootLayoutNav() {
   if (authLoading || modeLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.white,
   },
 });

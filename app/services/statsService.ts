@@ -2,19 +2,25 @@
 // Stats Service - Dashboard & Report Statistics
 // ============================================
 
-import { DashboardStats, WeeklyData, CategoryBreakdown, Sale, StoreSettings, STORAGE_KEYS, ProfitCalculationMethod } from '@/types';
+import { DashboardStats, WeeklyData, CategoryBreakdown, Sale, StoreSettings, STORAGE_KEYS, SHARED_STORAGE_KEYS, ProfitCalculationMethod } from '@/types';
 import { getTodaySales, calculateTotalSales, getSales } from './saleService';
 import { getTodayExpenses, calculateTotalExpenses } from './expenseService';
 import { getTotalOutstanding } from './customerService';
 import { getProducts } from './productService';
 import { getData } from './storage';
-import i18n from '@/utils/i18n';
+import i18n from '@/i18n';
 
 /**
  * Get the profit calculation method from settings
  */
 async function getProfitCalculationMethod(): Promise<ProfitCalculationMethod> {
+    const appMode = await getData<string>(SHARED_STORAGE_KEYS.APP_MODE);
+    if (appMode === 'personal') {
+        return 'cash';
+    }
+
     const settings = await getData<StoreSettings>(STORAGE_KEYS.STORE_SETTINGS);
+    // Default to 'accrual' for shopkeeper if not set
     return settings?.profitCalculationMethod || 'accrual';
 }
 
@@ -50,14 +56,20 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         ? todaySales  // Include all sales including bakaya payments
         : todaySales.filter(s => s.saleType !== 'BAKAYA_PAYMENT');
 
+    // Calculate Loan Given (Outflow) - specific to Personal Mode
+    // Defined as BAKAYA_PAYMENT with 0 amountPaid (we gave money, so we recorded the transaction but 0 was "paid back" to us)
+    const loanGiven = todaySales
+        .filter(s => s.saleType === 'BAKAYA_PAYMENT' && s.amountPaid === 0)
+        .reduce((sum, s) => sum + s.total, 0);
+
     // Use appropriate calculation based on setting
     const salesAmount = profitMethod === 'cash'
         ? relevantSales.reduce((sum, s) => sum + s.amountPaid, 0)
         : calculateTotalSales(relevantSales);
     const expensesAmount = calculateTotalExpenses(todayExpenses);
 
-    // Profit = Sales - Expenses (Spend)
-    const profit = salesAmount - expensesAmount;
+    // Profit = Sales - Expenses (Spend) - Loan Given
+    const profit = salesAmount - expensesAmount - loanGiven;
 
     return {
         todaySales: salesAmount,
@@ -115,8 +127,13 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const expensesOnDay = allExpenses.filter(e => e.date === dateStr);
             const dayExpenses = expensesOnDay.reduce((sum, e) => sum + e.amount, 0);
 
-            // Profit = Sales - Expenses (Spend)
-            const profit = daySales - dayExpenses;
+            // Calculate Loan Given for this day
+            const loanGivenOnDay = salesOnDay
+                .filter(s => s.saleType === 'BAKAYA_PAYMENT' && s.amountPaid === 0)
+                .reduce((sum, s) => sum + s.total, 0);
+
+            // Profit = Sales - Expenses (Spend) - Loan Given
+            const profit = daySales - dayExpenses - loanGivenOnDay;
             profits.push(profit);
         }
 
@@ -134,6 +151,7 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
 
             let weekSales = 0;
             let weekExpenses = 0;
+            let weekLoanGiven = 0;
 
             // Each week is 7 days
             for (let day = 0; day < 7; day++) {
@@ -153,11 +171,18 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
                 // Add expenses for this day
                 const expensesOnDay = allExpenses.filter(e => e.date === dateStr);
                 weekExpenses += expensesOnDay.reduce((sum, e) => sum + e.amount, 0);
+
+                // Calculate Loan Given for this day
+                const loanGivenOnDay = salesOnDay
+                    .filter(s => s.saleType === 'BAKAYA_PAYMENT' && s.amountPaid === 0)
+                    .reduce((sum, s) => sum + s.total, 0);
+
+                weekLoanGiven += loanGivenOnDay;
             }
 
             salesAmounts.push(weekSales);
-            // Profit = Sales - Expenses (Spend)
-            profits.push(weekSales - weekExpenses);
+            // Profit = Sales - Expenses (Spend) - Loan Given
+            profits.push(weekSales - weekExpenses - weekLoanGiven);
         }
 
     } else if (period === 'monthly') {
@@ -194,8 +219,13 @@ export async function getChartDataByPeriod(period: 'daily' | 'weekly' | 'monthly
             const expensesInMonth = allExpenses.filter(e => e.date >= monthStart && e.date <= monthEnd);
             const monthExpenses = expensesInMonth.reduce((sum, e) => sum + e.amount, 0);
 
-            // Profit = Sales - Expenses (Spend)
-            profits.push(monthSales - monthExpenses);
+            // Calculate Loan Given for this month
+            const loanGivenInMonth = salesInMonth
+                .filter(s => s.saleType === 'BAKAYA_PAYMENT' && s.amountPaid === 0)
+                .reduce((sum, s) => sum + s.total, 0);
+
+            // Profit = Sales - Expenses (Spend) - Loan Given
+            profits.push(monthSales - monthExpenses - loanGivenInMonth);
         }
     }
 

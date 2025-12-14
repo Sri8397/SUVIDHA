@@ -5,18 +5,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
+import { Colors } from '@/constants/theme';
 
 export default function BillingScreen() {
     const { t } = useTranslation();
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <FontAwesome name="arrow-left" size={20} color="#212121" />
+                        <FontAwesome name="arrow-left" size={20} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('billing.title')}</Text>
                     <View style={styles.backButton} />
@@ -34,24 +35,24 @@ export default function BillingScreen() {
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="account-balance" size={24} color="#2E7D32" />
+                            <MaterialIcons name="account-balance" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('billing.bankAccount')}</Text>
                             <Text style={styles.fieldValue}>HDFC Bank - ****1234</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="phone-android" size={24} color="#2E7D32" />
+                            <MaterialIcons name="phone-android" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>UPI</Text>
                             <Text style={styles.fieldValue}>store@upi</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
@@ -62,7 +63,7 @@ export default function BillingScreen() {
                             <Text style={styles.fieldLabel}>{t('billing.qrCode')}</Text>
                             <Text style={styles.fieldValue}>{t('billing.active')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -72,24 +73,24 @@ export default function BillingScreen() {
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="receipt" size={24} color="#2E7D32" />
+                            <MaterialIcons name="receipt" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('billing.invoiceTemplate')}</Text>
                             <Text style={styles.fieldValue}>{t('billing.defaultTemplate')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="format-list-numbered" size={24} color="#2E7D32" />
+                            <MaterialIcons name="format-list-numbered" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('billing.invoiceNumberSeries')}</Text>
                             <Text style={styles.fieldValue}>INV-2024-</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -99,22 +100,22 @@ export default function BillingScreen() {
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="history" size={24} color="#2E7D32" />
+                            <MaterialIcons name="history" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('billing.viewPastPayments')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.fieldCard}>
                         <View style={styles.iconContainer}>
-                            <MaterialIcons name="download" size={24} color="#2E7D32" />
+                            <MaterialIcons name="download" size={24} color={Colors.light.primary} />
                         </View>
                         <View style={styles.fieldContent}>
                             <Text style={styles.fieldLabel}>{t('billing.downloadReports')}</Text>
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#757575" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -125,10 +126,10 @@ export default function BillingScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     headerSafeArea: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -136,9 +137,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         padding: 8,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     scrollView: {
         flex: 1,
@@ -161,17 +162,17 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
     },
     fieldCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -192,11 +193,11 @@ const styles = StyleSheet.create({
     fieldLabel: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#212121',
+        color: Colors.light.text,
     },
     fieldValue: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 4,
     },
 });

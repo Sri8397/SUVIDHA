@@ -7,7 +7,9 @@ import { router } from 'expo-router';
 import { useSettings } from '@/contexts/settings-context';
 import { useAuth } from '@/contexts/auth-context';
 import * as ImagePicker from 'expo-image-picker';
+import { useAppMode } from '@/contexts/ModeContext';
 import { TransliterationInput } from '../components/ui/TransliterationInput';
+import { Colors } from '@/constants/theme';
 
 interface EditModalProps {
     visible: boolean;
@@ -54,7 +56,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             value={inputValue}
                             onChangeText={setInputValue}
                             placeholder={placeholder}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             autoFocus
                         />
                     ) : (
@@ -64,7 +66,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             onChangeText={setInputValue}
                             keyboardType={keyboardType}
                             placeholder={placeholder}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             autoFocus
                         />
                     )}
@@ -82,7 +84,7 @@ function EditModal({ visible, title, value, onSave, onClose, keyboardType = 'def
                             disabled={isSaving}
                         >
                             {isSaving ? (
-                                <ActivityIndicator size="small" color="#FFFFFF" />
+                                <ActivityIndicator size="small" color={Colors.light.white} />
                             ) : (
                                 <Text style={styles.saveButtonText}>{t('common.save')}</Text>
                             )}
@@ -98,6 +100,8 @@ export default function ProfileScreen() {
     const { t } = useTranslation();
     const { userProfile, storeSettings, updateUserProfile, updateStoreSettings, isLoading } = useSettings();
     const { user } = useAuth();
+    const { appMode } = useAppMode();
+    const isPersonalMode = appMode === 'personal';
 
     const [editField, setEditField] = useState<'name' | 'phone' | 'email' | 'address' | null>(null);
     const [showImagePicker, setShowImagePicker] = useState(false);
@@ -180,20 +184,20 @@ export default function ProfileScreen() {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor={Colors.light.white} />
 
             {/* Header */}
             <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <FontAwesome name="arrow-left" size={20} color="#212121" />
+                        <FontAwesome name="arrow-left" size={20} color={Colors.light.text} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('profile.title')}</Text>
                     <View style={styles.backButton} />
@@ -220,13 +224,15 @@ export default function ProfileScreen() {
                             style={styles.profileImage}
                         />
                         <View style={styles.cameraIconOverlay}>
-                            <FontAwesome name="camera" size={16} color="#FFFFFF" />
+                            <FontAwesome name="camera" size={16} color={Colors.light.white} />
                         </View>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setEditField('name')} style={styles.nameContainer}>
                         <Text style={styles.userName}>{getDisplayName()}</Text>
                     </TouchableOpacity>
-                    <Text style={styles.storeName}>{getStoreName()}</Text>
+                    {!isPersonalMode && (
+                        <Text style={styles.storeName}>{getStoreName()}</Text>
+                    )}
                 </View>
 
                 {/* Editable Fields */}
@@ -256,18 +262,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Account Settings Section */}
-                <View style={styles.settingsSection}>
-                    <Text style={styles.sectionTitle}>{t('profile.accountSettings')}</Text>
 
-                    <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>{t('profile.changePassword')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.settingCard}>
-                        <Text style={styles.settingText}>{t('profile.appSettings')}</Text>
-                    </TouchableOpacity>
-                </View>
             </ScrollView>
 
             {/* Edit Modals */}
@@ -327,14 +322,14 @@ export default function ProfileScreen() {
                             style={styles.imagePickerOption}
                             onPress={() => pickImage(true)}
                         >
-                            <FontAwesome name="camera" size={20} color="#2E7D32" />
+                            <FontAwesome name="camera" size={20} color={Colors.light.primary} />
                             <Text style={styles.imagePickerOptionText}>{t('profile.takePhoto')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.imagePickerOption}
                             onPress={() => pickImage(false)}
                         >
-                            <FontAwesome name="photo" size={20} color="#2E7D32" />
+                            <FontAwesome name="photo" size={20} color={Colors.light.primary} />
                             <Text style={styles.imagePickerOptionText}>{t('profile.chooseFromGallery')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -353,16 +348,16 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     headerSafeArea: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -370,9 +365,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         padding: 8,
@@ -380,7 +375,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     scrollView: {
         flex: 1,
@@ -391,11 +386,11 @@ const styles = StyleSheet.create({
     profileSection: {
         alignItems: 'center',
         paddingVertical: 32,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         marginHorizontal: 16,
         marginTop: 16,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -407,9 +402,9 @@ const styles = StyleSheet.create({
         borderRadius: 60,
         overflow: 'hidden',
         marginBottom: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderWidth: 3,
-        borderColor: '#FFFFFF',
+        borderColor: Colors.light.white,
     },
     profileImage: {
         width: '100%',
@@ -420,7 +415,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         right: 0,
         left: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         paddingVertical: 6,
         alignItems: 'center',
     },
@@ -431,13 +426,13 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 4,
         textAlign: 'center',
     },
     storeName: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     fieldsContainer: {
         paddingHorizontal: 16,
@@ -447,11 +442,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         padding: 16,
         marginBottom: 12,
         borderRadius: 12,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -462,53 +457,24 @@ const styles = StyleSheet.create({
     },
     fieldLabel: {
         fontSize: 14,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginBottom: 4,
     },
     fieldValue: {
         fontSize: 16,
-        color: '#212121',
-        fontWeight: '500',
-    },
-    editIcon: {
-        padding: 8,
-    },
-    settingsSection: {
-        paddingHorizontal: 16,
-        marginTop: 24,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#212121',
-        marginBottom: 16,
-    },
-    settingCard: {
-        backgroundColor: '#FFFFFF',
-        padding: 16,
-        marginBottom: 12,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    settingText: {
-        fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         fontWeight: '500',
     },
     // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderRadius: 16,
         padding: 24,
         width: '100%',
@@ -517,17 +483,17 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
         textAlign: 'center',
     },
     modalInput: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 20,
     },
     modalButtons: {
@@ -539,34 +505,34 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         alignItems: 'center',
     },
     cancelButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     saveButton: {
         flex: 1,
         paddingVertical: 12,
         borderRadius: 8,
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         alignItems: 'center',
     },
     saveButtonText: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     // Image Picker Modal Styles
     imagePickerOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: Colors.light.overlay,
         justifyContent: 'flex-end',
     },
     imagePickerContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingTop: 20,
@@ -576,7 +542,7 @@ const styles = StyleSheet.create({
     imagePickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         textAlign: 'center',
         marginBottom: 20,
     },
@@ -585,12 +551,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
+        borderBottomColor: Colors.light.background,
         gap: 16,
     },
     imagePickerOptionText: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
         fontWeight: '500',
     },
     imagePickerCancel: {
@@ -600,7 +566,7 @@ const styles = StyleSheet.create({
     },
     imagePickerCancelText: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         fontWeight: '600',
     },
 });

@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
-import { changeLanguage } from '@/utils/i18n';
+import { Colors } from '@/constants/theme';
+import { changeLanguage } from '@/i18n';
 
 interface LanguageModalProps {
     visible: boolean;
@@ -14,15 +15,15 @@ interface LanguageModalProps {
 const languages = [
     { id: 'hi', label: 'हिंदी' },
     { id: 'en', label: 'English' },
-    { id: 'mr', label: 'मराठी' },
-    { id: 'gu', label: 'ગુજરાતી' },
-    { id: 'bn', label: 'বাংলা' },
-    { id: 'ta', label: 'தமிழ்' },
-    { id: 'te', label: 'తెలుగు' },
-    { id: 'kn', label: 'ಕನ್ನಡ' },
-    { id: 'ml', label: 'മലയാളം' },
-    { id: 'pa', label: 'ਪੰਜਾਬੀ' },
-    { id: 'or', label: 'ଓଡ଼ିଆ' },
+    // { id: 'mr', label: 'मराठी' },
+    // { id: 'gu', label: 'ગુજરાતી' },
+    // { id: 'bn', label: 'বাংলা' },
+    // { id: 'ta', label: 'தமிழ்' },
+    // { id: 'te', label: 'తెలుగు' },
+    // { id: 'kn', label: 'ಕನ್ನಡ' },
+    // { id: 'ml', label: 'മലയാളം' },
+    // { id: 'pa', label: 'ਪੰਜਾਬੀ' },
+    // { id: 'or', label: 'ଓଡ଼ିଆ' },
 ];
 
 export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLanguage }: LanguageModalProps) {
@@ -54,7 +55,7 @@ export function LanguageModal({ visible, onClose, selectedLanguage, onSelectLang
                                 <MaterialIcons
                                     name={selectedLanguage === lang.id ? "radio-button-on" : "radio-button-off"}
                                     size={24}
-                                    color={selectedLanguage === lang.id ? "#2E7D32" : "#757575"}
+                                    color={selectedLanguage === lang.id ? Colors.light.primary : Colors.light.textSecondary}
                                 />
                                 <Text style={styles.radioLabel}>{lang.label}</Text>
                             </TouchableOpacity>
@@ -80,14 +81,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: Colors.light.modalOverlay,
     },
     modalView: {
         width: 300,
-        backgroundColor: 'white',
+        backgroundColor: Colors.light.card,
         borderRadius: 8,
         padding: 24,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: {
             width: 0,
             height: 2,
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#000',
+        color: Colors.light.text,
     },
     radioGroup: {
         gap: 16,
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     },
     radioLabel: {
         fontSize: 16,
-        color: '#000',
+        color: Colors.light.text,
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     textCancel: {
-        color: '#757575',
+        color: Colors.light.textSecondary,
         fontSize: 14,
         fontWeight: '600',
     },
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     textApply: {
-        color: '#2E7D32',
+        color: Colors.light.primary,
         fontSize: 14,
         fontWeight: '600',
     },

@@ -19,8 +19,9 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { TransliterationInput } from '../ui/TransliterationInput';
 import { useData } from '@/contexts/DataContext';
-import { ExpenseCategory, EXPENSE_CATEGORY_LABELS } from '@/types';
+import { ExpenseCategory } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 interface AddExpenseFormProps {
     visible: boolean;
@@ -101,7 +102,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('forms.expense.addTitle')}</Text>
                     <View style={styles.closeButton} />
@@ -120,20 +121,20 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                 <TouchableOpacity
                                     key={cat.id}
                                     style={[
-                                        styles.categoryCard,
-                                        category === cat.id && styles.categoryCardActive,
+                                        styles.categoryChip,
+                                        category === cat.id && styles.categoryChipActive,
                                     ]}
                                     onPress={() => setCategory(cat.id)}
                                 >
                                     <FontAwesome
                                         name={cat.icon as any}
-                                        size={24}
-                                        color={category === cat.id ? '#FFFFFF' : '#757575'}
+                                        size={14}
+                                        color={category === cat.id ? Colors.light.white : Colors.light.textSecondary}
                                     />
                                     <Text
                                         style={[
-                                            styles.categoryCardText,
-                                            category === cat.id && styles.categoryCardTextActive,
+                                            styles.categoryChipText,
+                                            category === cat.id && styles.categoryChipTextActive,
                                         ]}
                                     >
                                         {t(`expenseCategories.${cat.id}`)}
@@ -153,7 +154,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                                 value={amount}
                                 onChangeText={setAmount}
                                 placeholder="0"
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -167,26 +168,29 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
                             value={description}
                             onChangeText={setDescription}
                             placeholder={t('forms.expense.descriptionPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
                             numberOfLines={3}
                             textAlignVertical="top"
                         />
                     </View>
 
-                    {/* Submit Button */}
+                </ScrollView>
+
+                {/* Submit Button - Fixed at Bottom */}
+                <View style={styles.bottomButtonContainer}>
                     <TouchableOpacity
                         style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
                         onPress={handleSubmit}
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('forms.addExpense')}</Text>
                         )}
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -195,7 +199,7 @@ export function AddExpenseForm({ visible, onClose }: AddExpenseFormProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.white,
     },
     header: {
         flexDirection: 'row',
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -215,7 +219,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -227,81 +231,85 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 12,
     },
     categoryGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 8,
     },
-    categoryCard: {
-        width: '30%',
-        aspectRatio: 1,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
+    categoryChip: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: 'transparent',
+        backgroundColor: Colors.light.background,
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        gap: 6,
+        borderWidth: 1,
+        borderColor: Colors.light.border,
     },
-    categoryCardActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+    categoryChipActive: {
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
-    categoryCardText: {
-        fontSize: 11,
-        color: '#757575',
-        marginTop: 6,
-        textAlign: 'center',
+    categoryChipText: {
+        fontSize: 13,
+        color: Colors.light.textSecondary,
     },
-    categoryCardTextActive: {
-        color: '#FFFFFF',
+    categoryChipTextActive: {
+        color: Colors.light.white,
         fontWeight: '600',
     },
     amountInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 12,
-        backgroundColor: '#FAFAFA',
-        paddingHorizontal: 16,
+        borderColor: Colors.light.border,
+        borderRadius: 10,
+        backgroundColor: Colors.light.background,
+        paddingHorizontal: 12,
     },
     currencySymbol: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: '600',
-        color: '#2E7D32',
-        marginRight: 8,
+        color: Colors.light.primary,
+        marginRight: 6,
     },
     amountInput: {
         flex: 1,
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#212121',
-        paddingVertical: 16,
+        fontSize: 20,
+        fontWeight: '600',
+        color: Colors.light.text,
+        paddingVertical: 12,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FAFAFA',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.background,
     },
     textArea: {
-        height: 100,
-        paddingTop: 14,
+        height: 80,
+        paddingTop: 12,
+    },
+    bottomButtonContainer: {
+        padding: 16,
+        paddingBottom: 32,
+        backgroundColor: Colors.light.white,
+        borderTopWidth: 1,
+        borderTopColor: Colors.light.border,
     },
     submitButton: {
-        backgroundColor: '#F57C00',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
-        marginTop: 24,
-        marginBottom: 32,
     },
     submitButtonDisabled: {
         opacity: 0.7,
@@ -309,6 +317,6 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
 });

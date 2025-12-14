@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Transaction } from '@/types';
 import { useData } from '@/contexts/DataContext';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 type FilterType = 'all' | 'last10' | 'today' | 'week';
 
@@ -28,14 +29,14 @@ const getTransactionColor = (type: Transaction['type']) => {
     switch (type) {
         case 'SALE':
         case 'PAYMENT_RECEIVED':
-            return '#2E7D32'; // Green
+            return Colors.light.success; // Green
         case 'EXPENSE':
         case 'PAYMENT_GIVEN':
-            return '#D32F2F'; // Red
+            return Colors.light.error; // Red
         case 'PRODUCT_ADD':
-            return '#1976D2'; // Blue
+            return Colors.light.info; // Blue
         default:
-            return '#757575';
+            return Colors.light.textSecondary;
     }
 };
 
@@ -69,7 +70,7 @@ interface TransactionListProps {
 
 export const TransactionList = ({ showFilters = true, refreshing, onRefresh }: TransactionListProps) => {
     const { t } = useTranslation();
-    const { transactions, isLoading } = useData();
+    const { transactions } = useData();
     const [filter, setFilter] = useState<FilterType>('all');
 
     const filteredTransactions = useMemo(() => {
@@ -124,7 +125,7 @@ export const TransactionList = ({ showFilters = true, refreshing, onRefresh }: T
     if (transactions.length === 0) {
         return (
             <View style={styles.emptyContainer}>
-                <FontAwesome name="exchange" size={48} color="#BDBDBD" />
+                <FontAwesome name="exchange" size={48} color={Colors.light.textTertiary} />
                 <Text style={styles.emptyText}>{t('transactions.empty.title')}</Text>
                 <Text style={styles.emptySubtext}>{t('transactions.empty.subtitle')}</Text>
             </View>
@@ -179,12 +180,12 @@ export const TransactionList = ({ showFilters = true, refreshing, onRefresh }: T
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderRadius: 12,
         padding: 16,
         marginHorizontal: 16,
         marginBottom: 16,
-        shadowColor: '#000',
+        shadowColor: Colors.light.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
@@ -199,26 +200,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     filterChipActive: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
+        borderColor: Colors.light.primary,
     },
     filterText: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         fontWeight: '500',
     },
     filterTextActive: {
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     headerTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
         marginBottom: 16,
     },
     row: {
@@ -245,20 +246,20 @@ const styles = StyleSheet.create({
     typeLabel: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#424242',
+        color: Colors.light.text,
     },
     separator: {
         fontSize: 13,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
     description: {
         fontSize: 13,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         flex: 1,
     },
     date: {
         fontSize: 12,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
         marginTop: 2,
     },
     amountContainer: {
@@ -271,10 +272,10 @@ const styles = StyleSheet.create({
     },
     divider: {
         height: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     emptyContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderRadius: 12,
         padding: 48,
         marginHorizontal: 16,
@@ -283,12 +284,12 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 16,
     },
     emptySubtext: {
         fontSize: 14,
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
         marginTop: 4,
     },
     noResults: {
@@ -296,6 +297,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     noResultsText: {
-        color: '#9E9E9E',
+        color: Colors.light.textTertiary,
     },
 });

@@ -1,0 +1,93 @@
+{
+    "personal": {
+        "people": "लोग",
+        "todaysIncome": "आज की आमदनी",
+        "loanGiven": "कुल उधार",
+        "savings": "बचत",
+        "weeklyIncomeSavings": "साप्ताहिक आमदनी और बचत",
+        "appSettings": "ऐप सेटिंग",
+        "incomeSource": "आमदनी का स्रोत",
+        "income": {
+            "title": "आमदनी जोड़ें",
+            "amount": "राशि",
+            "source": "आमदनी का स्रोत",
+            "description": "विवरण",
+            "descriptionPlaceholder": "जैसे: मासिक वेतन, फ्रीलांस प्रोजेक्ट...",
+            "added": "आमदनी सफलतापूर्वक जोड़ी गई",
+            "saveError": "आमदनी सेव करने में समस्या हुई"
+        },
+        "incomeSources": {
+            "salary": "वेतन",
+            "freelance": "फ्रीलांस",
+            "business": "व्यापार",
+            "investment": "निवेश",
+            "gift": "उपहार",
+            "other": "अन्य"
+        },
+        "expense": {
+            "title": "खर्च जोड़ें",
+            "amount": "राशि",
+            "category": "श्रेणी",
+            "description": "विवरण",
+            "descriptionPlaceholder": "जैसे: किराना, बिजली...",
+            "added": "खर्च सफलतापूर्वक जोड़ा गया",
+            "saveError": "खर्च सेव करने में समस्या हुई"
+        },
+        "expenseCategories": {
+            "food": "खाना और भोजन",
+            "transport": "यातायात",
+            "utilities": "बिल",
+            "shopping": "खरीदारी",
+            "entertainment": "मनोरंजन",
+            "health": "स्वास्थ्य",
+            "education": "शिक्षा",
+            "rent": "किराया",
+            "other": "अन्य"
+        },
+        "loan": {
+            "title": "उधार जोड़ें",
+            "selectFriend": "दोस्त चुनें",
+            "amount": "राशि",
+            "description": "विवरण",
+            "descriptionPlaceholder": "जैसे: मेडिकल लोन, पर्सनल लोन...",
+            "given": "उधार सफलतापूर्वक दिया गया",
+            "received": "उधार सफलतापूर्वक लिया गया",
+            "saveError": "उधार सेव करने में समस्या हुई",
+            "type": {
+                "given": "उधार दिया",
+                "taken": "उधार लिया"
+            },
+            "giveToFriend": "दोस्त को दें",
+            "receiveFromFriend": "दोस्त से लें",
+            "noFriends": "कोई दोस्त नहीं। एक नया दोस्त जोड़ें।",
+            "addFriend": "दोस्त जोड़ें"
+        },
+        "friend": {
+            "title": "दोस्त जोड़ें",
+            "name": "दोस्त का नाम",
+            "phone": "फोन नंबर",
+            "namePlaceholder": "जैसे: राजेश कुमार",
+            "phonePlaceholder": "10 अंकों का मोबाइल नंबर",
+            "added": "दोस्त सफलतापूर्वक जोड़ा गया",
+            "saveError": "दोस्त सेव करने में समस्या हुई",
+            "deleteFriend": "दोस्त हटाएं",
+            "deleteFriendConfirm": "क्या आप \"{{name}}\" को हटाना चाहते हैं?",
+            "friendDeleted": "दोस्त हटाया गया",
+            "noFriends": "कोई दोस्त नहीं। नया दोस्त जोड़ें।",
+            "noFriendsFound": "कोई दोस्त नहीं मिला",
+            "addFriend": "दोस्त जोड़ें",
+            "searchPlaceholder": "नाम या फोन से खोजें...",
+            "friends_count": "{{count}} दोस्त"
+        },
+        "dashboard": {
+            "greeting": "नमस्ते!",
+            "greetingSummary": "आज के लिए आपका वित्तीय सारांश यहाँ है।",
+            "tooltips": {
+                "income": "आय = वेतन + व्यवसाय + लिया गया उधार",
+                "loan": "शुद्ध उधार = कुल दिया गया उधार - कुल लिया गया उधार",
+                "savings": "बचत = आय - खर्च - दिया गया उधार",
+                "expenses": "खर्च = कुल खर्च"
+            }
+        }
+    }
+}

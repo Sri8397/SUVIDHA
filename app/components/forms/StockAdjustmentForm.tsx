@@ -21,6 +21,7 @@ import { useData } from '@/contexts/DataContext';
 import { TransliterationInput } from '@/components/ui/TransliterationInput';
 import { Product, ExpenseCategory } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/theme';
 
 type AdjustmentType = 'ADD' | 'REMOVE';
 
@@ -35,8 +36,8 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
     const { products, updateProduct, addExpense } = useData();
 
     const ADJUSTMENT_TYPES: { key: AdjustmentType; label: string; icon: 'plus-circle' | 'minus-circle'; color: string }[] = [
-        { key: 'ADD', label: t('stockAdjustment.add'), icon: 'plus-circle', color: '#2E7D32' },
-        { key: 'REMOVE', label: t('stockAdjustment.remove'), icon: 'minus-circle', color: '#D32F2F' },
+        { key: 'ADD', label: t('stockAdjustment.add'), icon: 'plus-circle', color: Colors.light.primary },
+        { key: 'REMOVE', label: t('stockAdjustment.remove'), icon: 'minus-circle', color: Colors.light.error },
     ];
     const [isLoading, setIsLoading] = useState(false);
 
@@ -71,7 +72,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
         if (selectedProduct) {
             setCostPerUnit(selectedProduct.costPrice.toString());
         }
-    }, [selectedProductId]);
+    }, [selectedProduct]);
 
     const resetForm = () => {
         setSelectedProductId(undefined);
@@ -164,7 +165,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                        <FontAwesome name="times" size={20} color="#757575" />
+                        <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                     </TouchableOpacity>
                     <Text style={styles.title}>{t('stockAdjustment.title')}</Text>
                     <View style={styles.closeButton} />
@@ -177,7 +178,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                         onPress={() => setShowProductPicker(true)}
                     >
                         <View style={styles.productIcon}>
-                            <FontAwesome name="cube" size={20} color="#2E7D32" />
+                            <FontAwesome name="cube" size={20} color={Colors.light.primary} />
                         </View>
                         <View style={styles.productInfo}>
                             <Text style={styles.productLabel}>{t('stockAdjustment.product')}</Text>
@@ -190,7 +191,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                                 </Text>
                             )}
                         </View>
-                        <FontAwesome name="chevron-right" size={16} color="#9E9E9E" />
+                        <FontAwesome name="chevron-right" size={16} color={Colors.light.textTertiary} />
                     </TouchableOpacity>
 
                     {/* Adjustment Type */}
@@ -209,7 +210,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                                     <FontAwesome
                                         name={type.icon}
                                         size={24}
-                                        color={adjustmentType === type.key ? type.color : '#9E9E9E'}
+                                        color={adjustmentType === type.key ? type.color : Colors.light.textTertiary}
                                     />
                                     <Text style={[
                                         styles.typeLabel,
@@ -230,7 +231,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                             value={quantity}
                             onChangeText={(text) => setQuantity(text.replace(/[^0-9]/g, ''))}
                             placeholder={t('stockAdjustment.howMany')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             keyboardType="numeric"
                         />
                     </View>
@@ -244,7 +245,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                                 value={costPerUnit}
                                 onChangeText={(text) => setCostPerUnit(text.replace(/[^0-9.]/g, ''))}
                                 placeholder={t('stockAdjustment.cost')}
-                                placeholderTextColor="#9E9E9E"
+                                placeholderTextColor={Colors.light.textTertiary}
                                 keyboardType="numeric"
                             />
                         </View>
@@ -258,7 +259,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                             value={reason}
                             onChangeText={setReason}
                             placeholder={t('stockAdjustment.reasonPlaceholder')}
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={Colors.light.textTertiary}
                             multiline
                             numberOfLines={2}
                         />
@@ -271,7 +272,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
+                            <ActivityIndicator color={Colors.light.white} />
                         ) : (
                             <Text style={styles.submitButtonText}>{t('stockAdjustment.submit')}</Text>
                         )}
@@ -289,7 +290,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
                         <View style={styles.pickerHeader}>
                             <Text style={styles.pickerTitle}>{t('stockAdjustment.selectProduct')}</Text>
                             <TouchableOpacity onPress={() => setShowProductPicker(false)}>
-                                <FontAwesome name="times" size={20} color="#757575" />
+                                <FontAwesome name="times" size={20} color={Colors.light.textSecondary} />
                             </TouchableOpacity>
                         </View>
                         <ScrollView>
@@ -323,7 +324,7 @@ export function StockAdjustmentForm({ visible, onClose, preSelectedProduct }: St
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
+        backgroundColor: Colors.light.background,
     },
     header: {
         flexDirection: 'row',
@@ -331,9 +332,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     closeButton: {
         width: 40,
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     form: {
         flex: 1,
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     productSelector: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         padding: 16,
         borderRadius: 12,
         marginBottom: 20,
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: Colors.light.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -372,16 +373,16 @@ const styles = StyleSheet.create({
     },
     productLabel: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
     productName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#212121',
+        color: Colors.light.text,
     },
     currentStock: {
         fontSize: 12,
-        color: '#2E7D32',
+        color: Colors.light.primary,
         marginTop: 2,
     },
     section: {
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 12,
     },
     typeGrid: {
@@ -401,15 +402,15 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         padding: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
     },
     typeLabel: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 8,
         textAlign: 'center',
     },
@@ -420,18 +421,18 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#424242',
+        color: Colors.light.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: Colors.light.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 14,
         fontSize: 16,
-        color: '#212121',
-        backgroundColor: '#FFFFFF',
+        color: Colors.light.text,
+        backgroundColor: Colors.light.card,
     },
     textArea: {
         minHeight: 80,
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     },
 
     submitButton: {
-        backgroundColor: '#2E7D32',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
@@ -452,11 +453,11 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: Colors.light.white,
     },
     pickerContainer: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: Colors.light.card,
     },
     pickerHeader: {
         flexDirection: 'row',
@@ -464,12 +465,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
+        borderBottomColor: Colors.light.border,
     },
     pickerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerItem: {
         flexDirection: 'row',
@@ -477,25 +478,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
+        borderBottomColor: Colors.light.background,
     },
     pickerItemName: {
         fontSize: 16,
-        color: '#212121',
+        color: Colors.light.text,
     },
     pickerItemStock: {
         fontSize: 12,
-        color: '#757575',
+        color: Colors.light.textSecondary,
         marginTop: 2,
     },
     pickerItemPrice: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2E7D32',
+        color: Colors.light.primary,
     },
     emptyPicker: {
         textAlign: 'center',
         padding: 32,
-        color: '#757575',
+        color: Colors.light.textSecondary,
     },
 });
