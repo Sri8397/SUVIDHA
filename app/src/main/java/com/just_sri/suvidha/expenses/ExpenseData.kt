@@ -12,6 +12,8 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
+import androidx.room.PrimaryKey
+import androidx.room.OnConflictStrategy
 
 @Entity(tableName = "expenses")
 data class Expense(
@@ -38,17 +40,36 @@ data class FriendBalance(
     val updatedAt: Long,
 )
 
+@Entity(tableName = "split_transactions")
+data class SplitTransaction(
+    @PrimaryKey val id: String,
+    val friendId: String,
+    val amount: Double,
+    val note: String,
+    val date: Long,
+)
+
 @Dao
 interface FriendBalanceDao {
     @Query("SELECT * FROM friend_balances ORDER BY name COLLATE NOCASE") fun observeAll(): Flow<List<FriendBalance>>
-    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE) suspend fun save(balance: FriendBalance)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(balance: FriendBalance)
     @Query("DELETE FROM friend_balances WHERE id = :id") suspend fun delete(id: String)
 }
 
-@Database(entities = [Expense::class, FriendBalance::class], version = 2, exportSchema = false)
+@Dao
+interface SplitTransactionDao {
+    @Query("SELECT * FROM split_transactions WHERE friendId = :friendId ORDER BY date DESC") fun observeByFriend(friendId: String): Flow<List<SplitTransaction>>
+    @Insert suspend fun insert(transaction: SplitTransaction)
+    @Insert suspend fun insertAll(transactions: List<SplitTransaction>)
+    @Query("DELETE FROM split_transactions WHERE id = :id") suspend fun delete(id: String)
+    @Query("SELECT * FROM split_transactions WHERE id = :id") suspend fun getById(id: String): SplitTransaction?
+}
+
+@Database(entities = [Expense::class, FriendBalance::class, SplitTransaction::class], version = 3, exportSchema = false)
 abstract class ExpenseDatabase : RoomDatabase() {
     abstract fun expenses(): ExpenseDao
     abstract fun friendBalances(): FriendBalanceDao
+    abstract fun splitTransactions(): SplitTransactionDao
 
     companion object {
         @Volatile private var instance: ExpenseDatabase? = null
@@ -57,9 +78,14 @@ abstract class ExpenseDatabase : RoomDatabase() {
                 database.execSQL("CREATE TABLE IF NOT EXISTS friend_balances (id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL, amount REAL NOT NULL, updatedAt INTEGER NOT NULL)")
             }
         }
+        private val migration2To3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("CREATE TABLE IF NOT EXISTS split_transactions (id TEXT NOT NULL PRIMARY KEY, friendId TEXT NOT NULL, amount REAL NOT NULL, note TEXT NOT NULL, date INTEGER NOT NULL)")
+            }
+        }
         fun get(context: Context): ExpenseDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, ExpenseDatabase::class.java, "suvidha-expenses.db")
-                .addMigrations(migration1To2).build().also { instance = it }
+                .addMigrations(migration1To2, migration2To3).build().also { instance = it }
         }
     }
 }

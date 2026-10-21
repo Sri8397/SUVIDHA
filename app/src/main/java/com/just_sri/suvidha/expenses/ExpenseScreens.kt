@@ -75,7 +75,7 @@ private fun HeroBalanceCard(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "₹ ${money(amount)}",
+            text = "${LocalCurrency.current} ${money(amount)}",
             color = Color.White,
             fontSize = 34.sp,
             fontWeight = FontWeight.Bold
@@ -157,7 +157,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
     pendingDelete?.let { expense ->
         ConfirmDeleteDialog(
             title = "Delete expense?",
-            message = "\"${expense.description}\" (₹ ${money(expense.amount)}) will be removed. This cannot be undone.",
+            message = "\"${expense.description}\" (${LocalCurrency.current} ${money(expense.amount)}) will be removed. This cannot be undone.",
             confirmLabel = "Delete",
             onConfirm = { onDelete(expense.id); pendingDelete = null },
             onDismiss = { pendingDelete = null }
@@ -189,12 +189,12 @@ private fun ExpenseRow(expense: Expense) {
                 fontSize = 12.sp
             )
         }
-        Text("− ₹ ${money(expense.amount)}", color = Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text("− ${LocalCurrency.current} ${money(expense.amount)}", color = Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
     }
 }
 
 @Composable
-internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDeleteFriend: (String) -> Unit, onAddSplit: (String?) -> Unit) {
+internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDeleteFriend: (String) -> Unit, onAddSplit: (String?) -> Unit, onViewFriend: (FriendBalance) -> Unit) {
     val net = friends.sumOf { it.amount }
     var pendingDelete by remember { mutableStateOf<FriendBalance?>(null) }
     LazyColumn(
@@ -232,7 +232,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
                     Modifier
                         .fillMaxWidth()
                         .background(Color.White, RoundedCornerShape(18.dp))
-                        .clickable { onAddSplit(friend.id) }
+                        .clickable { onViewFriend(friend) }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -252,7 +252,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
                         )
                     }
                     Text(
-                        "₹ ${money(kotlin.math.abs(friend.amount))}",
+                        "${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))}",
                         color = if (friend.amount > 0) Green else if (friend.amount < 0) Color(0xFFB64C45) else Muted,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
@@ -264,7 +264,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
     pendingDelete?.let { friend ->
         ConfirmDeleteDialog(
             title = "Remove friend?",
-            message = "${friend.name} and their balance of ₹ ${money(kotlin.math.abs(friend.amount))} will be removed. This cannot be undone.",
+            message = "${friend.name} and their balance of ${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))} will be removed. This cannot be undone.",
             confirmLabel = "Remove",
             onConfirm = { onDeleteFriend(friend.id); pendingDelete = null },
             onDismiss = { pendingDelete = null }
@@ -273,7 +273,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
 }
 
 @Composable
-private fun SwipeToDeleteItem(
+internal fun SwipeToDeleteItem(
     onDeleteRequested: () -> Unit,
     shape: Shape = RoundedCornerShape(18.dp),
     content: @Composable () -> Unit
@@ -305,7 +305,7 @@ private fun SwipeToDeleteItem(
 }
 
 @Composable
-private fun ConfirmDeleteDialog(
+internal fun ConfirmDeleteDialog(
     title: String,
     message: String,
     confirmLabel: String,
@@ -326,7 +326,7 @@ private fun ConfirmDeleteDialog(
 }
 
 @Composable
-internal fun SettingsMenu(categoryCount: Int, friendCount: Int, modifier: Modifier, onOpen: (String) -> Unit) {
+internal fun SettingsMenu(categoryCount: Int, friendCount: Int, currency: String, modifier: Modifier, onOpen: (String) -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
@@ -335,13 +335,14 @@ internal fun SettingsMenu(categoryCount: Int, friendCount: Int, modifier: Modifi
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         ScreenHeader("SETTINGS", "Manage lists")
-        SettingsRow("Categories", "$categoryCount expense categories", onClick = { onOpen("categories") })
-        SettingsRow("Friends", "$friendCount friends", onClick = { onOpen("friends") })
+        SettingsRow("Currency", currency, icon = "¤", onClick = { onOpen("currency") })
+        SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") })
+        SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") })
     }
 }
 
 @Composable
-private fun SettingsRow(title: String, subtitle: String, onClick: () -> Unit) {
+private fun SettingsRow(title: String, subtitle: String, icon: String = title.take(1), onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -354,7 +355,7 @@ private fun SettingsRow(title: String, subtitle: String, onClick: () -> Unit) {
             Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(if (title == "Friends") "F" else "C", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(icon, color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
         Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
             Text(title, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
@@ -388,6 +389,51 @@ private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBa
         }
         Spacer(Modifier.width(8.dp))
         ScreenHeader("SETTINGS", title)
+    }
+}
+
+@Composable
+internal fun CurrencyManagementPage(current: String, modifier: Modifier, onBack: () -> Unit, onSave: (String) -> Unit) {
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item { SettingsSubHeader("Currency", onBack = onBack) }
+        item { Text("Select your currency", color = Muted, fontSize = 14.sp) }
+        items(supportedCurrencies, key = { it.first }) { (symbol, label) ->
+            val selected = symbol == current
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        if (selected) Color(0xFFEAF4EE) else Color.White,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .clickable { onSave(symbol) }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    Modifier.size(44.dp).background(
+                        if (selected) Green else Color(0xFFEAF4EE), CircleShape
+                    ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(symbol, color = if (selected) Color.White else Green, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+                Text(
+                    label,
+                    color = if (selected) Ink else Muted,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 14.dp).weight(1f)
+                )
+                if (selected) {
+                    Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            }
+        }
     }
 }
 
@@ -570,7 +616,7 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
             Column(Modifier.weight(1f)) {
                 Text("Spending trend", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
-                Text("₹ ${money(periodTotal)} in this ${period.lowercase()}", color = Muted, fontSize = 12.sp)
+                Text("${LocalCurrency.current} ${money(periodTotal)} in this ${period.lowercase()}", color = Muted, fontSize = 12.sp)
             }
             listOf("Day", "Week", "Month").forEach { choice ->
                 val active = period == choice
@@ -641,7 +687,124 @@ private fun SplitPreview() {
             ),
             modifier = Modifier,
             onDeleteFriend = {},
-            onAddSplit = {}
+            onAddSplit = {},
+            onViewFriend = {}
+        )
+    }
+}
+
+@Composable
+internal fun FriendTransactionsPage(
+    friend: FriendBalance,
+    transactions: List<SplitTransaction>,
+    modifier: Modifier,
+    onBack: () -> Unit,
+    onAddSplit: (String) -> Unit,
+    onDeleteTransaction: (SplitTransaction) -> Unit
+) {
+    var pendingDelete by remember { mutableStateOf<SplitTransaction?>(null) }
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Green
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                ScreenHeader("BAKAYA  /  HISTORY", friend.name)
+            }
+        }
+        item {
+            HeroBalanceCard(
+                eyebrow = "NET BALANCE",
+                amount = kotlin.math.abs(friend.amount),
+                subtitle = if (friend.amount > 0) "${friend.name} owes you" else if (friend.amount < 0) "You owe ${friend.name}" else "All settled",
+                isNegative = friend.amount < 0
+            )
+        }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Transactions  ·  ${transactions.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("Swipe to delete", color = Muted, fontSize = 11.sp)
+            }
+        }
+        if (transactions.isEmpty()) item {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("No transactions yet", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(6.dp))
+                Text("Tap + to add a split with ${friend.name}.", color = Muted, fontSize = 13.sp)
+            }
+        }
+        items(transactions, key = { it.id }) { txn ->
+            SwipeToDeleteItem(onDeleteRequested = { pendingDelete = txn }) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        Modifier.size(44.dp).background(
+                            if (txn.amount > 0) Color(0xFFEAF4EE) else Color(0xFFFBECEB),
+                            CircleShape
+                        ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            if (txn.amount > 0) "↑" else "↓",
+                            color = if (txn.amount > 0) Green else Danger,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                    Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                        Text(
+                            txn.note.ifBlank { if (txn.amount > 0) "They owe you" else "You owe" },
+                            color = Ink,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            SimpleDateFormat("d MMM yyyy, h:mm a", Locale.getDefault()).format(Date(txn.date)),
+                            color = Muted,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Text(
+                        "${if (txn.amount > 0) "+" else "−"} ${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}",
+                        color = if (txn.amount > 0) Green else Danger,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+        }
+    }
+    pendingDelete?.let { txn ->
+        ConfirmDeleteDialog(
+            title = "Delete transaction?",
+            message = "${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))} split with ${friend.name} will be removed and the balance will be adjusted.",
+            confirmLabel = "Delete",
+            onConfirm = { onDeleteTransaction(txn); pendingDelete = null },
+            onDismiss = { pendingDelete = null }
         )
     }
 }
@@ -650,6 +813,6 @@ private fun SplitPreview() {
 @Composable
 private fun SettingsPreview() {
     MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = Color.White)) {
-        SettingsMenu(categoryCount = 8, friendCount = 3, modifier = Modifier, onOpen = {})
+        SettingsMenu(categoryCount = 8, friendCount = 3, currency = "₹", modifier = Modifier, onOpen = {})
     }
 }

@@ -45,7 +45,8 @@ internal fun AddExpenseDialog(categories: List<String>, onDismiss: () -> Unit, o
                                 }
                             }
                         }
-                        OutlinedTextField(draft.amount, { value -> drafts[index] = draft.copy(amount = value); invalid = false }, label = { Text("Amount (₹)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && (draft.amount.toDoubleOrNull() ?: 0.0) <= 0, modifier = Modifier.fillMaxWidth())
+                        val currency = LocalCurrency.current
+                        OutlinedTextField(draft.amount, { value -> drafts[index] = draft.copy(amount = value); invalid = false }, label = { Text("Amount ($currency)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && (draft.amount.toDoubleOrNull() ?: 0.0) <= 0, modifier = Modifier.fillMaxWidth())
                         OutlinedTextField(draft.note, { value -> drafts[index] = draft.copy(note = value) }, label = { Text("Description (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -61,7 +62,7 @@ internal fun AddExpenseDialog(categories: List<String>, onDismiss: () -> Unit, o
     )
 }
 
-internal data class SplitDraft(val friendId: String, val amount: String = "")
+internal data class SplitDraft(val friendId: String, val amount: String = "", val note: String = "")
 
 @Composable
 internal fun SplitEntryDialog(friends: List<FriendBalance>, initialFriendId: String?, onDismiss: () -> Unit, onSave: (List<SplitDraft>) -> Unit) {
@@ -92,7 +93,9 @@ internal fun SplitEntryDialog(friends: List<FriendBalance>, initialFriendId: Str
                                 }
                             }
                         }
-                        OutlinedTextField(draft.amount, { amount -> drafts[index] = draft.copy(amount = amount); invalid = false }, label = { Text("Net amount (₹)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && draft.amount.toDoubleOrNull() == null, modifier = Modifier.fillMaxWidth())
+                        val currency = LocalCurrency.current
+                        OutlinedTextField(draft.amount, { amount -> drafts[index] = draft.copy(amount = amount); invalid = false }, label = { Text("Net amount ($currency)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && draft.amount.toDoubleOrNull() == null, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(draft.note, { note -> drafts[index] = draft.copy(note = note) }, label = { Text("Description (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     }
                 }
                 TextButton(onClick = { drafts.add(SplitDraft(friends.firstOrNull()?.id.orEmpty())) }, modifier = Modifier.fillMaxWidth()) { Text("+  Add another split", color = Green) }
