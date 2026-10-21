@@ -47,6 +47,8 @@ data class SplitTransaction(
     val amount: Double,
     val note: String,
     val date: Long,
+    val isSettled: Boolean = false,
+    val settledAt: Long? = null,
 )
 
 @Dao
@@ -61,11 +63,12 @@ interface SplitTransactionDao {
     @Query("SELECT * FROM split_transactions WHERE friendId = :friendId ORDER BY date DESC") fun observeByFriend(friendId: String): Flow<List<SplitTransaction>>
     @Insert suspend fun insert(transaction: SplitTransaction)
     @Insert suspend fun insertAll(transactions: List<SplitTransaction>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(transaction: SplitTransaction)
     @Query("DELETE FROM split_transactions WHERE id = :id") suspend fun delete(id: String)
     @Query("SELECT * FROM split_transactions WHERE id = :id") suspend fun getById(id: String): SplitTransaction?
 }
 
-@Database(entities = [Expense::class, FriendBalance::class, SplitTransaction::class], version = 3, exportSchema = false)
+@Database(entities = [Expense::class, FriendBalance::class, SplitTransaction::class], version = 5, exportSchema = false)
 abstract class ExpenseDatabase : RoomDatabase() {
     abstract fun expenses(): ExpenseDao
     abstract fun friendBalances(): FriendBalanceDao
@@ -83,11 +86,21 @@ abstract class ExpenseDatabase : RoomDatabase() {
                 database.execSQL("CREATE TABLE IF NOT EXISTS split_transactions (id TEXT NOT NULL PRIMARY KEY, friendId TEXT NOT NULL, amount REAL NOT NULL, note TEXT NOT NULL, date INTEGER NOT NULL)")
             }
         }
+        private val migration3To4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE split_transactions ADD COLUMN isSettled INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+        private val migration4To5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE split_transactions ADD COLUMN settledAt INTEGER")
+            }
+        }
         fun get(context: Context): ExpenseDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, ExpenseDatabase::class.java, "suvidha-expenses.db")
-                .addMigrations(migration1To2, migration2To3).build().also { instance = it }
+                .addMigrations(migration1To2, migration2To3, migration3To4, migration4To5).build().also { instance = it }
         }
     }
 }
 
-val defaultExpenseCategories = listOf("Rent", "Utilities", "Food", "Transport", "Health", "Shopping", "Salary", "Other")
+val defaultExpenseCategories = listOf("Rent", "Utilities", "Food", "Transport", "Health", "Shopping", "Salary", "Earn", "Other")

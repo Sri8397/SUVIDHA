@@ -36,3 +36,21 @@ internal val supportedCurrencies = listOf(
     "AED" to "AED  UAE Dirham",
     "SGD" to "SGD  Singapore Dollar",
 )
+
+internal fun getZoneIdForCurrency(currency: String): java.time.ZoneId {
+    return when (currency) {
+        "₹" -> java.time.ZoneId.of("Asia/Kolkata")
+        "$" -> java.time.ZoneId.of("America/New_York")
+        "€" -> java.time.ZoneId.of("Europe/Paris")
+        "£" -> java.time.ZoneId.of("Europe/London")
+        "¥" -> java.time.ZoneId.of("Asia/Tokyo")
+        "₩" -> java.time.ZoneId.of("Asia/Seoul")
+        "A$" -> java.time.ZoneId.of("Australia/Sydney")
+        "C$" -> java.time.ZoneId.of("America/Toronto")
+        "CHF" -> java.time.ZoneId.of("Europe/Zurich")
+        "AED" -> java.time.ZoneId.of("Asia/Dubai")
+        "SGD" -> java.time.ZoneId.of("Asia/Singapore")
+        else -> java.time.ZoneId.systemDefault()
+    }
+}
+

@@ -46,8 +46,28 @@ internal fun AddExpenseDialog(categories: List<String>, onDismiss: () -> Unit, o
                             }
                         }
                         val currency = LocalCurrency.current
-                        OutlinedTextField(draft.amount, { value -> drafts[index] = draft.copy(amount = value); invalid = false }, label = { Text("Amount ($currency)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && (draft.amount.toDoubleOrNull() ?: 0.0) <= 0, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(draft.note, { value -> drafts[index] = draft.copy(note = value) }, label = { Text("Description (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(
+                            draft.amount,
+                            { value ->
+                                if (value.length <= 15 && (value.isEmpty() || value.matches(Regex("""^\d*\.?\d{0,2}$""")))) {
+                                    drafts[index] = draft.copy(amount = value)
+                                    invalid = false
+                                }
+                            },
+                            label = { Text("Amount ($currency)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            isError = invalid && (draft.amount.toDoubleOrNull() ?: 0.0) <= 0,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            draft.note,
+                            { value -> if (value.length <= 50) drafts[index] = draft.copy(note = value) },
+                            label = { Text("Description (max 50 chars)") },
+                            singleLine = false,
+                            maxLines = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
                 TextButton(onClick = { drafts.add(ExpenseDraft()) }, modifier = Modifier.fillMaxWidth()) { Text("+  Add another expense", color = Green) }
@@ -94,8 +114,28 @@ internal fun SplitEntryDialog(friends: List<FriendBalance>, initialFriendId: Str
                             }
                         }
                         val currency = LocalCurrency.current
-                        OutlinedTextField(draft.amount, { amount -> drafts[index] = draft.copy(amount = amount); invalid = false }, label = { Text("Net amount ($currency)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, isError = invalid && draft.amount.toDoubleOrNull() == null, modifier = Modifier.fillMaxWidth())
-                        OutlinedTextField(draft.note, { note -> drafts[index] = draft.copy(note = note) }, label = { Text("Description (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(
+                            draft.amount,
+                            { amount ->
+                                if (amount.length <= 16 && (amount.isEmpty() || amount == "-" || amount.matches(Regex("""^-?\d*\.?\d{0,2}$""")))) {
+                                    drafts[index] = draft.copy(amount = amount)
+                                    invalid = false
+                                }
+                            },
+                            label = { Text("Net amount ($currency)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            isError = invalid && draft.amount.toDoubleOrNull() == null,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            draft.note,
+                            { note -> if (note.length <= 50) drafts[index] = draft.copy(note = note) },
+                            label = { Text("Description (max 50 chars)") },
+                            singleLine = false,
+                            maxLines = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
                 TextButton(onClick = { drafts.add(SplitDraft(friends.firstOrNull()?.id.orEmpty())) }, modifier = Modifier.fillMaxWidth()) { Text("+  Add another split", color = Green) }
