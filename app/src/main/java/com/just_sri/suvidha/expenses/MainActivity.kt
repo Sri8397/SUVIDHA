@@ -7,10 +7,15 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +42,8 @@ class MainActivity : ComponentActivity() {
                     val ids = updated.map { it.id }.toSet()
                     friends.filter { it.id !in ids }.forEach { friendDao.delete(it.id) }
                     updated.forEach { friendDao.save(it) }
-                } }, onAdd = { drafts ->
+                } }, onDeleteFriend = { id -> lifecycleScope.launch { friendDao.delete(id) } },
+                onAdd = { drafts ->
                     lifecycleScope.launch { dao.insertAll(drafts.map { draft -> Expense(UUID.randomUUID().toString(), draft.category, draft.amount.toDouble(), draft.note.ifBlank { draft.category }, System.currentTimeMillis()) }) }
                 }, onDelete = { id -> lifecycleScope.launch { dao.delete(id) } })
             }
@@ -49,7 +55,8 @@ class MainActivity : ComponentActivity() {
 private fun ExpenseHome(
     expenses: List<Expense>, friends: List<FriendBalance>, categories: List<String>,
     onCategoriesChange: (List<String>) -> Unit,
-    onFriendsChange: (List<FriendBalance>) -> Unit, onAdd: (List<ExpenseDraft>) -> Unit,
+    onFriendsChange: (List<FriendBalance>) -> Unit, onDeleteFriend: (String) -> Unit,
+    onAdd: (List<ExpenseDraft>) -> Unit,
     onDelete: (String) -> Unit
 ) {
     var tab by remember { mutableIntStateOf(0) }
@@ -61,15 +68,29 @@ private fun ExpenseHome(
         containerColor = Canvas,
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                listOf("Expenses", "Split", "Settings").forEachIndexed { index, label ->
-                    NavigationBarItem(
-                        selected = tab == index,
-                        onClick = { tab = index },
-                        icon = { Text(listOf("₹", "⇄", "⚙")[index], fontSize = 18.sp) },
-                        label = { Text(label) },
-                        colors = NavigationBarItemDefaults.colors(selectedIconColor = Green, selectedTextColor = Green, indicatorColor = Color(0xFFE5F2EA))
-                    )
-                }
+                val itemColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Green,
+                    selectedTextColor = Green,
+                    indicatorColor = Color(0xFFE5F2EA)
+                )
+                NavigationBarItem(
+                    selected = tab == 0,
+                    onClick = { tab = 0 },
+                    icon = { Icon(Icons.AutoMirrored.Outlined.List, contentDescription = "Expenses", modifier = Modifier.size(36.dp)) },
+                    colors = itemColors
+                )
+                NavigationBarItem(
+                    selected = tab == 1,
+                    onClick = { tab = 1 },
+                    icon = { Icon(painterResource(R.drawable.ic_payment_split), contentDescription = "Split", modifier = Modifier.size(36.dp)) },
+                    colors = itemColors
+                )
+                NavigationBarItem(
+                    selected = tab == 2,
+                    onClick = { tab = 2 },
+                    icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.size(36.dp)) },
+                    colors = itemColors
+                )
             }
         },
         floatingActionButton = {
@@ -87,7 +108,7 @@ private fun ExpenseHome(
     ) { padding ->
         when (tab) {
             0 -> ExpensesPage(expenses, categories, Modifier.padding(padding), onDelete)
-            1 -> SplitPage(friends, Modifier.padding(padding), onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true })
+            1 -> SplitPage(friends, Modifier.padding(padding), onDeleteFriend = onDeleteFriend, onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true })
             else -> when (settingsPage) {
                 "categories" -> CategoryManagementPage(categories, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onCategoriesChange)
                 "friends" -> FriendsManagementPage(friends, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onFriendsChange)

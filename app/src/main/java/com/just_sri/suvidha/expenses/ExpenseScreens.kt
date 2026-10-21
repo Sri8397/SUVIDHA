@@ -11,12 +11,18 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,102 +37,304 @@ import java.util.Locale
 import java.util.UUID
 
 @Composable
+private fun ScreenHeader(
+    eyebrow: String,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        Text(eyebrow, color = Green, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp)
+        Spacer(Modifier.height(4.dp))
+        Text(title, color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun HeroBalanceCard(
+    eyebrow: String,
+    amount: Double,
+    subtitle: String,
+    isNegative: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = if (isNegative) Color(0xFF773E3A) else Ink,
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(22.dp)
+    ) {
+        Text(
+            text = eyebrow.uppercase(),
+            color = Color(0xFFB8C8BF),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.3.sp
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "₹ ${money(amount)}",
+            color = Color.White,
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            color = Color(0xFFD0DAD4),
+            fontSize = 13.sp
+        )
+    }
+}
+
+@Composable
 internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, modifier: Modifier, onDelete: (String) -> Unit) {
     var selected by remember { mutableStateOf("All") }
     var trendPeriod by remember { mutableStateOf("Week") }
+    var pendingDelete by remember { mutableStateOf<Expense?>(null) }
     val today = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
     val todayTotal = expenses.filter { SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date(it.date)) == today }.sumOf { it.amount }
     val visible = expenses.filter { selected == "All" || it.category == selected }
-    LazyColumn(modifier = Modifier.fillMaxSize().then(modifier), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 22.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text("SUVIDHA  /  MONEY", color = Green, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
-                    Text("Expenses", color = Ink, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+            ScreenHeader("SUVIDHA  /  MONEY", "Expenses")
         }
         item {
-            Column(Modifier.fillMaxWidth().background(Ink, RoundedCornerShape(24.dp)).padding(22.dp)) {
-                Text("SPENT TODAY", color = Color(0xFFB8C8BF), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp)
-                Spacer(Modifier.height(8.dp)); Text("₹ ${money(todayTotal)}", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp)); Text("${expenses.size} expenses recorded", color = Color(0xFFD0DAD4), fontSize = 13.sp)
-            }
+            HeroBalanceCard(
+                eyebrow = "SPENT TODAY",
+                amount = todayTotal,
+                subtitle = "${expenses.size} expenses recorded"
+            )
         }
         item { ExpenseTrend(expenses, trendPeriod) { trendPeriod = it } }
         item {
-            Text("Recent expenses  ·  ${expenses.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Recent expenses  ·  ${expenses.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("Swipe to delete", color = Muted, fontSize = 11.sp)
+            }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
                 (listOf("All") + categories).forEach { category ->
                     val active = selected == category
-                    Text(category, modifier = Modifier.background(if (active) Green else Color.White, RoundedCornerShape(50)).clickable { selected = category }.padding(horizontal = 13.dp, vertical = 9.dp), color = if (active) Color.White else Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        category,
+                        modifier = Modifier
+                            .background(if (active) Green else Color.White, RoundedCornerShape(50))
+                            .clickable { selected = category }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        color = if (active) Color.White else Muted,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
         if (visible.isEmpty()) item {
-            Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(20.dp)).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text("No expenses yet", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(5.dp)); Text("Tap Add expense to record one.", color = Muted, fontSize = 13.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("Tap + to record one.", color = Muted, fontSize = 13.sp)
             }
         }
         items(visible, key = { it.id }) { expense ->
-            Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(18.dp)).padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(42.dp).background(Color(0xFFEAF4EE), CircleShape), contentAlignment = Alignment.Center) { Text(expense.category.take(1), color = Green, fontWeight = FontWeight.Bold) }
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(expense.description, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Text("${expense.category}  ·  ${SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(expense.date))}", color = Muted, fontSize = 12.sp)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("− ₹ ${money(expense.amount)}", color = Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                    Text("Delete", color = Color(0xFFB64C45), fontSize = 11.sp, modifier = Modifier.clickable { onDelete(expense.id) }.padding(top = 4.dp))
-                }
+            SwipeToDeleteItem(onDeleteRequested = { pendingDelete = expense }) {
+                ExpenseRow(expense)
             }
         }
+    }
+    pendingDelete?.let { expense ->
+        ConfirmDeleteDialog(
+            title = "Delete expense?",
+            message = "\"${expense.description}\" (₹ ${money(expense.amount)}) will be removed. This cannot be undone.",
+            confirmLabel = "Delete",
+            onConfirm = { onDelete(expense.id); pendingDelete = null },
+            onDismiss = { pendingDelete = null }
+        )
     }
 }
 
 @Composable
-internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onAddSplit: (String?) -> Unit) {
+private fun ExpenseRow(expense: Expense) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(18.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(expense.category.take(1).uppercase(), color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+            Text(expense.description, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "${expense.category}  ·  ${SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(expense.date))}",
+                color = Muted,
+                fontSize = 12.sp
+            )
+        }
+        Text("− ₹ ${money(expense.amount)}", color = Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+    }
+}
+
+@Composable
+internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDeleteFriend: (String) -> Unit, onAddSplit: (String?) -> Unit) {
     val net = friends.sumOf { it.amount }
-    LazyColumn(Modifier.fillMaxSize().then(modifier), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    var pendingDelete by remember { mutableStateOf<FriendBalance?>(null) }
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         item {
-            Text("BAKAYA  /  FRIENDS", color = Green, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp)
-            Text("Split expenses", color = Ink, fontSize = 29.sp, fontWeight = FontWeight.Bold)
-            Text("Keep a simple running balance with friends.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
+            ScreenHeader("BAKAYA  /  FRIENDS", "Split expenses")
         }
         item {
-            Column(Modifier.fillMaxWidth().background(if (net >= 0) Ink else Color(0xFF773E3A), RoundedCornerShape(22.dp)).padding(20.dp)) {
-                Text("YOUR NET BALANCE", color = Color(0xFFD0DAD4), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                Text("₹ ${money(kotlin.math.abs(net))}", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
-                Text(if (net > 0) "Friends owe you" else if (net < 0) "You owe friends" else "All settled", color = Color(0xFFE1E9E4), fontSize = 13.sp)
-            }
+            HeroBalanceCard(
+                eyebrow = "YOUR NET BALANCE",
+                amount = kotlin.math.abs(net),
+                subtitle = if (net > 0) "Friends owe you" else if (net < 0) "You owe friends" else "All settled",
+                isNegative = net < 0
+            )
         }
         if (friends.isEmpty()) item {
-            Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(18.dp)).padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text("No friends yet", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Text("Add friends in Settings to start tracking.", color = Muted, fontSize = 13.sp, modifier = Modifier.padding(top = 5.dp))
+                Spacer(Modifier.height(6.dp))
+                Text("Add friends in Settings to start tracking.", color = Muted, fontSize = 13.sp)
             }
         }
         items(friends, key = { it.id }) { friend ->
-            Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(18.dp)).clickable { onAddSplit(friend.id) }.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape), contentAlignment = Alignment.Center) { Text(friend.name.take(1).uppercase(), color = Green, fontWeight = FontWeight.Bold) }
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(friend.name, color = Ink, fontWeight = FontWeight.SemiBold)
-                    Text(if (friend.amount > 0) "Owes you" else if (friend.amount < 0) "You owe" else "Settled", color = Muted, fontSize = 12.sp)
+            SwipeToDeleteItem(onDeleteRequested = { pendingDelete = friend }) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Color.White, RoundedCornerShape(18.dp))
+                        .clickable { onAddSplit(friend.id) }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(friend.name.take(1).uppercase(), color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                    Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                        Text(friend.name, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            if (friend.amount > 0) "Owes you" else if (friend.amount < 0) "You owe" else "Settled",
+                            color = Muted,
+                            fontSize = 12.sp
+                        )
+                    }
+                    Text(
+                        "₹ ${money(kotlin.math.abs(friend.amount))}",
+                        color = if (friend.amount > 0) Green else if (friend.amount < 0) Color(0xFFB64C45) else Muted,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
                 }
-                Text("₹ ${money(kotlin.math.abs(friend.amount))}", color = if (friend.amount >= 0) Green else Color(0xFFB64C45), fontWeight = FontWeight.Bold)
             }
         }
     }
+    pendingDelete?.let { friend ->
+        ConfirmDeleteDialog(
+            title = "Remove friend?",
+            message = "${friend.name} and their balance of ₹ ${money(kotlin.math.abs(friend.amount))} will be removed. This cannot be undone.",
+            confirmLabel = "Remove",
+            onConfirm = { onDeleteFriend(friend.id); pendingDelete = null },
+            onDismiss = { pendingDelete = null }
+        )
+    }
+}
+
+@Composable
+private fun SwipeToDeleteItem(
+    onDeleteRequested: () -> Unit,
+    shape: Shape = RoundedCornerShape(18.dp),
+    content: @Composable () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) onDeleteRequested()
+            false
+        },
+        positionalThreshold = { distance -> distance * 0.35f }
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = Modifier.fillMaxWidth(),
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true,
+        backgroundContent = {
+            Row(
+                Modifier.fillMaxSize().clip(shape).background(Danger).padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Outlined.Delete, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Delete", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    ) { content() }
+}
+
+@Composable
+private fun ConfirmDeleteDialog(
+    title: String,
+    message: String,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Bold) },
+        text = { Text(message, color = Muted, fontSize = 14.sp) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(confirmLabel, color = Danger, fontWeight = FontWeight.SemiBold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = Muted) }
+        }
+    )
 }
 
 @Composable
 internal fun SettingsMenu(categoryCount: Int, friendCount: Int, modifier: Modifier, onOpen: (String) -> Unit) {
-    Column(Modifier.fillMaxSize().then(modifier).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("SETTINGS", color = Green, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.3.sp)
-        Text("Manage lists", color = Ink, fontSize = 29.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(2.dp))
+    Column(
+        Modifier
+            .fillMaxSize()
+            .then(modifier)
+            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ScreenHeader("SETTINGS", "Manage lists")
         SettingsRow("Categories", "$categoryCount expense categories", onClick = { onOpen("categories") })
         SettingsRow("Friends", "$friendCount friends", onClick = { onOpen("friends") })
     }
@@ -134,26 +342,52 @@ internal fun SettingsMenu(categoryCount: Int, friendCount: Int, modifier: Modifi
 
 @Composable
 private fun SettingsRow(title: String, subtitle: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(18.dp)).clickable(onClick = onClick).padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(42.dp).background(Color(0xFFEAF4EE), CircleShape), contentAlignment = Alignment.Center) {
-            Text(if (title == "Friends") "F" else "C", color = Green, fontWeight = FontWeight.Bold)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(if (title == "Friends") "F" else "C", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(title, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+            Text(title, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+            Spacer(Modifier.height(2.dp))
             Text(subtitle, color = Muted, fontSize = 12.sp)
         }
-        Text("›", color = Muted, fontSize = 26.sp)
+        Icon(
+            Icons.AutoMirrored.Outlined.ArrowForward,
+            contentDescription = null,
+            tint = Muted,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
 @Composable
-private fun SettingsSubHeader(title: String, modifier: Modifier, onBack: () -> Unit) {
-    Row(Modifier.fillMaxWidth().then(modifier), verticalAlignment = Alignment.CenterVertically) {
-        Text("‹", color = Green, fontSize = 30.sp, modifier = Modifier.clickable(onClick = onBack).padding(end = 12.dp))
-        Column {
-            Text("SETTINGS", color = Green, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
-            Text(title, color = Ink, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().then(modifier),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = "Back",
+                tint = Green
+            )
         }
+        Spacer(Modifier.width(8.dp))
+        ScreenHeader("SETTINGS", title)
     }
 }
 
@@ -161,31 +395,82 @@ private fun SettingsSubHeader(title: String, modifier: Modifier, onBack: () -> U
 internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier, onBack: () -> Unit, onSave: (List<String>) -> Unit) {
     var editable by remember(categories) { mutableStateOf(categories) }
     var newName by remember { mutableStateOf("") }
-    LazyColumn(Modifier.fillMaxSize().then(modifier), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { SettingsSubHeader("Categories", Modifier, onBack) }
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { SettingsSubHeader("Categories", onBack = onBack) }
         item { Text("Expense categories", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(newName, { newName = it }, label = { Text("New category") }, singleLine = true, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp))
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { val name = newName.trim(); if (name.isNotEmpty() && editable.none { it.equals(name, true) }) { editable = (editable.filterNot { it.equals("Other", true) } + name + "Other").distinct(); onSave(editable); newName = "" } }, shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("Add") }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    newName,
+                    { newName = it },
+                    label = { Text("New category") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Button(
+                    onClick = {
+                        val name = newName.trim()
+                        if (name.isNotEmpty() && editable.none { it.equals(name, true) }) {
+                            editable = (editable.filterNot { it.equals("Other", true) } + name + "Other").distinct()
+                            onSave(editable)
+                            newName = ""
+                        }
+                    },
+                    modifier = Modifier.height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Green)
+                ) {
+                    Text("Add", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
         itemsIndexed(editable, key = { index, _ -> index }) { index, category ->
-            Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(category, { value -> editable = editable.toMutableList().also { it[index] = value } }, modifier = Modifier.weight(1f), singleLine = true, enabled = !category.equals("Other", true), shape = RoundedCornerShape(12.dp))
-                if (!category.equals("Other", true)) TextButton(onClick = { editable = editable.filterNot { it == category }; onSave(editable) }) { Text("Remove", color = Color(0xFFB64C45)) }
-                else Text("Default", color = Green, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    category,
+                    { value -> editable = editable.toMutableList().also { it[index] = value } },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    enabled = !category.equals("Other", true),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                if (!category.equals("Other", true)) {
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(onClick = { editable = editable.filterNot { it == category }; onSave(editable) }) {
+                        Text("Remove", color = Color(0xFFB64C45), fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
+                    Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp))
+                }
             }
         }
         item {
             Text("Other is always available as the default category.", color = Muted, fontSize = 12.sp)
         }
         item {
-            Button(onClick = {
-                editable = (editable.map { it.trim() }.filter { it.isNotEmpty() && !it.equals("Other", true) }.distinct() + "Other")
-                onSave(editable)
-            }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("Save changes") }
+            Button(
+                onClick = {
+                    editable = (editable.map { it.trim() }.filter { it.isNotEmpty() && !it.equals("Other", true) }.distinct() + "Other")
+                    onSave(editable)
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Green)
+            ) {
+                Text("Save changes", fontWeight = FontWeight.SemiBold)
+            }
         }
     }
 }
@@ -194,29 +479,71 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
 internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modifier, onBack: () -> Unit, onSave: (List<FriendBalance>) -> Unit) {
     var editable by remember(friends) { mutableStateOf(friends) }
     var newName by remember { mutableStateOf("") }
-    LazyColumn(Modifier.fillMaxSize().then(modifier), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { SettingsSubHeader("Friends", Modifier, onBack) }
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { SettingsSubHeader("Friends", onBack = onBack) }
         item { Text("People you split expenses with", color = Muted, fontSize = 14.sp) }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(newName, { newName = it }, label = { Text("Friend's name") }, singleLine = true, modifier = Modifier.weight(1f), shape = RoundedCornerShape(14.dp))
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = {
-                    val name = newName.trim()
-                    if (name.isNotEmpty() && editable.none { it.name.equals(name, true) }) {
-                        editable = editable + FriendBalance(UUID.randomUUID().toString(), name, 0.0, System.currentTimeMillis())
-                        newName = ""
-                    }
-                }, shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("Add") }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    newName,
+                    { newName = it },
+                    label = { Text("Friend's name") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(14.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Button(
+                    onClick = {
+                        val name = newName.trim()
+                        if (name.isNotEmpty() && editable.none { it.name.equals(name, true) }) {
+                            editable = editable + FriendBalance(UUID.randomUUID().toString(), name, 0.0, System.currentTimeMillis())
+                            newName = ""
+                        }
+                    },
+                    modifier = Modifier.height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Green)
+                ) {
+                    Text("Add", fontWeight = FontWeight.SemiBold)
+                }
             }
         }
         itemsIndexed(editable, key = { _, friend -> friend.id }) { index, friend ->
-            Row(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(friend.name, { name -> editable = editable.toMutableList().also { it[index] = friend.copy(name = name) } }, modifier = Modifier.weight(1f), singleLine = true, shape = RoundedCornerShape(12.dp))
-                TextButton(onClick = { editable = editable.filterNot { it.id == friend.id } }) { Text("Remove", color = Color(0xFFB64C45)) }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    friend.name,
+                    { name -> editable = editable.toMutableList().also { it[index] = friend.copy(name = name) } },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = { editable = editable.filterNot { it.id == friend.id } }) {
+                    Text("Remove", color = Color(0xFFB64C45), fontWeight = FontWeight.SemiBold)
+                }
             }
         }
-        item { Button(onClick = { onSave(editable.map { it.copy(name = it.name.trim()) }.filter { it.name.isNotEmpty() }) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Green)) { Text("Save changes") } }
+        item {
+            Button(
+                onClick = { onSave(editable.map { it.copy(name = it.name.trim()) }.filter { it.name.isNotEmpty() }) },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Green)
+            ) {
+                Text("Save changes", fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }
 
@@ -238,16 +565,26 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
         !date.isBefore(point.start) && !date.isAfter(point.end)
     }.sumOf { it.amount } }
     val periodTotal = values.sum()
-    Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(22.dp)).padding(18.dp)) {
+    Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(24.dp)).padding(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Spending trend", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("₹ ${money(periodTotal)} in this ${period.lowercase()}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp))
+                Spacer(Modifier.height(4.dp))
+                Text("₹ ${money(periodTotal)} in this ${period.lowercase()}", color = Muted, fontSize = 12.sp)
             }
             listOf("Day", "Week", "Month").forEach { choice ->
                 val active = period == choice
-                Text(choice, color = if (active) Color.White else Muted, fontSize = 11.sp, fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 4.dp).background(if (active) Green else Canvas, RoundedCornerShape(50)).clickable { onPeriodChange(choice) }.padding(horizontal = 9.dp, vertical = 7.dp))
+                Text(
+                    choice,
+                    color = if (active) Color.White else Muted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .padding(start = 6.dp)
+                        .background(if (active) Green else Canvas, RoundedCornerShape(50))
+                        .clickable { onPeriodChange(choice) }
+                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                )
             }
         }
         if (expenses.isEmpty()) {
@@ -303,6 +640,7 @@ private fun SplitPreview() {
                 FriendBalance("2", "Meera", -120.0, System.currentTimeMillis())
             ),
             modifier = Modifier,
+            onDeleteFriend = {},
             onAddSplit = {}
         )
     }
@@ -315,4 +653,3 @@ private fun SettingsPreview() {
         SettingsMenu(categoryCount = 8, friendCount = 3, modifier = Modifier, onOpen = {})
     }
 }
-
