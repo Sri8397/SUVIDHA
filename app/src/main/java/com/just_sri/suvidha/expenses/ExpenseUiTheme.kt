@@ -4,9 +4,9 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.Locale
-
+import java.time.Instant
 import java.time.ZoneId
+import java.util.Locale
 
 // Shared UI tokens: change these once to restyle every screen.
 internal val Ink = Color(0xFF17231E)
@@ -24,38 +24,58 @@ private val moneyFmt = ThreadLocal.withInitial {
 
 internal fun money(value: Double): String = moneyFmt.get()!!.format(value)
 
-/** Currency symbol flows down via CompositionLocal – no need to thread it as a parameter. */
+/** Currency symbol flows down via CompositionLocal – independent of timezone. */
 internal val LocalCurrency = compositionLocalOf { "₹" }
+
+/** Active timezone ZoneId flows down via CompositionLocal. */
+internal val LocalZoneId = compositionLocalOf { ZoneId.systemDefault() }
 
 /** All currencies the user can pick from. Pair(symbol, label). */
 internal val supportedCurrencies = listOf(
-    "₹" to "₹  Indian Rupee (INR)",
-    "$" to "$  US Dollar (USD)",
-    "€" to "€  Euro (EUR)",
-    "£" to "£  British Pound (GBP)",
-    "¥" to "¥  Japanese Yen (JPY)",
-    "₩" to "₩  South Korean Won (KRW)",
-    "A$" to "A$  Australian Dollar (AUD)",
-    "C$" to "C$  Canadian Dollar (CAD)",
-    "CHF" to "CHF  Swiss Franc",
-    "AED" to "AED  UAE Dirham",
-    "SGD" to "SGD  Singapore Dollar",
+    "₹" to "₹  Rupee",
+    "$" to "$  Dollar",
+    "€" to "€  Euro",
+    "£" to "£  Pound",
+    "¥" to "¥  Yen / Yuan",
+    "₩" to "₩  Won",
+    "CHF" to "CHF  Franc",
+    "AED" to "AED  Dirham",
+    "฿" to "฿  Baht",
+    "₱" to "₱  Peso",
+    "₫" to "₫  Dong",
+    "kr" to "kr  Krona / Krone",
 )
 
-private val currencyZones = mapOf(
-    "₹" to ZoneId.of("Asia/Kolkata"),
-    "$" to ZoneId.of("America/New_York"),
-    "€" to ZoneId.of("Europe/Paris"),
-    "£" to ZoneId.of("Europe/London"),
-    "¥" to ZoneId.of("Asia/Tokyo"),
-    "₩" to ZoneId.of("Asia/Seoul"),
-    "A$" to ZoneId.of("Australia/Sydney"),
-    "C$" to ZoneId.of("America/Toronto"),
-    "CHF" to ZoneId.of("Europe/Zurich"),
-    "AED" to ZoneId.of("Asia/Dubai"),
-    "SGD" to ZoneId.of("Asia/Singapore")
+data class TimezoneOption(
+    val id: String,
+    val continent: String,
+    val city: String,
+    val offsetString: String,
+    val offsetSeconds: Int
 )
 
-internal fun getZoneIdForCurrency(currency: String): ZoneId =
-    currencyZones[currency] ?: ZoneId.systemDefault()
-
+internal val allTimezones: List<TimezoneOption> by lazy {
+    val now = Instant.now()
+    ZoneId.getAvailableZoneIds()
+        .filter { id ->
+            (id.startsWith("Africa/") || id.startsWith("America/") || id.startsWith("Antarctica/") ||
+             id.startsWith("Asia/") || id.startsWith("Atlantic/") || id.startsWith("Australia/") ||
+             id.startsWith("Europe/") || id.startsWith("Indian/") || id.startsWith("Pacific/"))
+        }
+        .map { id ->
+            val zone = ZoneId.of(id)
+            val offset = zone.rules.getOffset(now)
+            val parts = id.split('/', limit = 2)
+            val continent = parts.getOrNull(0) ?: ""
+            val city = parts.getOrNull(1)?.replace('_', ' ') ?: id
+            val offsetStr = if (offset.totalSeconds == 0) "UTC" else "UTC${offset.id}"
+            TimezoneOption(
+                id = id,
+                continent = continent,
+                city = city,
+                offsetString = offsetStr,
+                offsetSeconds = offset.totalSeconds
+            )
+        }
+        .sortedWith(compareBy({ it.continent }, { it.city }))
+}

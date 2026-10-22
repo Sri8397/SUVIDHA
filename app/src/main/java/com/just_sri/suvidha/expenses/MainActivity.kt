@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 import java.util.UUID
 
 class MainActivity : ComponentActivity() {
@@ -64,11 +65,27 @@ class MainActivity : ComponentActivity() {
             val friends by friendDao.observeAll().collectAsStateWithLifecycle(emptyList())
             var categories by remember { mutableStateOf(prefs.getString("categories", null)?.split("|")?.filter { it.isNotBlank() } ?: defaultExpenseCategories) }
             var currency by remember { mutableStateOf(prefs.getString("currency", "₹") ?: "₹") }
-            CompositionLocalProvider(LocalCurrency provides currency) {
+            var timezoneId by remember { mutableStateOf(prefs.getString("timezone_id", "AUTO") ?: "AUTO") }
+            val effectiveZoneId = remember(timezoneId) {
+                if (timezoneId == "AUTO") {
+                    ZoneId.systemDefault()
+                } else {
+                    try {
+                        ZoneId.of(timezoneId)
+                    } catch (_: Exception) {
+                        ZoneId.systemDefault()
+                    }
+                }
+            }
+            CompositionLocalProvider(
+                LocalCurrency provides currency,
+                LocalZoneId provides effectiveZoneId
+            ) {
                 MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
                     ExpenseHome(
                         expenses = expenses, friends = friends, categories = categories,
                         currency = currency,
+                        timezoneId = timezoneId,
                         splitDao = splitDao,
                         onCategoriesChange = {
                             categories = (it.filter { name -> name.isNotBlank() && !name.equals("Other", true) } + "Other").distinct()
@@ -77,6 +94,10 @@ class MainActivity : ComponentActivity() {
                         onCurrencyChange = { sym ->
                             currency = sym
                             prefs.edit().putString("currency", sym).apply()
+                        },
+                        onTimezoneChange = { tz ->
+                            timezoneId = tz
+                            prefs.edit().putString("timezone_id", tz).apply()
                         },
                         onFriendsChange = { updated -> lifecycleScope.launch {
                             val ids = updated.map { it.id }.toSet()
@@ -146,9 +167,11 @@ class MainActivity : ComponentActivity() {
 private fun ExpenseHome(
     expenses: List<Expense>, friends: List<FriendBalance>, categories: List<String>,
     currency: String,
+    timezoneId: String,
     splitDao: SplitTransactionDao,
     onCategoriesChange: (List<String>) -> Unit,
     onCurrencyChange: (String) -> Unit,
+    onTimezoneChange: (String) -> Unit,
     onFriendsChange: (List<FriendBalance>) -> Unit, onDeleteFriend: (String) -> Unit,
     onAdd: (List<ExpenseDraft>) -> Unit,
     onDelete: (String) -> Unit,
@@ -263,9 +286,10 @@ private fun ExpenseHome(
                 tab == 1 -> SplitPage(friends, scrollModifier, onDeleteFriend = onDeleteFriend, onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true }, onViewFriend = { friend -> viewingFriend = friend })
                 else -> when (settingsPage) {
                     "currency" -> CurrencyManagementPage(currency, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = { onCurrencyChange(it); settingsPage = null })
+                    "timezone" -> TimezoneManagementPage(timezoneId, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = { onTimezoneChange(it); settingsPage = null })
                     "categories" -> CategoryManagementPage(categories, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onCategoriesChange)
                     "friends" -> FriendsManagementPage(friends, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onFriendsChange)
-                    else -> SettingsMenu(categories.size, friends.size, currency, Modifier.padding(padding), onOpen = { settingsPage = it })
+                    else -> SettingsMenu(categories.size, friends.size, currency, timezoneId, Modifier.padding(padding), onOpen = { settingsPage = it })
                 }
             }
         }

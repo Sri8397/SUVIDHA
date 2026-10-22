@@ -188,8 +188,7 @@ private fun CalendarIcon(
 @Composable
 internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, modifier: Modifier, onDelete: (String) -> Unit) {
     val context = LocalContext.current
-    // Dates are always shown in the device's timezone; currency is only a display symbol.
-    val zoneId = remember { ZoneId.systemDefault() }
+    val zoneId = LocalZoneId.current
     val today = remember(zoneId) { LocalDate.now(zoneId) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
@@ -364,7 +363,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
             )
         }
         if (activeSection == "Spend") {
-            item { ExpenseTrend(spendExpenses, trendPeriod) { trendPeriod = it } }
+            item { ExpenseTrend(spendExpenses, trendPeriod, zoneId) { trendPeriod = it } }
         }
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1048,7 +1047,14 @@ internal fun SplitTransactionDetailDialog(
 
 
 @Composable
-internal fun SettingsMenu(categoryCount: Int, friendCount: Int, currency: String, modifier: Modifier, onOpen: (String) -> Unit) {
+internal fun SettingsMenu(
+    categoryCount: Int,
+    friendCount: Int,
+    currency: String,
+    timezoneId: String,
+    modifier: Modifier,
+    onOpen: (String) -> Unit
+) {
     Column(
         Modifier
             .fillMaxSize()
@@ -1056,8 +1062,23 @@ internal fun SettingsMenu(categoryCount: Int, friendCount: Int, currency: String
             .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ScreenHeader("SETTINGS", "Manage lists")
+        ScreenHeader("SETTINGS", "Manage preferences")
         SettingsRow("Currency", currency, icon = "¤", onClick = { onOpen("currency") })
+        val tzSubtitle = if (timezoneId == "AUTO") {
+            val devZone = ZoneId.systemDefault()
+            val offset = try {
+                val off = devZone.rules.getOffset(Instant.now())
+                if (off.totalSeconds == 0) "UTC" else "UTC${off.id}"
+            } catch (_: Exception) { "" }
+            "Auto (${devZone.id.split('/').last().replace('_', ' ')} · $offset)"
+        } else {
+            val offset = try {
+                val off = ZoneId.of(timezoneId).rules.getOffset(Instant.now())
+                if (off.totalSeconds == 0) "UTC" else "UTC${off.id}"
+            } catch (_: Exception) { "" }
+            "${timezoneId.replace('_', ' ')} · $offset"
+        }
+        SettingsRow("Timezone", tzSubtitle, icon = "🌐", onClick = { onOpen("timezone") })
         SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") })
         SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") })
     }
@@ -1153,6 +1174,196 @@ internal fun CurrencyManagementPage(current: String, modifier: Modifier, onBack:
                 )
                 if (selected) {
                     Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun TimezoneManagementPage(
+    current: String,
+    modifier: Modifier,
+    onBack: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val defaultDeviceZone = remember { ZoneId.systemDefault() }
+    val defaultDeviceOffset = remember {
+        val off = defaultDeviceZone.rules.getOffset(Instant.now())
+        if (off.totalSeconds == 0) "UTC" else "UTC${off.id}"
+    }
+
+    val filteredList = remember(searchQuery) {
+        val q = searchQuery.trim().lowercase()
+        if (q.isBlank()) {
+            allTimezones
+        } else {
+            allTimezones.filter {
+                it.city.lowercase().contains(q) ||
+                it.continent.lowercase().contains(q) ||
+                it.id.lowercase().contains(q) ||
+                it.offsetString.lowercase().contains(q)
+            }
+        }
+    }
+
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item { SettingsSubHeader("Timezone", onBack = onBack) }
+        item {
+            Text(
+                "Select timezone for transaction timestamps and daily spending calculations",
+                color = Muted,
+                fontSize = 14.sp
+            )
+        }
+        item {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Search city, continent, or UTC offset...", color = Muted, fontSize = 14.sp) },
+                singleLine = true,
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Text("✕", color = Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Green,
+                    cursorColor = Green,
+                    focusedContainerColor = CardSurface,
+                    unfocusedContainerColor = CardSurface
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        val showAuto = searchQuery.isBlank() ||
+            "automatic".contains(searchQuery.trim().lowercase()) ||
+            "device".contains(searchQuery.trim().lowercase()) ||
+            "auto".contains(searchQuery.trim().lowercase())
+
+        if (showAuto) {
+            item {
+                val isSelected = current == "AUTO"
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if (isSelected) Color(0xFFEAF4EE) else CardSurface,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .clickable { onSave("AUTO") }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        Modifier.size(44.dp).background(
+                            if (isSelected) Green else Color(0xFFEAF4EE), CircleShape
+                        ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("🌐", fontSize = 16.sp)
+                    }
+                    Column(
+                        Modifier.padding(horizontal = 14.dp).weight(1f)
+                    ) {
+                        Text(
+                            "Automatic (Device Time)",
+                            color = if (isSelected) Ink else Muted,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 15.sp
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            "Current device timezone: ${defaultDeviceZone.id.replace('_', ' ')} · $defaultDeviceOffset",
+                            color = Muted,
+                            fontSize = 12.sp
+                        )
+                    }
+                    if (isSelected) {
+                        Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+
+        if (filteredList.isEmpty() && !showAuto) {
+            item {
+                Box(
+                    Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No timezones matching \"$searchQuery\"",
+                        color = Muted,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        } else {
+            items(filteredList, key = { it.id }) { option ->
+                val isSelected = current == option.id
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if (isSelected) Color(0xFFEAF4EE) else CardSurface,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .clickable { onSave(option.id) }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        Modifier.size(44.dp).background(
+                            if (isSelected) Green else Color(0xFFEAF4EE), CircleShape
+                        ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            option.continent.take(2).uppercase(),
+                            color = if (isSelected) OffWhite else Green,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+                    Column(
+                        Modifier.padding(horizontal = 14.dp).weight(1f)
+                    ) {
+                        Text(
+                            "${option.city} (${option.continent})",
+                            color = if (isSelected) Ink else Muted,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 14.sp
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            option.id,
+                            color = Muted.copy(alpha = 0.8f),
+                            fontSize = 12.sp
+                        )
+                    }
+                    Text(
+                        option.offsetString,
+                        color = if (isSelected) Green else Muted,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .background(if (isSelected) Color(0xFFD4EAD9) else Color(0xFFEFF2EE), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                    if (isSelected) {
+                        Spacer(Modifier.width(8.dp))
+                        Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
             }
         }
@@ -1318,8 +1529,8 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
 private data class TrendPoint(val label: String, val start: LocalDate, val end: LocalDate)
 
 @Composable
-private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange: (String) -> Unit) {
-    val today = LocalDate.now()
+private fun ExpenseTrend(expenses: List<Expense>, period: String, zoneId: ZoneId, onPeriodChange: (String) -> Unit) {
+    val today = remember(zoneId) { LocalDate.now(zoneId) }
     val points = when (period) {
         "Day" -> (6 downTo 0).map { offset -> val date = today.minusDays(offset.toLong()); TrendPoint(date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }, date, date) }
         "Month" -> (5 downTo 0).map { offset -> val month = today.withDayOfMonth(1).minusMonths(offset.toLong()); TrendPoint(month.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }, month, month.withDayOfMonth(month.lengthOfMonth())) }
@@ -1329,7 +1540,7 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
         }
     }
     val values = points.map { point -> expenses.filter { expense ->
-        val date = Instant.ofEpochMilli(expense.date).atZone(ZoneId.systemDefault()).toLocalDate()
+        val date = Instant.ofEpochMilli(expense.date).atZone(zoneId).toLocalDate()
         !date.isBefore(point.start) && !date.isAfter(point.end)
     }.sumOf { it.amount } }
     val periodTotal = values.sum()
@@ -1433,7 +1644,7 @@ internal fun FriendTransactionsPage(
     var pendingDelete by remember { mutableStateOf<SplitTransaction?>(null) }
     var pendingSettle by remember { mutableStateOf<SplitTransaction?>(null) }
     var selectedTxnForDetail by remember { mutableStateOf<SplitTransaction?>(null) }
-    val zoneId = remember { ZoneId.systemDefault() }
+    val zoneId = LocalZoneId.current
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
@@ -1587,6 +1798,6 @@ internal fun FriendTransactionsPage(
 @Composable
 private fun SettingsPreview() {
     MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
-        SettingsMenu(categoryCount = 8, friendCount = 3, currency = "₹", modifier = Modifier, onOpen = {})
+        SettingsMenu(categoryCount = 8, friendCount = 3, currency = "₹", timezoneId = "AUTO", modifier = Modifier, onOpen = {})
     }
 }
