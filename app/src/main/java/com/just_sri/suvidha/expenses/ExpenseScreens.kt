@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -42,9 +41,19 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
-import java.util.Date
 import java.util.Locale
 import java.util.UUID
+
+private val detailTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy · hh:mm:ss a", Locale.getDefault())
+private val rowDateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+private val rowDateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", Locale.getDefault())
+
+private fun rowAmountFontSize(length: Int) = when {
+    length > 20 -> 12.sp
+    length > 15 -> 13.sp
+    length > 11 -> 14.sp
+    else -> 15.sp
+}
 
 @Composable
 private fun ScreenHeader(
@@ -96,7 +105,7 @@ private fun HeroBalanceCard(
         }
         Text(
             text = formattedAmount,
-            color = Color.White,
+            color = OffWhite,
             fontSize = amountFontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -130,7 +139,7 @@ private fun HeroBalanceCard(
 @Composable
 private fun CalendarIcon(
     modifier: Modifier = Modifier,
-    tint: Color = Color.White
+    tint: Color = OffWhite
 ) {
     androidx.compose.foundation.Canvas(modifier = modifier.size(18.dp)) {
         val strokeWidth = 1.7.dp.toPx()
@@ -179,8 +188,8 @@ private fun CalendarIcon(
 @Composable
 internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, modifier: Modifier, onDelete: (String) -> Unit) {
     val context = LocalContext.current
-    val currency = LocalCurrency.current
-    val zoneId = remember(currency) { getZoneIdForCurrency(currency) }
+    // Dates are always shown in the device's timezone; currency is only a display symbol.
+    val zoneId = remember { ZoneId.systemDefault() }
     val today = remember(zoneId) { LocalDate.now(zoneId) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
@@ -255,14 +264,14 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.22f))
+                        .background(OffWhite.copy(alpha = 0.22f))
                         .clickable { selectedDate = null }
                         .padding(horizontal = 9.dp, vertical = 5.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         "Today",
-                        color = Color.White,
+                        color = OffWhite,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -272,12 +281,12 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(if (selectedDate != null) Green else Color.White.copy(alpha = 0.16f))
+                    .background(if (selectedDate != null) Green else OffWhite.copy(alpha = 0.16f))
                     .clickable { openDatePicker() },
                 contentAlignment = Alignment.Center
             ) {
                 CalendarIcon(
-                    tint = Color.White,
+                    tint = OffWhite,
                     modifier = Modifier.size(17.dp)
                 )
             }
@@ -291,7 +300,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -313,53 +322,32 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
 
                 Row(
                     modifier = Modifier
-                        .background(Color.White, RoundedCornerShape(20.dp))
+                        .background(CardSurface, RoundedCornerShape(20.dp))
                         .padding(3.dp),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val isSpend = activeSection == "Spend"
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSpend) Green else Color.Transparent)
-                            .clickable { activeSection = "Spend"; selected = "All"; selectedDate = null }
-                            .padding(horizontal = 12.dp, vertical = 7.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Spend", color = if (isSpend) Color.White else Muted, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            if (spendBadge != null) {
-                                Spacer(Modifier.width(4.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .background(if (isSpend) Color.White.copy(alpha = 0.25f) else Green.copy(alpha = 0.15f), CircleShape)
-                                        .padding(horizontal = 5.dp, vertical = 1.dp)
-                                ) {
-                                    Text(spendBadge, color = if (isSpend) Color.White else Green, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-                    val isEarn = activeSection == "Earn"
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isEarn) Green else Color.Transparent)
-                            .clickable { activeSection = "Earn"; selected = "All"; selectedDate = null }
-                            .padding(horizontal = 12.dp, vertical = 7.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Earn", color = if (isEarn) Color.White else Muted, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            if (earnBadge != null) {
-                                Spacer(Modifier.width(4.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .background(if (isEarn) Color.White.copy(alpha = 0.25f) else Green.copy(alpha = 0.15f), CircleShape)
-                                        .padding(horizontal = 5.dp, vertical = 1.dp)
-                                ) {
-                                    Text(earnBadge, color = if (isEarn) Color.White else Green, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    listOf("Spend" to spendBadge, "Earn" to earnBadge).forEach { (section, badge) ->
+                        val active = activeSection == section
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (active) Green else Color.Transparent)
+                                .clickable { activeSection = section; selected = "All"; selectedDate = null }
+                                .padding(horizontal = 12.dp, vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(section, color = if (active) OffWhite else Muted, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                if (badge != null) {
+                                    Spacer(Modifier.width(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .background(if (active) OffWhite.copy(alpha = 0.25f) else Green.copy(alpha = 0.15f), CircleShape)
+                                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                                    ) {
+                                        Text(badge, color = if (active) OffWhite else Green, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -368,22 +356,12 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
             }
         }
         item {
-            if (activeSection == "Spend") {
-                HeroBalanceCard(
-                    eyebrow = displayEyebrow,
-                    amount = displayAmount,
-                    subtitle = displaySubtitle,
-                    trailingAction = trailingCalendarAction
-                )
-            } else {
-                HeroBalanceCard(
-                    eyebrow = displayEyebrow,
-                    amount = displayAmount,
-                    subtitle = displaySubtitle,
-                    isNegative = false,
-                    trailingAction = trailingCalendarAction
-                )
-            }
+            HeroBalanceCard(
+                eyebrow = displayEyebrow,
+                amount = displayAmount,
+                subtitle = displaySubtitle,
+                trailingAction = trailingCalendarAction
+            )
         }
         if (activeSection == "Spend") {
             item { ExpenseTrend(spendExpenses, trendPeriod) { trendPeriod = it } }
@@ -427,10 +405,10 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
                         Text(
                             category,
                             modifier = Modifier
-                                .background(if (active) Green else Color.White, RoundedCornerShape(50))
+                                .background(if (active) Green else CardSurface, RoundedCornerShape(50))
                                 .clickable { selected = category }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
-                            color = if (active) Color.White else Muted,
+                            color = if (active) OffWhite else Muted,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -442,7 +420,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .background(CardSurface, RoundedCornerShape(18.dp))
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -483,7 +461,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
         }
         items(visible, key = { it.id }) { expense ->
             SwipeToDeleteItem(onDeleteRequested = { pendingDelete = expense }) {
-                ExpenseRow(expense, onClick = { selectedExpenseForDetail = expense })
+                ExpenseRow(expense, zoneId = zoneId, onClick = { selectedExpenseForDetail = expense })
             }
         }
     }
@@ -510,13 +488,13 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
 }
 
 @Composable
-private fun ExpenseRow(expense: Expense, onClick: (() -> Unit)? = null) {
+private fun ExpenseRow(expense: Expense, zoneId: ZoneId, onClick: (() -> Unit)? = null) {
     val isEarn = expense.category.equals("Earn", true) || expense.category.equals("Salary", true)
     Row(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White)
+            .background(CardSurface)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -548,7 +526,7 @@ private fun ExpenseRow(expense: Expense, onClick: (() -> Unit)? = null) {
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = "${expense.category}  ·  ${SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(expense.date))}",
+                text = "${expense.category}  ·  ${rowDateFormatter.format(Instant.ofEpochMilli(expense.date).atZone(zoneId))}",
                 color = Muted,
                 fontSize = 12.sp,
                 maxLines = 1,
@@ -556,17 +534,11 @@ private fun ExpenseRow(expense: Expense, onClick: (() -> Unit)? = null) {
             )
         }
         val formattedAmount = "${if (isEarn) "+" else "−"} ${LocalCurrency.current} ${money(expense.amount)}"
-        val amountFontSize = when {
-            formattedAmount.length > 20 -> 12.sp
-            formattedAmount.length > 15 -> 13.sp
-            formattedAmount.length > 11 -> 14.sp
-            else -> 15.sp
-        }
         Text(
             text = formattedAmount,
             color = if (isEarn) Green else Ink,
             fontWeight = FontWeight.Bold,
-            fontSize = amountFontSize,
+            fontSize = rowAmountFontSize(formattedAmount.length),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.End,
@@ -581,7 +553,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
     var pendingDelete by remember { mutableStateOf<FriendBalance?>(null) }
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
@@ -599,7 +571,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .background(CardSurface, RoundedCornerShape(18.dp))
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -626,7 +598,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(18.dp))
+                        .background(CardSurface, RoundedCornerShape(18.dp))
                         .clickable { onViewFriend(friend) }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -656,17 +628,11 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
                         )
                     }
                     val formattedAmount = "${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))}"
-                    val amountFontSize = when {
-                        formattedAmount.length > 20 -> 12.sp
-                        formattedAmount.length > 15 -> 13.sp
-                        formattedAmount.length > 11 -> 14.sp
-                        else -> 15.sp
-                    }
                     Text(
                         formattedAmount,
                         color = if (friend.amount > 0) Green else if (friend.amount < 0) Color(0xFFB64C45) else Muted,
                         fontWeight = FontWeight.Bold,
-                        fontSize = amountFontSize,
+                        fontSize = rowAmountFontSize(formattedAmount.length),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.End,
@@ -711,9 +677,9 @@ internal fun SwipeToDeleteItem(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.Delete, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.Delete, contentDescription = null, tint = OffWhite, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Delete", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text("Delete", color = OffWhite, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     ) { content() }
@@ -788,9 +754,9 @@ internal fun SwipeTransactionItem(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Check, contentDescription = "Settle", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Check, contentDescription = "Settle", tint = OffWhite, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Settle", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("Settle", color = OffWhite, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 isRightSwipe -> {
@@ -803,9 +769,9 @@ internal fun SwipeTransactionItem(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Color.White, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = OffWhite, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Delete", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Delete", color = OffWhite, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
                 else -> Box(Modifier.fillMaxSize())
@@ -845,9 +811,8 @@ internal fun ExpenseDetailDialog(
     onDismiss: () -> Unit
 ) {
     val isEarn = expense.category.equals("Earn", true) || expense.category.equals("Salary", true)
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy · hh:mm:ss a", Locale.getDefault()) }
     val formattedTime = remember(expense.date, zoneId) {
-        Instant.ofEpochMilli(expense.date).atZone(zoneId).format(timeFormatter)
+        Instant.ofEpochMilli(expense.date).atZone(zoneId).format(detailTimeFormatter)
     }
 
     AlertDialog(
@@ -858,7 +823,7 @@ internal fun ExpenseDetailDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = Green),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Done", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Done", color = OffWhite, fontWeight = FontWeight.SemiBold)
             }
         },
         title = {
@@ -939,7 +904,7 @@ internal fun ExpenseDetailDialog(
             }
         },
         shape = RoundedCornerShape(22.dp),
-        containerColor = Color.White
+        containerColor = CardSurface
     )
 }
 
@@ -954,13 +919,12 @@ internal fun SplitTransactionDetailDialog(
     val isSettled = txn.isSettled
     val settleBg = Color(0xFFFEF3C7)
     val settleColor = Color(0xFFD97706)
-    val timeFormatter = remember { DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy · hh:mm:ss a", Locale.getDefault()) }
     val formattedCreatedTime = remember(txn.date, zoneId) {
-        Instant.ofEpochMilli(txn.date).atZone(zoneId).format(timeFormatter)
+        Instant.ofEpochMilli(txn.date).atZone(zoneId).format(detailTimeFormatter)
     }
     val formattedSettleTime = remember(txn.settledAt, txn.date, zoneId) {
         val timestamp = txn.settledAt ?: txn.date
-        Instant.ofEpochMilli(timestamp).atZone(zoneId).format(timeFormatter)
+        Instant.ofEpochMilli(timestamp).atZone(zoneId).format(detailTimeFormatter)
     }
 
     AlertDialog(
@@ -971,7 +935,7 @@ internal fun SplitTransactionDetailDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = Green),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Done", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Done", color = OffWhite, fontWeight = FontWeight.SemiBold)
             }
         },
         title = {
@@ -1078,7 +1042,7 @@ internal fun SplitTransactionDetailDialog(
             }
         },
         shape = RoundedCornerShape(22.dp),
-        containerColor = Color.White
+        containerColor = CardSurface
     )
 }
 
@@ -1104,7 +1068,7 @@ private fun SettingsRow(title: String, subtitle: String, icon: String = title.ta
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(18.dp))
+            .background(CardSurface, RoundedCornerShape(18.dp))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1165,7 +1129,7 @@ internal fun CurrencyManagementPage(current: String, modifier: Modifier, onBack:
                 Modifier
                     .fillMaxWidth()
                     .background(
-                        if (selected) Color(0xFFEAF4EE) else Color.White,
+                        if (selected) Color(0xFFEAF4EE) else CardSurface,
                         RoundedCornerShape(16.dp)
                     )
                     .clickable { onSave(symbol) }
@@ -1178,7 +1142,7 @@ internal fun CurrencyManagementPage(current: String, modifier: Modifier, onBack:
                     ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(symbol, color = if (selected) Color.White else Green, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(symbol, color = if (selected) OffWhite else Green, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
                 Text(
                     label,
@@ -1238,7 +1202,7 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .background(CardSurface, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1321,7 +1285,7 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .background(CardSurface, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1365,11 +1329,11 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
         }
     }
     val values = points.map { point -> expenses.filter { expense ->
-        val date = java.time.Instant.ofEpochMilli(expense.date).atZone(ZoneId.systemDefault()).toLocalDate()
+        val date = Instant.ofEpochMilli(expense.date).atZone(ZoneId.systemDefault()).toLocalDate()
         !date.isBefore(point.start) && !date.isAfter(point.end)
     }.sumOf { it.amount } }
     val periodTotal = values.sum()
-    Column(Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(24.dp)).padding(20.dp)) {
+    Column(Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(24.dp)).padding(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Spending trend", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -1385,7 +1349,7 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
                 val active = period == choice
                 Text(
                     choice,
-                    color = if (active) Color.White else Muted,
+                    color = if (active) OffWhite else Muted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
@@ -1426,7 +1390,7 @@ private fun ExpenseTrend(expenses: List<Expense>, period: String, onPeriodChange
 @Preview(showBackground = true, name = "Expenses")
 @Composable
 private fun ExpensesPreview() {
-    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = Color.White)) {
+    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
         ExpensesPage(
             expenses = listOf(
                 Expense("1", "Food", 240.0, "Lunch", System.currentTimeMillis()),
@@ -1442,7 +1406,7 @@ private fun ExpensesPreview() {
 @Preview(showBackground = true, name = "Split")
 @Composable
 private fun SplitPreview() {
-    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = Color.White)) {
+    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
         SplitPage(
             friends = listOf(
                 FriendBalance("1", "Aarav", 450.0, System.currentTimeMillis()),
@@ -1469,6 +1433,7 @@ internal fun FriendTransactionsPage(
     var pendingDelete by remember { mutableStateOf<SplitTransaction?>(null) }
     var pendingSettle by remember { mutableStateOf<SplitTransaction?>(null) }
     var selectedTxnForDetail by remember { mutableStateOf<SplitTransaction?>(null) }
+    val zoneId = remember { ZoneId.systemDefault() }
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
@@ -1507,7 +1472,7 @@ internal fun FriendTransactionsPage(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(18.dp))
+                    .background(CardSurface, RoundedCornerShape(18.dp))
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -1529,7 +1494,7 @@ internal fun FriendTransactionsPage(
                     Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White)
+                        .background(CardSurface)
                         .clickable { selectedTxnForDetail = txn }
                         .then(
                             if (isSettled) Modifier.border(1.5.dp, Color(0xFFFDE68A), RoundedCornerShape(18.dp))
@@ -1563,7 +1528,7 @@ internal fun FriendTransactionsPage(
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            SimpleDateFormat("d MMM yyyy, h:mm a", Locale.getDefault()).format(Date(txn.date)),
+                            rowDateTimeFormatter.format(Instant.ofEpochMilli(txn.date).atZone(zoneId)),
                             color = Muted,
                             fontSize = 12.sp,
                             maxLines = 1,
@@ -1571,17 +1536,11 @@ internal fun FriendTransactionsPage(
                         )
                     }
                     val formattedAmount = "${if (isSettled) "✓ " else if (txn.amount > 0) "+" else "−"} ${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}"
-                    val amountFontSize = when {
-                        formattedAmount.length > 20 -> 12.sp
-                        formattedAmount.length > 15 -> 13.sp
-                        formattedAmount.length > 11 -> 14.sp
-                        else -> 15.sp
-                    }
                     Text(
                         formattedAmount,
                         color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
                         fontWeight = FontWeight.Bold,
-                        fontSize = amountFontSize,
+                        fontSize = rowAmountFontSize(formattedAmount.length),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.End,
@@ -1614,7 +1573,6 @@ internal fun FriendTransactionsPage(
     }
     selectedTxnForDetail?.let { txn ->
         val currency = LocalCurrency.current
-        val zoneId = remember(currency) { getZoneIdForCurrency(currency) }
         SplitTransactionDetailDialog(
             txn = txn,
             friendName = friend.name,
@@ -1628,7 +1586,7 @@ internal fun FriendTransactionsPage(
 @Preview(showBackground = true, name = "Settings")
 @Composable
 private fun SettingsPreview() {
-    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = Color.White)) {
+    MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
         SettingsMenu(categoryCount = 8, friendCount = 3, currency = "₹", modifier = Modifier, onOpen = {})
     }
 }

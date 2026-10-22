@@ -1,9 +1,8 @@
 package com.just_sri.suvidha.expenses
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +26,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
-import kotlin.math.roundToLong
 
 internal enum class SplitMode {
     EQUAL,
@@ -214,7 +209,7 @@ private fun AmountInputStep(
                 onClick = onBack,
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color.White, CircleShape)
+                    .background(CardSurface, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
@@ -272,9 +267,9 @@ private fun AmountInputStep(
             enabled = isValid,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Green,
-                contentColor = Color.White,
+                contentColor = OffWhite,
                 disabledContainerColor = Green.copy(alpha = 0.35f),
-                disabledContentColor = Color.White.copy(alpha = 0.7f)
+                disabledContentColor = OffWhite.copy(alpha = 0.7f)
             ),
             shape = RoundedCornerShape(28.dp),
             modifier = Modifier
@@ -322,7 +317,7 @@ private fun Keypad(
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp)
-                            .background(Color.White, RoundedCornerShape(16.dp))
+                            .background(CardSurface, RoundedCornerShape(16.dp))
                             .clickable {
                                 handleKeyPress(key, amountText, onAmountChange)
                             },
@@ -404,93 +399,86 @@ private fun DistributionStep(
         else -> totalAmount
     }
 
-    // Share calculations
     val totalUnits = when (splitMode) {
-        SplitMode.EQUAL -> {
-            selectedFriendList.size + (if (includeMyself) 1 else 0)
-        }
-        SplitMode.SHARES -> {
-            selectedFriendList.sumOf { friendShares[it.id] ?: 1 } + (if (includeMyself) myShares else 0)
-        }
+        SplitMode.EQUAL -> selectedFriendList.size + (if (includeMyself) 1 else 0)
+        SplitMode.SHARES -> selectedFriendList.sumOf { friendShares[it.id] ?: 1 } + (if (includeMyself) myShares else 0)
         SplitMode.EXACT -> 1
     }
 
-    fun calculateFriendShare(friendId: String): Double {
-        return when (splitMode) {
-            SplitMode.EXACT -> exactAmounts[friendId]?.toDoubleOrNull() ?: 0.0
-            SplitMode.EQUAL -> {
-                if (totalUnits > 0) computedTotal / totalUnits else 0.0
-            }
-            SplitMode.SHARES -> {
-                val shares = friendShares[friendId] ?: 1
-                if (totalUnits > 0) (computedTotal * shares) / totalUnits else 0.0
-            }
-        }
+    fun calculateFriendShare(friendId: String): Double = when (splitMode) {
+        SplitMode.EXACT -> exactAmounts[friendId]?.toDoubleOrNull() ?: 0.0
+        else -> if (totalUnits > 0) (computedTotal * (if (splitMode == SplitMode.SHARES) friendShares[friendId] ?: 1 else 1)) / totalUnits else 0.0
     }
 
-    val myComputedShare = when (splitMode) {
-        SplitMode.EXACT -> 0.0
-        SplitMode.EQUAL -> if (includeMyself && totalUnits > 0) computedTotal / totalUnits else 0.0
-        SplitMode.SHARES -> if (includeMyself && totalUnits > 0) (computedTotal * myShares) / totalUnits else 0.0
-    }
+    val myComputedShare = if (includeMyself && totalUnits > 0 && splitMode != SplitMode.EXACT) {
+        (computedTotal * (if (splitMode == SplitMode.SHARES) myShares else 1)) / totalUnits
+    } else 0.0
 
     Scaffold(
         containerColor = Canvas,
         contentWindowInsets = WindowInsets.statusBars,
         bottomBar = {
-            Surface(
-                color = Color.White,
-                shadowElevation = 8.dp,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                Surface(
+                    color = CardSurface.copy(alpha = 0.92f),
+                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(32.dp),
+                    border = BorderStroke(1.dp, BorderLight),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    val isValidToSave = when (splitMode) {
-                        SplitMode.EXACT -> {
-                            selectedFriendList.isNotEmpty() && selectedFriendList.any { (exactAmounts[it.id]?.toDoubleOrNull() ?: 0.0) > 0.0 }
-                        }
-                        else -> {
-                            computedTotal > 0 && selectedFriendList.isNotEmpty()
-                        }
-                    }
-
-                    Button(
-                        onClick = {
-                            val sign = if (theyOweYou) 1.0 else -1.0
-                            val drafts = selectedFriendList.mapNotNull { friend ->
-                                val amount = calculateFriendShare(friend.id)
-                                if (amount > 0.001) {
-                                    val finalAmount = amount * sign
-                                    SplitDraft(
-                                        friendId = friend.id,
-                                        amount = String.format(java.util.Locale.US, "%.2f", finalAmount),
-                                        note = note.ifBlank { "Split bill" }
-                                    )
-                                } else null
-                            }
-                            if (drafts.isNotEmpty()) onSave(drafts)
-                        },
-                        enabled = isValidToSave,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Green,
-                            contentColor = Color.White,
-                            disabledContainerColor = Green.copy(alpha = 0.35f),
-                            disabledContentColor = Color.White.copy(alpha = 0.7f)
-                        ),
-                        shape = RoundedCornerShape(28.dp),
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                        Text(
-                            text = "Save split  ·  $currency ${money(computedTotal)}",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        val isValidToSave = when (splitMode) {
+                            SplitMode.EXACT -> {
+                                selectedFriendList.isNotEmpty() && selectedFriendList.any { (exactAmounts[it.id]?.toDoubleOrNull() ?: 0.0) > 0.0 }
+                            }
+                            else -> {
+                                computedTotal > 0 && selectedFriendList.isNotEmpty()
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                val sign = if (theyOweYou) 1.0 else -1.0
+                                val drafts = selectedFriendList.mapNotNull { friend ->
+                                    val amount = calculateFriendShare(friend.id)
+                                    if (amount > 0.001) {
+                                        val finalAmount = amount * sign
+                                        SplitDraft(
+                                            friendId = friend.id,
+                                            amount = String.format(java.util.Locale.US, "%.2f", finalAmount),
+                                            note = note.ifBlank { "Split bill" }
+                                        )
+                                    } else null
+                                }
+                                if (drafts.isNotEmpty()) onSave(drafts)
+                            },
+                            enabled = isValidToSave,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green,
+                                contentColor = OffWhite,
+                                disabledContainerColor = Green.copy(alpha = 0.35f),
+                                disabledContentColor = OffWhite.copy(alpha = 0.7f)
+                            ),
+                            shape = RoundedCornerShape(26.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Text(
+                                text = "Save split  ·  $currency ${money(computedTotal)}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -499,8 +487,8 @@ private fun DistributionStep(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(bottom = 24.dp)
+                .padding(top = padding.calculateTopPadding()),
+            contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 24.dp)
         ) {
             // Top Bar
             item {
@@ -514,7 +502,7 @@ private fun DistributionStep(
                         onClick = onBack,
                         modifier = Modifier
                             .size(40.dp)
-                            .background(Color.White, CircleShape)
+                            .background(CardSurface, CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
@@ -582,9 +570,9 @@ private fun DistributionStep(
                     // "What's this for?" Chip
                     Surface(
                         onClick = onOpenNoteDialog,
-                        color = Color.White,
+                        color = CardSurface,
                         shape = RoundedCornerShape(20.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE0E5E2)),
+                        border = BorderStroke(1.dp, BorderLight),
                         modifier = Modifier.height(38.dp)
                     ) {
                         Row(
@@ -612,7 +600,7 @@ private fun DistributionStep(
                     // Payer Direction Pill (They owe you vs You owe them)
                     Row(
                         modifier = Modifier
-                            .background(Color.White, RoundedCornerShape(20.dp))
+                            .background(CardSurface, RoundedCornerShape(20.dp))
                             .padding(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -627,7 +615,7 @@ private fun DistributionStep(
                         ) {
                             Text(
                                 "They owe you",
-                                color = if (theyOweYou) Color.White else Muted,
+                                color = if (theyOweYou) OffWhite else Muted,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -641,7 +629,7 @@ private fun DistributionStep(
                         ) {
                             Text(
                                 "You owe them",
-                                color = if (!theyOweYou) Color.White else Muted,
+                                color = if (!theyOweYou) OffWhite else Muted,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -656,7 +644,7 @@ private fun DistributionStep(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(16.dp))
+                            .background(CardSurface, RoundedCornerShape(16.dp))
                             .padding(6.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -702,7 +690,7 @@ private fun DistributionStep(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(16.dp))
+                                .background(CardSurface, RoundedCornerShape(16.dp))
                                 .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -711,7 +699,7 @@ private fun DistributionStep(
                                 onCheckedChange = onIncludeMyselfChange,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Green,
-                                    checkmarkColor = Color.White
+                                    checkmarkColor = OffWhite
                                 )
                             )
                             Spacer(Modifier.width(8.dp))
@@ -788,7 +776,7 @@ private fun DistributionStep(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(24.dp)
-                            .background(Color.White, RoundedCornerShape(16.dp))
+                            .background(CardSurface, RoundedCornerShape(16.dp))
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -808,7 +796,7 @@ private fun DistributionStep(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 4.dp)
-                        .background(Color.White, RoundedCornerShape(16.dp))
+                        .background(CardSurface, RoundedCornerShape(16.dp))
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -817,7 +805,7 @@ private fun DistributionStep(
                         onCheckedChange = { onFriendToggle(friend.id, it) },
                         colors = CheckboxDefaults.colors(
                             checkedColor = Green,
-                            checkmarkColor = Color.White
+                            checkmarkColor = OffWhite
                         )
                     )
                     Spacer(Modifier.width(8.dp))
@@ -895,7 +883,7 @@ private fun SplitTabItem(
     ) {
         Text(
             text = title,
-            color = if (isSelected) Color.White else Ink,
+            color = if (isSelected) OffWhite else Ink,
             fontSize = 13.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
@@ -936,18 +924,19 @@ private fun StepperControl(
     }
 }
 
+private val avatarPalettes = listOf(
+    Color(0xFFE8F5E9) to Color(0xFF2E7D32),
+    Color(0xFFE3F2FD) to Color(0xFF1565C0),
+    Color(0xFFFFF3E0) to Color(0xFFE65100),
+    Color(0xFFF3E5F5) to Color(0xFF7B1FA2),
+    Color(0xFFFFEBEE) to Color(0xFFC62828),
+    Color(0xFFE0F7FA) to Color(0xFF00838F),
+)
+
 @Composable
 private fun FriendAvatarBadge(name: String, modifier: Modifier = Modifier) {
     val initial = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-    val palette = listOf(
-        Color(0xFFE8F5E9) to Color(0xFF2E7D32),
-        Color(0xFFE3F2FD) to Color(0xFF1565C0),
-        Color(0xFFFFF3E0) to Color(0xFFE65100),
-        Color(0xFFF3E5F5) to Color(0xFF7B1FA2),
-        Color(0xFFFFEBEE) to Color(0xFFC62828),
-        Color(0xFFE0F7FA) to Color(0xFF00838F),
-    )
-    val colorPair = palette[abs(name.hashCode()) % palette.size]
+    val colorPair = avatarPalettes[abs(name.hashCode()) % avatarPalettes.size]
     Box(
         modifier = modifier
             .size(40.dp)

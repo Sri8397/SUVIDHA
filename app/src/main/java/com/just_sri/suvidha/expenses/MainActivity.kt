@@ -8,15 +8,25 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -55,7 +65,7 @@ class MainActivity : ComponentActivity() {
             var categories by remember { mutableStateOf(prefs.getString("categories", null)?.split("|")?.filter { it.isNotBlank() } ?: defaultExpenseCategories) }
             var currency by remember { mutableStateOf(prefs.getString("currency", "₹") ?: "₹") }
             CompositionLocalProvider(LocalCurrency provides currency) {
-                MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = Color.White)) {
+                MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
                     ExpenseHome(
                         expenses = expenses, friends = friends, categories = categories,
                         currency = currency,
@@ -95,8 +105,7 @@ class MainActivity : ComponentActivity() {
                         onDeleteSplitTransaction = { txn ->
                             lifecycleScope.launch {
                                 splitDao.delete(txn.id)
-                                val friend = friends.firstOrNull { it.id == txn.friendId }
-                                if (friend != null) {
+                                friends.firstOrNull { it.id == txn.friendId }?.let { friend ->
                                     friendDao.save(friend.copy(amount = friend.amount - txn.amount, updatedAt = System.currentTimeMillis()))
                                 }
                             }
@@ -107,32 +116,19 @@ class MainActivity : ComponentActivity() {
                                 val friend = friends.firstOrNull { it.id == txn.friendId }
                                 val friendName = friend?.name ?: "Friend"
 
-                                // 1. Mark existing transaction as settled (no new split entry created)
                                 splitDao.save(txn.copy(isSettled = true, settledAt = now))
-
-                                // 2. Adjust friend balance
                                 if (friend != null) {
                                     friendDao.save(friend.copy(amount = friend.amount - txn.amount, updatedAt = now))
                                 }
 
-                                // 3. Record in Earn section if friend owed money
-                                if (txn.amount > 0) {
+                                if (txn.amount != 0.0) {
+                                    val isOwed = txn.amount > 0
                                     dao.insert(
                                         Expense(
                                             id = UUID.randomUUID().toString(),
-                                            category = "Earn",
-                                            amount = txn.amount,
-                                            description = "Settled by $friendName: ${txn.note.ifBlank { "Split" }}",
-                                            date = now
-                                        )
-                                    )
-                                } else if (txn.amount < 0) {
-                                    dao.insert(
-                                        Expense(
-                                            id = UUID.randomUUID().toString(),
-                                            category = "Other",
+                                            category = if (isOwed) "Earn" else "Other",
                                             amount = kotlin.math.abs(txn.amount),
-                                            description = "Settled to $friendName: ${txn.note.ifBlank { "Split" }}",
+                                            description = "Settled ${if (isOwed) "by" else "to"} $friendName: ${txn.note.ifBlank { "Split" }}",
                                             date = now
                                         )
                                     )
@@ -179,50 +175,75 @@ private fun ExpenseHome(
     } else {
         Scaffold(
             containerColor = Canvas,
+            contentWindowInsets = WindowInsets.statusBars,
             bottomBar = {
                 if (viewingFriend == null) {
-                    NavigationBar(containerColor = Color.White) {
-                        val itemColors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Green,
-                            selectedTextColor = Green,
-                            indicatorColor = Color(0xFFE5F2EA)
-                        )
-                        NavigationBarItem(
-                            selected = tab == 0,
-                            onClick = { tab = 0 },
-                            icon = { Icon(Icons.AutoMirrored.Outlined.List, contentDescription = "Expenses", modifier = Modifier.size(36.dp)) },
-                            colors = itemColors
-                        )
-                        NavigationBarItem(
-                            selected = tab == 1,
-                            onClick = { tab = 1 },
-                            icon = { Icon(painterResource(R.drawable.ic_payment_split), contentDescription = "Split", modifier = Modifier.size(36.dp)) },
-                            colors = itemColors
-                        )
-                        NavigationBarItem(
-                            selected = tab == 2,
-                            onClick = { tab = 2 },
-                            icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.size(36.dp)) },
-                            colors = itemColors
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(32.dp),
+                            color = CardSurface.copy(alpha = 0.92f),
+                            border = BorderStroke(1.dp, BorderLight),
+                            shadowElevation = 8.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            NavigationBar(
+                                containerColor = Color.Transparent,
+                                tonalElevation = 0.dp,
+                                windowInsets = WindowInsets(0, 0, 0, 0),
+                                modifier = Modifier.height(64.dp)
+                            ) {
+                                val itemColors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Green,
+                                    selectedTextColor = Green,
+                                    indicatorColor = Color(0xFFE5F2EA),
+                                    unselectedIconColor = Ink.copy(alpha = 0.6f)
+                                )
+                                NavigationBarItem(
+                                    selected = tab == 0,
+                                    onClick = { tab = 0 },
+                                    icon = { Icon(Icons.AutoMirrored.Outlined.List, contentDescription = "Expenses", modifier = Modifier.size(30.dp)) },
+                                    colors = itemColors
+                                )
+                                NavigationBarItem(
+                                    selected = tab == 1,
+                                    onClick = { tab = 1 },
+                                    icon = { Icon(painterResource(R.drawable.ic_payment_split), contentDescription = "Split", modifier = Modifier.size(30.dp)) },
+                                    colors = itemColors
+                                )
+                                NavigationBarItem(
+                                    selected = tab == 2,
+                                    onClick = { tab = 2 },
+                                    icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.size(30.dp)) },
+                                    colors = itemColors
+                                )
+                            }
+                        }
                     }
                 }
             },
             floatingActionButton = {
                 if (tab == 0 || tab == 1 || viewingFriend != null) SmallFloatingActionButton(
                     onClick = {
-                        if (viewingFriend != null) { selectedSplitFriend = viewingFriend!!.id; showSplitForm = true }
+                        val vf = viewingFriend
+                        if (vf != null) { selectedSplitFriend = vf.id; showSplitForm = true }
                         else if (tab == 0) showAddExpense = true
                         else if (friends.isEmpty()) { tab = 2; settingsPage = "friends" }
                         else { selectedSplitFriend = null; showSplitForm = true }
                     },
                     containerColor = Green,
-                    contentColor = Color.White,
+                    contentColor = OffWhite,
                     shape = CircleShape
                 ) { Text("+", fontSize = 26.sp, fontWeight = FontWeight.Normal) }
             }
         ) { padding ->
             val currentViewingFriend = viewingFriend
+            val scrollModifier = Modifier.padding(top = padding.calculateTopPadding())
             when {
                 currentViewingFriend != null -> {
                     // Keep the friend object in sync with the latest from friends list
@@ -238,8 +259,8 @@ private fun ExpenseHome(
                         onSettleTransaction = onSettleSplitTransaction
                     )
                 }
-                tab == 0 -> ExpensesPage(expenses, categories, Modifier.padding(padding), onDelete)
-                tab == 1 -> SplitPage(friends, Modifier.padding(padding), onDeleteFriend = onDeleteFriend, onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true }, onViewFriend = { friend -> viewingFriend = friend })
+                tab == 0 -> ExpensesPage(expenses, categories, scrollModifier, onDelete)
+                tab == 1 -> SplitPage(friends, scrollModifier, onDeleteFriend = onDeleteFriend, onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true }, onViewFriend = { friend -> viewingFriend = friend })
                 else -> when (settingsPage) {
                     "currency" -> CurrencyManagementPage(currency, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = { onCurrencyChange(it); settingsPage = null })
                     "categories" -> CategoryManagementPage(categories, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onCategoriesChange)
