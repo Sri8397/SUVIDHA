@@ -93,36 +93,12 @@ internal fun SplitFlowScreen(
     }
 
     if (showNoteDialog) {
-        var tempNote by remember { mutableStateOf(note) }
-        AlertDialog(
-            onDismissRequest = { showNoteDialog = false },
-            title = { Text("What's this for?", fontWeight = FontWeight.Bold, color = Ink) },
-            text = {
-                OutlinedTextField(
-                    value = tempNote,
-                    onValueChange = { if (it.length <= 50) tempNote = it },
-                    placeholder = { Text("e.g. Dinner, Groceries, Movie (max 50 chars)") },
-                    singleLine = false,
-                    maxLines = 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Green,
-                        cursorColor = Green
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    note = tempNote.trim()
-                    showNoteDialog = false
-                }) {
-                    Text("Done", color = Green, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNoteDialog = false }) {
-                    Text("Cancel", color = Muted)
-                }
+        NoteEntryDialog(
+            initialNote = note,
+            onDismiss = { showNoteDialog = false },
+            onConfirm = { updatedNote ->
+                note = updatedNote
+                showNoteDialog = false
             }
         )
     }
@@ -132,20 +108,25 @@ internal fun SplitFlowScreen(
         color = Canvas
     ) {
         if (step == SplitStep.AMOUNT_INPUT) {
-            AmountInputStep(
+            AmountEntryStep(
+                title = "Enter amount to split",
                 currency = currency,
                 amountText = amountInput,
                 onAmountChange = { amountInput = it },
                 onBack = onBack,
-                onNext = {
+                onPrimary = {
                     if (amountInput.toDoubleOrNull() != null && amountInput.toDouble() > 0) {
                         splitMode = SplitMode.EQUAL
                         step = SplitStep.DISTRIBUTION
                     }
                 },
-                onSkipToExact = {
-                    splitMode = SplitMode.EXACT
-                    step = SplitStep.DISTRIBUTION
+                trailingAction = {
+                    TextButton(onClick = {
+                        splitMode = SplitMode.EXACT
+                        step = SplitStep.DISTRIBUTION
+                    }) {
+                        Text("Exact amounts →", color = Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    }
                 }
             )
         } else {
@@ -175,188 +156,6 @@ internal fun SplitFlowScreen(
                 onTheyOweYouChange = { theyOweYou = it },
                 onSave = onSave
             )
-        }
-    }
-}
-
-// -------------------------------------------------------------
-// STEP 1: AMOUNT INPUT WITH CUSTOM KEYPAD (Matching GPay Style)
-// -------------------------------------------------------------
-@Composable
-private fun AmountInputStep(
-    currency: String,
-    amountText: String,
-    onAmountChange: (String) -> Unit,
-    onBack: () -> Unit,
-    onNext: () -> Unit,
-    onSkipToExact: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(CardSurface, CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Ink
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = onSkipToExact) {
-                Text("Exact amounts →", color = Green, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            }
-        }
-
-        Spacer(Modifier.height(32.dp))
-
-        Text(
-            text = "Enter amount to split",
-            color = Muted,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-
-        Spacer(Modifier.height(14.dp))
-
-        // Large Display Amount
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) {
-            Text(
-                text = currency,
-                color = Ink,
-                fontSize = 38.sp,
-                fontWeight = FontWeight.Light,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            val displayValue = if (amountText.isEmpty()) "0" else amountText
-            Text(
-                text = displayValue,
-                color = Ink,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Spacer(Modifier.weight(1f))
-
-        // Next Button
-        val isValid = (amountText.toDoubleOrNull() ?: 0.0) > 0.0
-        Button(
-            onClick = onNext,
-            enabled = isValid,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Green,
-                contentColor = OffWhite,
-                disabledContainerColor = Green.copy(alpha = 0.35f),
-                disabledContentColor = OffWhite.copy(alpha = 0.7f)
-            ),
-            shape = RoundedCornerShape(28.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-        ) {
-            Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        // Custom Numeric Keypad
-        Keypad(
-            amountText = amountText,
-            onAmountChange = onAmountChange
-        )
-
-        Spacer(Modifier.height(12.dp))
-    }
-}
-
-@Composable
-private fun Keypad(
-    amountText: String,
-    onAmountChange: (String) -> Unit
-) {
-    val keys = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf(".", "0", "⌫")
-    )
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        keys.forEach { row ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                row.forEach { key ->
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .background(CardSurface, RoundedCornerShape(16.dp))
-                            .clickable {
-                                handleKeyPress(key, amountText, onAmountChange)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = key,
-                            color = Ink,
-                            fontSize = if (key == "⌫") 20.sp else 22.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun handleKeyPress(key: String, current: String, onChange: (String) -> Unit) {
-    when (key) {
-        "⌫" -> {
-            if (current.isNotEmpty()) onChange(current.dropLast(1))
-        }
-        "." -> {
-            if (!current.contains(".")) {
-                onChange(if (current.isEmpty()) "0." else "$current.")
-            }
-        }
-        else -> {
-            // Check decimal places constraint (max 2 decimal places)
-            if (current.contains(".")) {
-                val decimals = current.substringAfter(".")
-                if (decimals.length >= 2) return
-            }
-            if (current == "0") {
-                onChange(key)
-            } else if (current.length < 9) {
-                onChange(current + key)
-            }
         }
     }
 }
@@ -414,74 +213,37 @@ private fun DistributionStep(
         (computedTotal * (if (splitMode == SplitMode.SHARES) myShares else 1)) / totalUnits
     } else 0.0
 
+    val isValidToSave = when (splitMode) {
+        SplitMode.EXACT -> {
+            selectedFriendList.isNotEmpty() && selectedFriendList.any { (exactAmounts[it.id]?.toDoubleOrNull() ?: 0.0) > 0.0 }
+        }
+        else -> {
+            computedTotal > 0 && selectedFriendList.isNotEmpty()
+        }
+    }
+
     Scaffold(
         containerColor = Canvas,
         contentWindowInsets = WindowInsets.statusBars,
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-            ) {
-                Surface(
-                    color = CardSurface.copy(alpha = 0.92f),
-                    shadowElevation = 8.dp,
-                    shape = RoundedCornerShape(32.dp),
-                    border = BorderStroke(1.dp, BorderLight),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp)
-                    ) {
-                        val isValidToSave = when (splitMode) {
-                            SplitMode.EXACT -> {
-                                selectedFriendList.isNotEmpty() && selectedFriendList.any { (exactAmounts[it.id]?.toDoubleOrNull() ?: 0.0) > 0.0 }
-                            }
-                            else -> {
-                                computedTotal > 0 && selectedFriendList.isNotEmpty()
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                val sign = if (theyOweYou) 1.0 else -1.0
-                                val drafts = selectedFriendList.mapNotNull { friend ->
-                                    val amount = calculateFriendShare(friend.id)
-                                    if (amount > 0.001) {
-                                        val finalAmount = amount * sign
-                                        SplitDraft(
-                                            friendId = friend.id,
-                                            amount = String.format(java.util.Locale.US, "%.2f", finalAmount),
-                                            note = note.ifBlank { "Split bill" }
-                                        )
-                                    } else null
-                                }
-                                if (drafts.isNotEmpty()) onSave(drafts)
-                            },
-                            enabled = isValidToSave,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Green,
-                                contentColor = OffWhite,
-                                disabledContainerColor = Green.copy(alpha = 0.35f),
-                                disabledContentColor = OffWhite.copy(alpha = 0.7f)
-                            ),
-                            shape = RoundedCornerShape(26.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                        ) {
-                            Text(
-                                text = "Save split  ·  $currency ${money(computedTotal)}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+            FlowSaveBar(
+                label = "Save split  ·  $currency ${money(computedTotal)}",
+                enabled = isValidToSave,
+                onClick = {
+                    val sign = if (theyOweYou) 1.0 else -1.0
+                    val drafts = selectedFriendList.mapNotNull { friend ->
+                        val amount = calculateFriendShare(friend.id)
+                        if (amount > 0.001) {
+                            SplitDraft(
+                                friendId = friend.id,
+                                amount = String.format(java.util.Locale.US, "%.2f", amount * sign),
+                                note = note.ifBlank { "Split bill" }
                             )
-                        }
+                        } else null
                     }
+                    if (drafts.isNotEmpty()) onSave(drafts)
                 }
-            }
+            )
         }
     ) { padding ->
         LazyColumn(
@@ -492,32 +254,7 @@ private fun DistributionStep(
         ) {
             // Top Bar
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(CardSurface, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Ink
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = "Split expense",
-                        color = Ink,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                FlowTopBar(title = "Split expense", onBack = onBack)
             }
 
             // Hero Amount Card

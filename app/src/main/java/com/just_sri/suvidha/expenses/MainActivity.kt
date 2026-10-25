@@ -105,8 +105,18 @@ class MainActivity : ComponentActivity() {
                             updated.forEach { friendDao.save(it) }
                         } },
                         onDeleteFriend = { id -> lifecycleScope.launch { friendDao.delete(id) } },
-                        onAdd = { drafts ->
-                            lifecycleScope.launch { dao.insertAll(drafts.map { draft -> Expense(UUID.randomUUID().toString(), draft.category, draft.amount.toDouble(), draft.note.ifBlank { draft.category }, System.currentTimeMillis()) }) }
+                        onAdd = { draft ->
+                            lifecycleScope.launch {
+                                dao.insert(
+                                    Expense(
+                                        UUID.randomUUID().toString(),
+                                        draft.category,
+                                        draft.amount.toDouble(),
+                                        draft.note.ifBlank { draft.category },
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                            }
                         },
                         onDelete = { id -> lifecycleScope.launch { dao.delete(id) } },
                         onSaveSplitTransactions = { entries, friendsMap ->
@@ -173,7 +183,7 @@ private fun ExpenseHome(
     onCurrencyChange: (String) -> Unit,
     onTimezoneChange: (String) -> Unit,
     onFriendsChange: (List<FriendBalance>) -> Unit, onDeleteFriend: (String) -> Unit,
-    onAdd: (List<ExpenseDraft>) -> Unit,
+    onAdd: (ExpenseDraft) -> Unit,
     onDelete: (String) -> Unit,
     onSaveSplitTransactions: (List<SplitDraft>, Map<String, FriendBalance>) -> Unit,
     onDeleteSplitTransaction: (SplitTransaction) -> Unit,
@@ -194,6 +204,16 @@ private fun ExpenseHome(
                 onSaveSplitTransactions(entries, friends.associateBy { it.id })
                 showSplitForm = false
             }
+        )
+    } else if (showAddExpense) {
+        ExpenseFlowScreen(
+            categories = categories,
+            onBack = { showAddExpense = false },
+            onSave = { draft ->
+                onAdd(draft)
+                showAddExpense = false
+            },
+            onSaveAndNew = { draft -> onAdd(draft) }
         )
     } else {
         Scaffold(
@@ -230,19 +250,19 @@ private fun ExpenseHome(
                                 NavigationBarItem(
                                     selected = tab == 0,
                                     onClick = { tab = 0 },
-                                    icon = { Icon(Icons.AutoMirrored.Outlined.List, contentDescription = "Expenses", modifier = Modifier.size(30.dp)) },
+                                    icon = { Icon(painterResource(R.drawable.ic_analytics), contentDescription = "Expenses", modifier = Modifier.size(32.dp)) },
                                     colors = itemColors
                                 )
                                 NavigationBarItem(
                                     selected = tab == 1,
                                     onClick = { tab = 1 },
-                                    icon = { Icon(painterResource(R.drawable.ic_payment_split), contentDescription = "Split", modifier = Modifier.size(30.dp)) },
+                                    icon = { Icon(painterResource(R.drawable.ic_community), contentDescription = "Split", modifier = Modifier.size(33.dp)) },
                                     colors = itemColors
                                 )
                                 NavigationBarItem(
                                     selected = tab == 2,
                                     onClick = { tab = 2 },
-                                    icon = { Icon(Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.size(30.dp)) },
+                                    icon = { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings", modifier = Modifier.size(26.dp)) },
                                     colors = itemColors
                                 )
                             }
@@ -295,9 +315,6 @@ private fun ExpenseHome(
         }
         BackHandler(enabled = viewingFriend != null) { viewingFriend = null }
         BackHandler(enabled = tab == 2 && settingsPage != null) { settingsPage = null }
-        if (showAddExpense) AddExpenseDialog(categories, { showAddExpense = false }) { drafts ->
-            onAdd(drafts); showAddExpense = false
-        }
     }
 }
 

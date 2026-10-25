@@ -80,3 +80,7 @@ abstract class ExpenseDatabase : RoomDatabase() {
 }
 
 val defaultExpenseCategories = listOf("Rent", "Utilities", "Food", "Transport", "Health", "Shopping", "Salary", "Earn", "Other")
+
+/** Draft rows produced by the full-screen add/split flows before they are persisted. */
+internal data class ExpenseDraft(val category: String = "Other", val amount: String = "", val note: String = "")
+internal data class SplitDraft(val friendId: String, val amount: String = "", val note: String = "")

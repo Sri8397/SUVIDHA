@@ -27,11 +27,12 @@ local.properties
 # Log Files
 *.log
 
-# Android Studio / IntelliJ IDEA
+# Android Studio / IntelliJ IDEA / VS Code
 .idea/
 *.iml
 .navigation/
 captures/
+.vscode/
 
 # Kotlin compiler cache
 .kotlin/
