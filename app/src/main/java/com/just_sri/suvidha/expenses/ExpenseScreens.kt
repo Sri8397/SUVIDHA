@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
@@ -33,12 +34,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -726,6 +729,7 @@ internal fun ConfirmDeleteDialog(
 internal fun SwipeTransactionItem(
     onDeleteRequested: () -> Unit,
     onSettleRequested: () -> Unit,
+    enabledDelete: Boolean = true,
     enabledSettle: Boolean = true,
     shape: Shape = RoundedCornerShape(18.dp),
     content: @Composable () -> Unit
@@ -740,7 +744,7 @@ internal fun SwipeTransactionItem(
                 }
                 SwipeToDismissBoxValue.StartToEnd -> {
                     // Right swipe: Delete
-                    onDeleteRequested()
+                    if (enabledDelete) onDeleteRequested()
                     false
                 }
                 else -> false
@@ -756,7 +760,7 @@ internal fun SwipeTransactionItem(
     SwipeToDismissBox(
         state = dismissState,
         modifier = Modifier.fillMaxWidth(),
-        enableDismissFromStartToEnd = true,
+        enableDismissFromStartToEnd = enabledDelete,
         enableDismissFromEndToStart = enabledSettle,
         backgroundContent = {
             when {
@@ -775,7 +779,7 @@ internal fun SwipeTransactionItem(
                         Text("Settle", color = OffWhite, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
-                isRightSwipe -> {
+                isRightSwipe && enabledDelete -> {
                     Row(
                         Modifier
                             .fillMaxSize()
@@ -1070,8 +1074,12 @@ internal fun SettingsMenu(
     currency: String,
     timezoneId: String,
     modifier: Modifier,
-    onOpen: (String) -> Unit
+    onOpen: (String) -> Unit,
+    accountStatus: String? = null,
+    onAccountAction: () -> Unit = {}
 ) {
+    var showSignOutConfirmation by remember { mutableStateOf(false) }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -1098,6 +1106,71 @@ internal fun SettingsMenu(
         SettingsRow("Timezone", tzSubtitle, icon = "🌐", onClick = { onOpen("timezone") })
         SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") })
         SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") })
+        if (accountStatus != null) {
+            SignOutRow(accountStatus) { showSignOutConfirmation = true }
+        } else {
+            SettingsRow("Cloud Sync", "Sign in with phone to backup & sync", icon = "☁", onClick = onAccountAction)
+        }
+    }
+
+    if (showSignOutConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirmation = false },
+            title = { Text("Sign out?", fontWeight = FontWeight.Bold, color = Ink) },
+            text = { Text("You’ll need to sign in again to sync your account data.", color = Muted, fontSize = 14.sp) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSignOutConfirmation = false
+                    onAccountAction()
+                }) { Text("Sign out", color = Danger, fontWeight = FontWeight.SemiBold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirmation = false }) { Text("Cancel", color = Muted) }
+            },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = CardSurface
+        )
+    }
+}
+
+@Composable
+private fun SignOutRow(accountStatus: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(CardSurface, RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SignOutIcon(Modifier.size(22.dp))
+        Text(
+            "Sign out",
+            color = Danger,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp,
+            modifier = Modifier.padding(start = 14.dp).weight(1f)
+        )
+        Text(accountStatus, color = Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun SignOutIcon(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        val stroke = 1.8.dp.toPx()
+        val centerY = size.height / 2f
+        val doorLeft = size.width * 0.56f
+        val doorRight = size.width * 0.92f
+        val doorTop = size.height * 0.18f
+        val doorBottom = size.height * 0.82f
+
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(doorLeft, doorTop), androidx.compose.ui.geometry.Offset(doorRight, doorTop), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(doorRight, doorTop), androidx.compose.ui.geometry.Offset(doorRight, doorBottom), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(doorRight, doorBottom), androidx.compose.ui.geometry.Offset(doorLeft, doorBottom), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(size.width * 0.08f, centerY), androidx.compose.ui.geometry.Offset(size.width * 0.63f, centerY), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.28f), androidx.compose.ui.geometry.Offset(size.width * 0.63f, centerY), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(Danger, androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.72f), androidx.compose.ui.geometry.Offset(size.width * 0.63f, centerY), stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
     }
 }
 
@@ -1405,6 +1478,39 @@ internal fun TimezoneManagementPage(
 }
 
 @Composable
+private fun CompactSettingsInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.height(50.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = Canvas,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF858A87))
+    ) {
+        Box(
+            Modifier.fillMaxSize().padding(horizontal = 14.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = TextStyle(color = Ink, fontSize = 14.sp),
+                cursorBrush = SolidColor(Green),
+                modifier = Modifier.fillMaxWidth(),
+                decorationBox = { innerTextField ->
+                    if (value.isBlank()) Text(placeholder, color = Muted, fontSize = 14.sp)
+                    innerTextField()
+                }
+            )
+        }
+    }
+}
+
+@Composable
 internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier, onBack: () -> Unit, onSave: (List<String>) -> Unit) {
     var editable by remember(categories) { mutableStateOf(categories) }
     var newName by remember { mutableStateOf("") }
@@ -1420,18 +1526,16 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
         item { Text("Expense categories", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    newName,
-                    { newName = it.take(25) },
-                    label = { Text("New category") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp)
+                CompactSettingsInput(
+                    value = newName,
+                    onValueChange = { newName = it.take(25) },
+                    placeholder = "New category",
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(Modifier.width(10.dp))
                 Button(
@@ -1442,7 +1546,7 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
                             newName = ""
                         }
                     },
-                    modifier = Modifier.height(56.dp),
+                    modifier = Modifier.height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Green)
                 ) {
@@ -1457,18 +1561,11 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
                 canDelete = !category.equals("Other", true)
             ) {
                 Row(
-                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        category,
-                        {},
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        enabled = false,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    if (category.equals("Other", true)) Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp))
+                    Text(category, modifier = Modifier.weight(1f), color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    if (category.equals("Other", true)) Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -1504,7 +1601,13 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
 }
 
 @Composable
-internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modifier, onBack: () -> Unit, onSave: (List<FriendBalance>) -> Unit) {
+internal fun FriendsManagementPage(
+    friends: List<FriendBalance>,
+    modifier: Modifier,
+    onBack: () -> Unit,
+    onSave: (List<FriendBalance>) -> Unit,
+    onAssignContact: (FriendBalance) -> Unit
+) {
     var editable by remember(friends) { mutableStateOf(friends) }
     var newName by remember { mutableStateOf("") }
     var pendingDelete by remember { mutableStateOf<FriendBalance?>(null) }
@@ -1519,29 +1622,27 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
         item { Text("People you split expenses with", color = Muted, fontSize = 14.sp) }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    newName,
-                    { newName = it.take(25) },
-                    label = { Text("Friend's name") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(14.dp)
+                CompactSettingsInput(
+                    value = newName,
+                    onValueChange = { newName = it.take(25) },
+                    placeholder = "Friend's name",
+                    modifier = Modifier.weight(1f)
                 )
                 Spacer(Modifier.width(10.dp))
                 Button(
                     onClick = {
                         val name = newName.trim()
                         if (name.isNotEmpty() && editable.none { it.name.equals(name, true) }) {
-                            persist(editable + FriendBalance(UUID.randomUUID().toString(), name, 0.0, System.currentTimeMillis()))
+                            persist(editable + Friend(UUID.randomUUID().toString(), name, System.currentTimeMillis()))
                             newName = ""
                         }
                     },
-                    modifier = Modifier.height(56.dp),
+                    modifier = Modifier.height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Green)
                 ) {
@@ -1555,17 +1656,37 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
                 onDeleteRequested = { pendingDelete = friend }
             ) {
                 Row(
-                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(14.dp)).padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        friend.name,
-                        {},
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = false
-                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(friend.name, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                        friend.phoneNumber?.takeIf { it.isNotBlank() }?.let {
+                            Text(PhoneUtils.formatDisplay(it), color = Muted, fontSize = 12.sp)
+                        }
+                    }
+                    if (friend.contactId == null) {
+                        Box(
+                            modifier = Modifier
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onAssignContact(friend) }
+                                .padding(horizontal = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Assign contact",
+                                color = Green,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .background(Color(0xFFEAF4EE), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                            )
+                        }
+                    } else {
+                        Text("Assigned", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                    }
                 }
             }
         }
@@ -1607,7 +1728,7 @@ private fun EditNameDialog(title: String, value: String, onValueChange: (String)
                 value = value,
                 onValueChange = onValueChange,
                 singleLine = true,
-                supportingText = { Text("${value.length}/25") },
+                placeholder = { Text("Friend's name", color = Muted) },
                 shape = RoundedCornerShape(12.dp)
             )
         },
@@ -2076,31 +2197,37 @@ internal fun FriendTransactionsPage(
             }
         }
         item {
+            val netBalance = remember(transactions) {
+                transactions.filterNot { it.isSettled }.sumOf { it.amount }
+            }
             HeroBalanceCard(
                 eyebrow = "NET BALANCE",
-                amount = kotlin.math.abs(friend.amount),
-                subtitle = if (friend.amount > 0) "${friend.name} owes you" else if (friend.amount < 0) "You owe ${friend.name}" else "All settled",
-                isNegative = friend.amount < 0
+                amount = kotlin.math.abs(netBalance),
+                subtitle = if (netBalance > 0) "${friend.name} owes you" else if (netBalance < 0) "You owe ${friend.name}" else "All settled",
+                isNegative = netBalance < 0
             )
         }
         item {
+            val netBalance = remember(transactions) {
+                transactions.filterNot { it.isSettled }.sumOf { it.amount }
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Transactions  ·  ${transactions.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = {
-                        val message = "Hi ${friend.name}, a quick reminder that your balance with me is $currency ${money(kotlin.math.abs(friend.amount))}. When you get a chance, could you settle it? Thanks!"
+                        val message = "Hi ${friend.name}, a quick reminder that your balance with me is $currency ${money(kotlin.math.abs(netBalance))}. When you get a chance, could you settle it? Thanks!"
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, message)
                         }
                         context.startActivity(Intent.createChooser(shareIntent, "Send reminder"))
                     },
-                    enabled = friend.amount > 0.0
+                    enabled = netBalance > 0.0
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Share,
                         contentDescription = "Share balance reminder",
-                        tint = if (friend.amount > 0.0) Green else Muted
+                        tint = if (netBalance > 0.0) Green else Muted
                     )
                 }
             }
@@ -2123,7 +2250,8 @@ internal fun FriendTransactionsPage(
             SwipeTransactionItem(
                 onDeleteRequested = { pendingDelete = txn },
                 onSettleRequested = { if (!isSettled) pendingSettle = txn },
-                enabledSettle = !isSettled
+                enabledDelete = !txn.isShared,
+                enabledSettle = !isSettled && !txn.isShared
             ) {
                 val settleColor = Color(0xFFD97706)
                 val settleBg = Color(0xFFFEF3C7)

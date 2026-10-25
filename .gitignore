@@ -54,3 +54,14 @@ Thumbs.db
 
 # Local screenshots
 /suvidha-screenshots/
+
+# Firebase configuration
+google-services.json
+app/google-services.json
+
+# Local database backups
+backup_local_db/
+*.db
+*.db-wal
+*.db-shm
+

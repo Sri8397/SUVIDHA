@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+
+    <!-- Dark-green background filling entire canvas -->
+    <path android:fillColor="#14251F"
+        android:pathData="M0,0h256v256h-256z" />
+
+    <!-- Rear bank card -->
+    <path android:fillColor="#7BDB8D"
+        android:pathData="M80,91 L149,67 Q157,64 162,73 L179,119 L83,141 Q69,144 66,131 L62,111 Q59,98 80,91 Z" />
+    <path android:fillColor="#16A463"
+        android:pathData="M73,105 Q73,97 84,97 L171,97 Q181,97 181,108 L181,139 L73,139 Z" />
+
+    <!-- White wallet body -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M83,112 H169 Q186,112 186,129 V171 Q186,189 169,189 H83 Q66,189 66,171 V129 Q66,112 83,112 Z" />
+    <!-- Soft green lower-left highlight -->
+    <path android:fillColor="#D9F9C9"
+        android:pathData="M66,159 Q83,175 112,189 H83 Q66,189 66,171 Z" />
+
+    <!-- Wallet closure -->
+    <path android:fillColor="#07945B"
+        android:pathData="M163,134 H187 Q194,134 194,142 V157 Q194,165 187,165 H163 Q154,165 154,156 V143 Q154,134 163,134 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M174,142 A7,7 0,1 1,174 156 A7,7 0,1 1,174 142 Z" />
+
+    <!-- Yellow success/sparkle rays -->
+    <path android:strokeColor="#F7E94B" android:strokeWidth="6"
+        android:strokeLineCap="round" android:pathData="M190,88 L194,76" />
+    <path android:strokeColor="#F7E94B" android:strokeWidth="6"
+        android:strokeLineCap="round" android:pathData="M203,99 L214,90" />
+    <path android:strokeColor="#F7E94B" android:strokeWidth="6"
+        android:strokeLineCap="round" android:pathData="M207,111 L219,113" />
+
+    <!-- Brand name: stylized using path-based block letters -->
+    <!-- S -->
+    <path android:fillColor="#FFFFFF" android:pathData="M58,204 H70 V208 H59 V211 H69 Q73,211 73,216 V221 Q73,226 67,226 H54 V222 H68 V218 H59 Q54,218 54,213 V209 Q54,204 58,204 Z" />
+    <!-- U -->
+    <path android:fillColor="#FFFFFF" android:pathData="M77,204 H82 V219 Q82,222 86,222 Q90,222 90,219 V204 H95 V219 Q95,227 86,227 Q77,227 77,219 Z" />
+    <!-- V -->
+    <path android:fillColor="#34C76A" android:pathData="M98,204 H104 L110,220 L116,204 H122 L113,226 H107 Z" />
+    <!-- I -->
+    <path android:fillColor="#FFFFFF" android:pathData="M125,204 H130 V226 H125 Z" />
+    <!-- D -->
+    <path android:fillColor="#FFFFFF" android:pathData="M135,204 H145 Q155,204 155,215 Q155,226 145,226 H135 Z M140,209 V221 H145 Q150,221 150,215 Q150,209 145,209 Z" android:fillType="evenOdd" />
+    <!-- H -->
+    <path android:fillColor="#FFFFFF" android:pathData="M159,204 H164 V212 H175 V204 H180 V226 H175 V217 H164 V226 H159 Z" />
+    <!-- A -->
+    <path android:fillColor="#FFFFFF" android:pathData="M191,204 H197 L207,226 H201 L199,221 H189 L187,226 H181 Z M194,210 L191,217 H197 Z" android:fillType="evenOdd" />
+</vector>
