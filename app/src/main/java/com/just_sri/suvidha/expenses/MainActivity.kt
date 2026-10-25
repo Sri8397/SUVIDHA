@@ -203,6 +203,9 @@ private fun ExpenseHome(
             onSave = { entries ->
                 onSaveSplitTransactions(entries, friends.associateBy { it.id })
                 showSplitForm = false
+            },
+            onSaveAndNew = { entries ->
+                onSaveSplitTransactions(entries, friends.associateBy { it.id })
             }
         )
     } else if (showAddExpense) {

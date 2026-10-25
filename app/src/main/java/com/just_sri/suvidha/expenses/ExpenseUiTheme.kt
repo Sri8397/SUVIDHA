@@ -54,28 +54,21 @@ data class TimezoneOption(
     val offsetSeconds: Int
 )
 
-internal val allTimezones: List<TimezoneOption> by lazy {
-    val now = Instant.now()
+private val timezoneContinents = setOf(
+    "Africa", "America", "Antarctica", "Asia", "Atlantic", "Australia", "Europe", "Indian", "Pacific"
+)
+
+/** Sorted IDs are cheap to retain; rich display options are created only for visible/search-matched rows. */
+internal val timezoneIds: List<String> by lazy {
     ZoneId.getAvailableZoneIds()
-        .filter { id ->
-            (id.startsWith("Africa/") || id.startsWith("America/") || id.startsWith("Antarctica/") ||
-             id.startsWith("Asia/") || id.startsWith("Atlantic/") || id.startsWith("Australia/") ||
-             id.startsWith("Europe/") || id.startsWith("Indian/") || id.startsWith("Pacific/"))
-        }
-        .map { id ->
-            val zone = ZoneId.of(id)
-            val offset = zone.rules.getOffset(now)
-            val parts = id.split('/', limit = 2)
-            val continent = parts.getOrNull(0) ?: ""
-            val city = parts.getOrNull(1)?.replace('_', ' ') ?: id
-            val offsetStr = if (offset.totalSeconds == 0) "UTC" else "UTC${offset.id}"
-            TimezoneOption(
-                id = id,
-                continent = continent,
-                city = city,
-                offsetString = offsetStr,
-                offsetSeconds = offset.totalSeconds
-            )
-        }
-        .sortedWith(compareBy({ it.continent }, { it.city }))
+        .filter { it.substringBefore('/') in timezoneContinents && '/' in it }
+        .sortedWith(compareBy<String>({ it.substringBefore('/') }, { it.substringAfter('/').replace('_', ' ') }))
+}
+
+internal fun timezoneOption(id: String, now: Instant = Instant.now()): TimezoneOption {
+    val offset = ZoneId.of(id).rules.getOffset(now)
+    val continent = id.substringBefore('/')
+    val city = id.substringAfter('/').replace('_', ' ')
+    val offsetString = if (offset.totalSeconds == 0) "UTC" else "UTC${offset.id}"
+    return TimezoneOption(id, continent, city, offsetString, offset.totalSeconds)
 }

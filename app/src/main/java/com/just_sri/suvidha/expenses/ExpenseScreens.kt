@@ -1,6 +1,7 @@
 package com.just_sri.suvidha.expenses
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import androidx.compose.foundation.Canvas as DrawCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,9 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -1128,7 +1132,7 @@ private fun SettingsRow(title: String, subtitle: String, icon: String = title.ta
 }
 
 @Composable
-private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBack: () -> Unit) {
+private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBack: () -> Unit, onDone: (() -> Unit)? = null) {
     Row(
         modifier = Modifier.fillMaxWidth().then(modifier),
         verticalAlignment = Alignment.CenterVertically
@@ -1143,8 +1147,22 @@ private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBa
                 tint = Green
             )
         }
-        Spacer(Modifier.width(8.dp))
-        ScreenHeader("SETTINGS", title)
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = title,
+            color = Ink,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f)
+        )
+        if (onDone != null) {
+            IconButton(
+                onClick = onDone,
+                modifier = Modifier.size(40.dp).background(Green, CircleShape)
+            ) {
+                Icon(Icons.Outlined.Check, contentDescription = "Done", tint = OffWhite)
+            }
+        }
     }
 }
 
@@ -1207,39 +1225,38 @@ internal fun TimezoneManagementPage(
         if (off.totalSeconds == 0) "UTC" else "UTC${off.id}"
     }
 
-    val filteredList = remember(searchQuery) {
+    val filteredIds = remember(searchQuery) {
         val q = searchQuery.trim().lowercase()
         if (q.isBlank()) {
-            allTimezones
+            timezoneIds
         } else {
-            allTimezones.filter {
-                it.city.lowercase().contains(q) ||
-                it.continent.lowercase().contains(q) ||
-                it.id.lowercase().contains(q) ||
-                it.offsetString.lowercase().contains(q)
+            val now = Instant.now()
+            timezoneIds.filter { id ->
+                val city = id.substringAfter('/').replace('_', ' ')
+                val offset = ZoneId.of(id).rules.getOffset(now)
+                val offsetString = if (offset.totalSeconds == 0) "UTC" else "UTC${offset.id}"
+                city.lowercase().contains(q) ||
+                id.substringBefore('/').lowercase().contains(q) ||
+                id.lowercase().contains(q) ||
+                offsetString.lowercase().contains(q)
             }
         }
     }
 
-    LazyColumn(
-        Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
+    Column(Modifier.fillMaxSize().then(modifier)) {
+      SettingsSubHeader("Timezone", Modifier.padding(horizontal = 20.dp, vertical = 12.dp), onBack = onBack)
+      LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item { SettingsSubHeader("Timezone", onBack = onBack) }
-        item {
-            Text(
-                "Select timezone for transaction timestamps and daily spending calculations",
-                color = Muted,
-                fontSize = 14.sp
-            )
-        }
+      ) {
         item {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search city, continent, or UTC offset...", color = Muted, fontSize = 14.sp) },
+                placeholder = { Text("Search…", color = Muted, fontSize = 14.sp) },
                 singleLine = true,
+                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = "Search", tint = Muted) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
@@ -1252,7 +1269,9 @@ internal fun TimezoneManagementPage(
                     focusedBorderColor = Green,
                     cursorColor = Green,
                     focusedContainerColor = CardSurface,
-                    unfocusedContainerColor = CardSurface
+                    unfocusedContainerColor = CardSurface,
+                    focusedTextColor = Ink,
+                    unfocusedTextColor = Ink
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1308,7 +1327,7 @@ internal fun TimezoneManagementPage(
             }
         }
 
-        if (filteredList.isEmpty() && !showAuto) {
+        if (filteredIds.isEmpty() && !showAuto) {
             item {
                 Box(
                     Modifier.fillMaxWidth().padding(vertical = 32.dp),
@@ -1322,7 +1341,8 @@ internal fun TimezoneManagementPage(
                 }
             }
         } else {
-            items(filteredList, key = { it.id }) { option ->
+            items(filteredIds, key = { it }) { timezoneId ->
+                val option = remember(timezoneId) { timezoneOption(timezoneId) }
                 val isSelected = current == option.id
                 Row(
                     Modifier
@@ -1380,6 +1400,7 @@ internal fun TimezoneManagementPage(
                 }
             }
         }
+      }
     }
 }
 
@@ -1387,18 +1408,26 @@ internal fun TimezoneManagementPage(
 internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier, onBack: () -> Unit, onSave: (List<String>) -> Unit) {
     var editable by remember(categories) { mutableStateOf(categories) }
     var newName by remember { mutableStateOf("") }
-    LazyColumn(
-        Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item { SettingsSubHeader("Categories", onBack = onBack) }
+    var pendingDelete by remember { mutableStateOf<String?>(null) }
+    var editingCategory by remember { mutableStateOf<String?>(null) }
+    var editCategoryText by remember { mutableStateOf("") }
+    fun persist(values: List<String>) {
+        editable = (values.map { it.trim() }.filter { it.isNotEmpty() && !it.equals("Other", true) }.distinct() + "Other")
+        onSave(editable)
+    }
+    Column(Modifier.fillMaxSize().then(modifier)) {
+        SettingsSubHeader("Categories", Modifier.padding(horizontal = 20.dp, vertical = 12.dp), onBack = onBack, onDone = onBack)
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item { Text("Expense categories", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     newName,
-                    { newName = it },
+                    { newName = it.take(25) },
                     label = { Text("New category") },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
@@ -1409,8 +1438,7 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
                     onClick = {
                         val name = newName.trim()
                         if (name.isNotEmpty() && editable.none { it.equals(name, true) }) {
-                            editable = (editable.filterNot { it.equals("Other", true) } + name + "Other").distinct()
-                            onSave(editable)
+                            persist(editable.filterNot { it.equals("Other", true) } + name)
                             newName = ""
                         }
                     },
@@ -1422,48 +1450,56 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
                 }
             }
         }
-        itemsIndexed(editable, key = { index, _ -> index }) { index, category ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(CardSurface, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+        itemsIndexed(editable, key = { _, category -> category.lowercase() }) { _, category ->
+            SwipeManagementItem(
+                onEditRequested = { editingCategory = category; editCategoryText = category },
+                onDeleteRequested = { if (!category.equals("Other", true)) pendingDelete = category },
+                canDelete = !category.equals("Other", true)
             ) {
-                OutlinedTextField(
-                    category,
-                    { value -> editable = editable.toMutableList().also { it[index] = value } },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    enabled = !category.equals("Other", true),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                if (!category.equals("Other", true)) {
-                    Spacer(Modifier.width(8.dp))
-                    TextButton(onClick = { editable = editable.filterNot { it == category }; onSave(editable) }) {
-                        Text("Remove", color = Color(0xFFB64C45), fontWeight = FontWeight.SemiBold)
-                    }
-                } else {
-                    Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp))
+                Row(
+                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        category,
+                        {},
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        enabled = false,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    if (category.equals("Other", true)) Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 12.dp))
                 }
             }
         }
         item {
             Text("Other is always available as the default category.", color = Muted, fontSize = 12.sp)
         }
-        item {
-            Button(
-                onClick = {
-                    editable = (editable.map { it.trim() }.filter { it.isNotEmpty() && !it.equals("Other", true) }.distinct() + "Other")
-                    onSave(editable)
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Green)
-            ) {
-                Text("Save changes", fontWeight = FontWeight.SemiBold)
-            }
         }
+    }
+    pendingDelete?.let { category ->
+        ConfirmDeleteDialog(
+            title = "Remove category?",
+            message = "$category will be removed from your expense categories.",
+            confirmLabel = "Remove",
+            onConfirm = { persist(editable.filterNot { it == category }); pendingDelete = null },
+            onDismiss = { pendingDelete = null }
+        )
+    }
+    editingCategory?.let { category ->
+        EditNameDialog(
+            title = "Edit category",
+            value = editCategoryText,
+            onValueChange = { editCategoryText = it.take(25) },
+            onDismiss = { editingCategory = null },
+            onSave = {
+                val name = editCategoryText.trim()
+                if (name.isNotEmpty() && editable.none { it != category && it.equals(name, true) }) {
+                    persist(editable.map { if (it == category) name else it })
+                }
+                editingCategory = null
+            }
+        )
     }
 }
 
@@ -1471,18 +1507,26 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
 internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modifier, onBack: () -> Unit, onSave: (List<FriendBalance>) -> Unit) {
     var editable by remember(friends) { mutableStateOf(friends) }
     var newName by remember { mutableStateOf("") }
-    LazyColumn(
-        Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item { SettingsSubHeader("Friends", onBack = onBack) }
+    var pendingDelete by remember { mutableStateOf<FriendBalance?>(null) }
+    var editingFriend by remember { mutableStateOf<FriendBalance?>(null) }
+    var editFriendText by remember { mutableStateOf("") }
+    fun persist(values: List<FriendBalance>) {
+        editable = values.map { it.copy(name = it.name.trim()) }.filter { it.name.isNotEmpty() }
+        onSave(editable)
+    }
+    Column(Modifier.fillMaxSize().then(modifier)) {
+        SettingsSubHeader("Friends", Modifier.padding(horizontal = 20.dp, vertical = 12.dp), onBack = onBack, onDone = onBack)
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item { Text("People you split expenses with", color = Muted, fontSize = 14.sp) }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     newName,
-                    { newName = it },
+                    { newName = it.take(25) },
                     label = { Text("Friend's name") },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
@@ -1493,7 +1537,7 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
                     onClick = {
                         val name = newName.trim()
                         if (name.isNotEmpty() && editable.none { it.name.equals(name, true) }) {
-                            editable = editable + FriendBalance(UUID.randomUUID().toString(), name, 0.0, System.currentTimeMillis())
+                            persist(editable + FriendBalance(UUID.randomUUID().toString(), name, 0.0, System.currentTimeMillis()))
                             newName = ""
                         }
                     },
@@ -1506,37 +1550,107 @@ internal fun FriendsManagementPage(friends: List<FriendBalance>, modifier: Modif
             }
         }
         itemsIndexed(editable, key = { _, friend -> friend.id }) { index, friend ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(CardSurface, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            SwipeManagementItem(
+                onEditRequested = { editingFriend = friend; editFriendText = friend.name },
+                onDeleteRequested = { pendingDelete = friend }
             ) {
-                OutlinedTextField(
-                    friend.name,
-                    { name -> editable = editable.toMutableList().also { it[index] = friend.copy(name = name) } },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                TextButton(onClick = { editable = editable.filterNot { it.id == friend.id } }) {
-                    Text("Remove", color = Color(0xFFB64C45), fontWeight = FontWeight.SemiBold)
+                Row(
+                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        friend.name,
+                        {},
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = false
+                    )
                 }
             }
         }
-        item {
-            Button(
-                onClick = { onSave(editable.map { it.copy(name = it.name.trim()) }.filter { it.name.isNotEmpty() }) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Green)
-            ) {
-                Text("Save changes", fontWeight = FontWeight.SemiBold)
-            }
         }
     }
+    pendingDelete?.let { friend ->
+        ConfirmDeleteDialog(
+            title = "Remove friend?",
+            message = "${friend.name} and their balance will be removed. This cannot be undone.",
+            confirmLabel = "Remove",
+            onConfirm = { persist(editable.filterNot { it.id == friend.id }); pendingDelete = null },
+            onDismiss = { pendingDelete = null }
+        )
+    }
+    editingFriend?.let { friend ->
+        EditNameDialog(
+            title = "Edit friend",
+            value = editFriendText,
+            onValueChange = { editFriendText = it.take(25) },
+            onDismiss = { editingFriend = null },
+            onSave = {
+                val name = editFriendText.trim()
+                if (name.isNotEmpty() && editable.none { it.id != friend.id && it.name.equals(name, true) }) {
+                    persist(editable.map { if (it.id == friend.id) it.copy(name = name) else it })
+                }
+                editingFriend = null
+            }
+        )
+    }
+}
+
+@Composable
+private fun EditNameDialog(title: String, value: String, onValueChange: (String) -> Unit, onDismiss: () -> Unit, onSave: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Bold) },
+        text = {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                supportingText = { Text("${value.length}/25") },
+                shape = RoundedCornerShape(12.dp)
+            )
+        },
+        confirmButton = { TextButton(onClick = onSave) { Text("Save", color = Green) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = Muted) } }
+    )
+}
+
+@Composable
+private fun SwipeManagementItem(
+    onEditRequested: () -> Unit,
+    onDeleteRequested: () -> Unit,
+    canDelete: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> { onEditRequested(); false }
+                SwipeToDismissBoxValue.EndToStart -> { if (canDelete) onDeleteRequested(); false }
+                else -> false
+            }
+        },
+        positionalThreshold = { distance -> distance * 0.28f }
+    )
+    val right = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
+    SwipeToDismissBox(
+        state = state,
+        modifier = Modifier.fillMaxWidth(),
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = canDelete,
+        backgroundContent = {
+            Row(
+                Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).background(if (right) Green else Danger).padding(horizontal = 18.dp),
+                horizontalArrangement = if (right) Arrangement.Start else Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(if (right) Icons.Outlined.Edit else Icons.Outlined.Delete, contentDescription = null, tint = OffWhite, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(if (right) "Edit" else "Delete", color = OffWhite, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    ) { content() }
 }
 
 private enum class TrendMode(val label: String) {
@@ -1934,6 +2048,8 @@ internal fun FriendTransactionsPage(
     onDeleteTransaction: (SplitTransaction) -> Unit,
     onSettleTransaction: (SplitTransaction) -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val currency = LocalCurrency.current
     var pendingDelete by remember { mutableStateOf<SplitTransaction?>(null) }
     var pendingSettle by remember { mutableStateOf<SplitTransaction?>(null) }
     var selectedTxnForDetail by remember { mutableStateOf<SplitTransaction?>(null) }
@@ -1970,6 +2086,23 @@ internal fun FriendTransactionsPage(
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Transactions  ·  ${transactions.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = {
+                        val message = "Hi ${friend.name}, a quick reminder that your balance with me is $currency ${money(kotlin.math.abs(friend.amount))}. When you get a chance, could you settle it? Thanks!"
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, message)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Send reminder"))
+                    },
+                    enabled = friend.amount > 0.0
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = "Share balance reminder",
+                        tint = if (friend.amount > 0.0) Green else Muted
+                    )
+                }
             }
         }
         if (transactions.isEmpty()) item {

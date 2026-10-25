@@ -44,7 +44,8 @@ internal fun SplitFlowScreen(
     initialFriendId: String?,
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onSave: (List<SplitDraft>) -> Unit
+    onSave: (List<SplitDraft>) -> Unit,
+    onSaveAndNew: (List<SplitDraft>) -> Unit = onSave
 ) {
     var step by remember {
         mutableStateOf(if (friends.isEmpty()) SplitStep.DISTRIBUTION else SplitStep.AMOUNT_INPUT)
@@ -154,7 +155,22 @@ internal fun SplitFlowScreen(
                 onFriendSharesChange = { id, count -> friendShares[id] = count },
                 onExactAmountChange = { id, text -> exactAmounts[id] = text },
                 onTheyOweYouChange = { theyOweYou = it },
-                onSave = onSave
+                onSave = onSave,
+                onSaveAndNew = { drafts ->
+                    onSaveAndNew(drafts)
+                    amountInput = ""
+                    note = ""
+                    splitMode = SplitMode.EQUAL
+                    includeMyself = true
+                    myShares = 1
+                    theyOweYou = true
+                    friends.forEach { friend ->
+                        selectedFriends[friend.id] = initialFriendId == null || friend.id == initialFriendId
+                        friendShares[friend.id] = 1
+                        exactAmounts[friend.id] = ""
+                    }
+                    step = if (friends.isEmpty()) SplitStep.DISTRIBUTION else SplitStep.AMOUNT_INPUT
+                }
             )
         }
     }
@@ -186,7 +202,8 @@ private fun DistributionStep(
     onFriendSharesChange: (String, Int) -> Unit,
     onExactAmountChange: (String, String) -> Unit,
     onTheyOweYouChange: (Boolean) -> Unit,
-    onSave: (List<SplitDraft>) -> Unit
+    onSave: (List<SplitDraft>) -> Unit,
+    onSaveAndNew: (List<SplitDraft>) -> Unit
 ) {
     val selectedFriendList = friends.filter { selectedFriends[it.id] == true }
 
@@ -226,22 +243,30 @@ private fun DistributionStep(
         containerColor = Canvas,
         contentWindowInsets = WindowInsets.statusBars,
         bottomBar = {
+            val buildDrafts: () -> List<SplitDraft> = {
+                val sign = if (theyOweYou) 1.0 else -1.0
+                selectedFriendList.mapNotNull { friend ->
+                    val amount = calculateFriendShare(friend.id)
+                    if (amount > 0.001) {
+                        SplitDraft(
+                            friendId = friend.id,
+                            amount = String.format(java.util.Locale.US, "%.2f", amount * sign),
+                            note = note.ifBlank { "Split bill" }
+                        )
+                    } else null
+                }
+            }
             FlowSaveBar(
-                label = "Save split  ·  $currency ${money(computedTotal)}",
+                label = "Save & exit  ·  $currency ${money(computedTotal)}",
                 enabled = isValidToSave,
                 onClick = {
-                    val sign = if (theyOweYou) 1.0 else -1.0
-                    val drafts = selectedFriendList.mapNotNull { friend ->
-                        val amount = calculateFriendShare(friend.id)
-                        if (amount > 0.001) {
-                            SplitDraft(
-                                friendId = friend.id,
-                                amount = String.format(java.util.Locale.US, "%.2f", amount * sign),
-                                note = note.ifBlank { "Split bill" }
-                            )
-                        } else null
-                    }
+                    val drafts = buildDrafts()
                     if (drafts.isNotEmpty()) onSave(drafts)
+                },
+                secondaryLabel = "Save & add another",
+                onSecondary = {
+                    val drafts = buildDrafts()
+                    if (drafts.isNotEmpty()) onSaveAndNew(drafts)
                 }
             )
         }
