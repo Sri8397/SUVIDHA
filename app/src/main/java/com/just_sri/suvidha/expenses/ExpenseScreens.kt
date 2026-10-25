@@ -30,7 +30,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
@@ -67,6 +70,36 @@ private fun rowAmountFontSize(length: Int) = when {
     length > 11 -> 14.sp
     else -> 15.sp
 }
+
+internal fun Modifier.verticalScrollbar(
+    scrollState: androidx.compose.foundation.ScrollState,
+    thumbColor: Color = Color(0xFF94A3B8),
+    trackColor: Color = Color(0xFFE2E8F0).copy(alpha = 0.6f),
+    width: androidx.compose.ui.unit.Dp = 4.dp
+): Modifier = this.drawWithContent {
+    drawContent()
+    if (scrollState.maxValue > 0) {
+        val viewHeight = size.height
+        val totalHeight = viewHeight + scrollState.maxValue
+        val thumbHeight = (viewHeight / totalHeight * viewHeight).coerceIn(24.dp.toPx(), viewHeight)
+        val thumbOffset = (scrollState.value.toFloat() / scrollState.maxValue) * (viewHeight - thumbHeight)
+
+        val trackX = size.width - width.toPx()
+        drawRoundRect(
+            color = trackColor,
+            topLeft = Offset(trackX, 0f),
+            size = Size(width.toPx(), viewHeight),
+            cornerRadius = CornerRadius(width.toPx() / 2f, width.toPx() / 2f)
+        )
+        drawRoundRect(
+            color = thumbColor,
+            topLeft = Offset(trackX, thumbOffset),
+            size = Size(width.toPx(), thumbHeight),
+            cornerRadius = CornerRadius(width.toPx() / 2f, width.toPx() / 2f)
+        )
+    }
+}
+
 
 @Composable
 private fun ScreenHeader(
@@ -221,8 +254,8 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
 
     val currentList = if (activeSection == "Spend") spendExpenses else earnExpenses
 
-    // The trend chart owns the day/week/month choice; Earn has no chart, so it stays day-based.
-    val periodMode = if (activeSection == "Spend") trendMode else TrendMode.Day
+    // Both Spend and Earn trend charts own the day/week/month choice.
+    val periodMode = trendMode
     val hasSelection = selectedAnchor != null
     val displaySpan = selectedAnchor
         ?.let { trendPeriodSpan(periodMode, it) }
@@ -373,17 +406,18 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
                 trailingAction = trailingCalendarAction
             )
         }
-        if (activeSection == "Spend") {
-            item {
-                ExpenseTrend(
-                    expenses = spendExpenses,
-                    mode = trendMode,
-                    anchor = selectedAnchor,
-                    zoneId = zoneId,
-                    onModeChange = { trendMode = it },
-                    onSelectPeriod = { selectedAnchor = it }
-                )
-            }
+        item {
+            val isSpend = activeSection == "Spend"
+            ExpenseTrend(
+                title = if (isSpend) "Spending trend" else "Earning trend",
+                emptyText = if (isSpend) "Your spending trend will appear here." else "Your earning trend will appear here.",
+                expenses = if (isSpend) spendExpenses else earnExpenses,
+                mode = trendMode,
+                anchor = selectedAnchor,
+                zoneId = zoneId,
+                onModeChange = { trendMode = it },
+                onSelectPeriod = { selectedAnchor = it }
+            )
         }
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -865,10 +899,14 @@ internal fun ExpenseDetailDialog(
             }
         },
         text = {
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    .heightIn(max = 280.dp)
+                    .verticalScrollbar(scrollState)
+                    .padding(end = if (scrollState.maxValue > 0) 8.dp else 0.dp)
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -968,8 +1006,9 @@ internal fun SplitTransactionDetailDialog(
                     letterSpacing = 1.3.sp
                 )
                 Spacer(Modifier.height(4.dp))
+                val sign = if (txn.amount < 0) "− " else "+ "
                 Text(
-                    text = "${if (isSettled) "✓ " else if (txn.amount > 0) "+" else "−"} $currency ${money(kotlin.math.abs(txn.amount))}",
+                    text = "${if (isSettled) "✓ " else ""}$sign$currency ${money(kotlin.math.abs(txn.amount))}",
                     color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
@@ -978,9 +1017,7 @@ internal fun SplitTransactionDetailDialog(
         },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -992,72 +1029,95 @@ internal fun SplitTransactionDetailDialog(
                         Text("Friend", color = Muted, fontSize = 11.sp)
                         Text(friendName, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSettled) settleBg else if (txn.amount > 0) Color(0xFFEAF4EE) else Color(0xFFFBECEB))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = if (isSettled) "✓ Settled" else if (txn.amount > 0) "Owes you" else "You owe",
-                            color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (!isSettled) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (txn.amount > 0) Color(0xFFEAF4EE) else Color(0xFFFBECEB))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = if (txn.amount > 0) "Owes you" else "You owe",
+                                color = if (txn.amount > 0) Green else Danger,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Canvas, RoundedCornerShape(14.dp))
-                        .padding(12.dp)
+                        .heightIn(max = 260.dp)
+                        .verticalScrollbar(scrollState)
+                        .padding(end = if (scrollState.maxValue > 0) 8.dp else 0.dp)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text("Exact Date & Time", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = formattedCreatedTime,
-                        color = Ink,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        lineHeight = 18.sp
-                    )
-                }
-
-                if (isSettled) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(settleBg.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                            .background(Canvas, RoundedCornerShape(14.dp))
                             .padding(12.dp)
                     ) {
-                        Text("Settle Time", color = settleColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Exact Date & Time", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = formattedSettleTime,
+                            text = formattedCreatedTime,
                             color = Ink,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             lineHeight = 18.sp
                         )
                     }
-                }
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Canvas, RoundedCornerShape(14.dp))
-                        .padding(12.dp)
-                ) {
-                    Text("Description", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = txn.note.ifBlank { "Split bill" },
-                        color = Ink,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp
-                    )
+                    if (isSettled) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(settleBg.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                                .padding(12.dp)
+                        ) {
+                            Text("Settled By", color = settleColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = if (txn.isShared) friendName else "You",
+                                color = Ink,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 18.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text("Settle Time", color = settleColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = formattedSettleTime,
+                                color = Ink,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Canvas, RoundedCornerShape(14.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text("Description", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = txn.note.ifBlank { "Split bill" },
+                            color = Ink,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 20.sp
+                        )
+                    }
                 }
             }
         },
@@ -1926,7 +1986,9 @@ private fun ExpenseTrend(
     anchor: LocalDate?,
     zoneId: ZoneId,
     onModeChange: (TrendMode) -> Unit,
-    onSelectPeriod: (LocalDate) -> Unit
+    onSelectPeriod: (LocalDate) -> Unit,
+    title: String = "Spending trend",
+    emptyText: String = "Your spending trend will appear here."
 ) {
     val today = remember(zoneId) { LocalDate.now(zoneId) }
     val selectedStart = anchor?.let { trendPeriodSpan(mode, it).start }
@@ -1943,7 +2005,7 @@ private fun ExpenseTrend(
 
     Column(Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(24.dp)).padding(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Spending trend", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(title, color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             TrendMode.values().forEach { choice ->
                 val active = mode == choice
                 Text(
@@ -1961,7 +2023,7 @@ private fun ExpenseTrend(
         }
         if (expenses.isEmpty()) {
             Box(Modifier.fillMaxWidth().height(140.dp), contentAlignment = Alignment.Center) {
-                Text("Your spending trend will appear here.", color = Muted, fontSize = 13.sp)
+                Text(emptyText, color = Muted, fontSize = 13.sp)
             }
         } else {
             DrawCanvas(
@@ -2300,7 +2362,8 @@ internal fun FriendTransactionsPage(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    val formattedAmount = "${if (isSettled) "✓ " else if (txn.amount > 0) "+" else "−"} ${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}"
+                    val sign = if (txn.amount < 0) "− " else "+ "
+                    val formattedAmount = "${if (isSettled) "✓ " else ""}$sign${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}"
                     Text(
                         formattedAmount,
                         color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
