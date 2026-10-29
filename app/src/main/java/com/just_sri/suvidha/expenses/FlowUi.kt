@@ -17,31 +17,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.just_sri.suvidha.expenses.components.AppBackButton
+import com.just_sri.suvidha.expenses.components.AppInputDialog
+import com.just_sri.suvidha.expenses.components.AppPrimaryButton
+import com.just_sri.suvidha.expenses.components.AppTopBar
 
 /**
  * Shared building blocks for the full-screen money flows (Add expense / Split expense).
@@ -50,18 +44,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun FlowBackButton(onBack: () -> Unit) {
-    IconButton(
-        onClick = onBack,
-        modifier = Modifier
-            .size(40.dp)
-            .background(CardSurface, CircleShape)
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-            contentDescription = "Back",
-            tint = Ink
-        )
-    }
+    AppBackButton(onBack = onBack)
 }
 
 @Composable
@@ -70,21 +53,7 @@ internal fun FlowTopBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        FlowBackButton(onBack)
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = title,
-            color = Ink,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
+    AppTopBar(title = title, onBack = onBack, modifier = modifier)
 }
 
 /**
@@ -157,22 +126,12 @@ internal fun AmountEntryStep(
         Spacer(Modifier.weight(1f))
 
         val isValid = (amountText.toDoubleOrNull() ?: 0.0) > 0.0
-        Button(
+        AppPrimaryButton(
+            text = primaryLabel,
             onClick = onPrimary,
             enabled = isValid,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Green,
-                contentColor = OffWhite,
-                disabledContainerColor = Green.copy(alpha = 0.35f),
-                disabledContentColor = OffWhite.copy(alpha = 0.7f)
-            ),
-            shape = RoundedCornerShape(28.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-        ) {
-            Text(primaryLabel, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+            shape = RoundedCornerShape(28.dp)
+        )
 
         Spacer(Modifier.height(20.dp))
 
@@ -261,34 +220,16 @@ internal fun NoteEntryDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var tempNote by remember { mutableStateOf(initialNote) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("What's this for?", fontWeight = FontWeight.Bold, color = Ink) },
-        text = {
-            OutlinedTextField(
-                value = tempNote,
-                onValueChange = { if (it.length <= 50) tempNote = it },
-                placeholder = { Text("e.g. Dinner, Groceries, Movie (max 50 chars)") },
-                singleLine = false,
-                maxLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Green,
-                    cursorColor = Green
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(tempNote.trim()) }) {
-                Text("Done", color = Green, fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Muted)
-            }
-        }
+    AppInputDialog(
+        title = "What's this for?",
+        initialValue = initialNote,
+        placeholder = "e.g. Dinner, Groceries, Movie (max 50 chars)",
+        confirmLabel = "Done",
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        maxLength = 50,
+        singleLine = false,
+        maxLines = 3
     )
 }
 
@@ -318,26 +259,11 @@ internal fun FlowSaveBar(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                Button(
+                AppPrimaryButton(
+                    text = label,
                     onClick = onClick,
-                    enabled = enabled,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Green,
-                        contentColor = OffWhite,
-                        disabledContainerColor = Green.copy(alpha = 0.35f),
-                        disabledContentColor = OffWhite.copy(alpha = 0.7f)
-                    ),
-                    shape = RoundedCornerShape(26.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                ) {
-                    Text(
-                        text = label,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                    enabled = enabled
+                )
                 if (secondaryLabel != null && onSecondary != null) {
                     TextButton(
                         onClick = onSecondary,
@@ -358,3 +284,90 @@ internal fun FlowSaveBar(
         }
     }
 }
+
+/**
+ * Shared hero amount card with tap-to-edit and "What's this for?" note chip.
+ * Used identically by both ExpenseFlowScreen and SplitFlowScreen.
+ */
+@Composable
+internal fun FlowAmountHero(
+    title: String,
+    currency: String,
+    amount: Double,
+    note: String,
+    onOpenNoteDialog: () -> Unit,
+    onEditAmount: (() -> Unit)? = null
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = title, color = Muted, fontSize = 14.sp)
+        Spacer(Modifier.height(6.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(enabled = onEditAmount != null) { onEditAmount?.invoke() }
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = currency,
+                color = Ink,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier.padding(end = 6.dp)
+            )
+            Text(
+                text = money(amount),
+                color = Ink,
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold
+            )
+            if (onEditAmount != null) {
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Edit amount",
+                    tint = Green,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // "What's this for?" chip
+        Surface(
+            onClick = onOpenNoteDialog,
+            color = CardSurface,
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.dp, BorderLight),
+            modifier = Modifier.height(38.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = if (note.isBlank()) "What’s this for?" else note,
+                    color = if (note.isBlank()) Muted else Ink,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(6.dp))
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Edit note",
+                    tint = Muted,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+    }
+}
+

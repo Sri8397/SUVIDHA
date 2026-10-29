@@ -1,20 +1,22 @@
 package com.just_sri.suvidha.expenses
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Insert
-import androidx.room.migration.Migration
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.Transaction
-import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
+import java.io.File
+
+private const val EXPENSE_DATABASE_VERSION = 1
+private const val EXPENSE_DATABASE_NAME = "suvidha-expenses.db"
 
 @Entity(tableName = "expenses")
 data class Expense(
@@ -31,8 +33,6 @@ interface ExpenseDao {
     @Insert suspend fun insert(expense: Expense)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(expenses: List<Expense>)
     @Query("DELETE FROM expenses WHERE id = :id") suspend fun delete(id: String)
-    @Query("DELETE FROM expenses") suspend fun deleteAll()
-    @Transaction suspend fun replaceAll(expenses: List<Expense>) { deleteAll(); insertAll(expenses) }
 }
 
 @Entity(tableName = "friends")
@@ -43,20 +43,9 @@ data class Friend(
     val phoneNumber: String? = null,
     val contactId: String? = null,
 ) {
+    // Balances come from split transactions, so Room stores friend identity only.
     @Ignore
     var amount: Double = 0.0
-
-    @Ignore
-    constructor(
-        id: String,
-        name: String,
-        amount: Double,
-        updatedAt: Long,
-        phoneNumber: String? = null,
-        contactId: String? = null
-    ) : this(id, name, updatedAt, phoneNumber, contactId) {
-        this.amount = amount
-    }
 
     fun withAmount(newAmount: Double): Friend = copy().also { it.amount = newAmount }
 }
@@ -72,7 +61,6 @@ data class SplitTransaction(
     val date: Long,
     val isSettled: Boolean = false,
     val settledAt: Long? = null,
-    val isShared: Boolean = false,
 )
 
 @Dao
@@ -81,12 +69,7 @@ interface FriendDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(friend: Friend)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(friends: List<Friend>)
     @Query("DELETE FROM friends WHERE id = :id") suspend fun delete(id: String)
-    @Query("DELETE FROM friends WHERE id LIKE 'shared_user_%'") suspend fun deleteSharedUsers()
-    @Query("DELETE FROM friends") suspend fun deleteAll()
-    @Transaction suspend fun replaceAll(friends: List<Friend>) { deleteAll(); insertAll(friends) }
 }
-
-typealias FriendBalanceDao = FriendDao
 
 @Dao
 interface SplitTransactionDao {
@@ -95,69 +78,102 @@ interface SplitTransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(transactions: List<SplitTransaction>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(transaction: SplitTransaction)
     @Query("DELETE FROM split_transactions WHERE id = :id") suspend fun delete(id: String)
-    @Query("DELETE FROM split_transactions WHERE id LIKE 'shared_%'") suspend fun deleteShared()
-    @Query("DELETE FROM split_transactions") suspend fun deleteAll()
-    @Transaction suspend fun replaceAll(transactions: List<SplitTransaction>) { deleteAll(); insertAll(transactions) }
 }
 
-@Database(entities = [Expense::class, Friend::class, SplitTransaction::class], version = 8, exportSchema = false)
+@Database(entities = [Expense::class, Friend::class, SplitTransaction::class], version = EXPENSE_DATABASE_VERSION, exportSchema = false)
 abstract class ExpenseDatabase : RoomDatabase() {
     abstract fun expenses(): ExpenseDao
     abstract fun friends(): FriendDao
-    fun friendBalances(): FriendDao = friends()
     abstract fun splitTransactions(): SplitTransactionDao
 
     companion object {
-        private val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE friend_balances ADD COLUMN phoneNumber TEXT")
-                db.execSQL("ALTER TABLE friend_balances ADD COLUMN contactId TEXT")
-            }
-        }
-        private val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE split_transactions ADD COLUMN isShared INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-        private val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `friends` (
-                        `id` TEXT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `updatedAt` INTEGER NOT NULL,
-                        `phoneNumber` TEXT,
-                        `contactId` TEXT,
-                        PRIMARY KEY(`id`)
-                    )
-                """.trimIndent())
-                db.execSQL("""
-                    INSERT OR IGNORE INTO `friends` (`id`, `name`, `updatedAt`, `phoneNumber`, `contactId`)
-                    SELECT `id`, `name`, `updatedAt`, `phoneNumber`, `contactId` FROM `friend_balances`
-                """.trimIndent())
-                db.execSQL("DROP TABLE IF EXISTS `friend_balances`")
-            }
-        }
-        private val instances = mutableMapOf<String, ExpenseDatabase>()
+        @Volatile
+        private var INSTANCE: ExpenseDatabase? = null
 
-        /** Keeps guest/offline records in the legacy local database and isolates each account. */
-        fun getForAccount(context: Context, uid: String?): ExpenseDatabase {
-            val key = uid ?: "offline"
+        fun get(context: Context): ExpenseDatabase {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: openDatabase(context).also { INSTANCE = it }
+            }
+        }
+
+        fun deleteAndCreateFresh(context: Context): ExpenseDatabase {
             return synchronized(this) {
-                instances[key] ?: run {
-                    val dbName = if (uid == null) "suvidha-expenses.db" else "suvidha-expenses-$uid.db"
-                    Room.databaseBuilder(context.applicationContext, ExpenseDatabase::class.java, dbName)
-                        .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
-                        .fallbackToDestructiveMigration(true)
-                        .build()
-                        .also { instances[key] = it }
+                INSTANCE?.close()
+                INSTANCE = null
+                context.deleteDatabase(EXPENSE_DATABASE_NAME)
+                check(!context.getDatabasePath(EXPENSE_DATABASE_NAME).exists()) {
+                    "Could not delete the existing database."
                 }
+                openDatabase(context).also { INSTANCE = it }
+            }
+        }
+
+        private fun openDatabase(context: Context): ExpenseDatabase {
+            backupDatabaseBeforeDestructiveMigration(context)
+            val database = Room.databaseBuilder(
+                context.applicationContext,
+                ExpenseDatabase::class.java,
+                EXPENSE_DATABASE_NAME
+            )
+                .fallbackToDestructiveMigration(true)
+                .build()
+
+            return try {
+                database.openHelper.writableDatabase
+                database
+            } catch (error: Throwable) {
+                database.close()
+                throw error
+            }
+        }
+
+        /** Keep a recoverable copy before Room recreates tables for a missing migration. */
+        private fun backupDatabaseBeforeDestructiveMigration(context: Context) {
+            val databaseFile = context.getDatabasePath(EXPENSE_DATABASE_NAME)
+            if (!databaseFile.isFile) return
+
+            val oldVersion = SQLiteDatabase.openDatabase(
+                databaseFile.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE
+            ).use { database ->
+                val version = database.rawQuery("PRAGMA user_version", null).use { cursor ->
+                    check(cursor.moveToFirst()) { "Could not read the existing database version." }
+                    cursor.getInt(0)
+                }
+                if (version == EXPENSE_DATABASE_VERSION) return
+
+                val checkpointed = database.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { cursor ->
+                    check(cursor.moveToFirst()) { "Could not checkpoint the existing database." }
+                    cursor.getInt(0) == 0
+                }
+                check(checkpointed) { "Could not safely checkpoint the existing database before backup." }
+                version
+            }
+
+            val backupDirectory = File(context.filesDir, "database-backups")
+            check(backupDirectory.exists() || backupDirectory.mkdirs()) {
+                "Could not create the database backup directory."
+            }
+            val backupFile = File(
+                backupDirectory,
+                "suvidha-expenses-v${oldVersion}-to-v${EXPENSE_DATABASE_VERSION}.db"
+            )
+            val temporaryFile = File(backupDirectory, "${backupFile.name}.tmp")
+            databaseFile.copyTo(temporaryFile, overwrite = true)
+            if (!temporaryFile.renameTo(backupFile)) {
+                temporaryFile.copyTo(backupFile, overwrite = true)
+                temporaryFile.delete()
             }
         }
     }
 }
 
-val defaultExpenseCategories = listOf("Rent", "Utilities", "Food", "Transport", "Health", "Shopping", "Salary", "Earn", "Other")
+val defaultExpenseCategories get() = com.just_sri.suvidha.expenses.constants.defaultExpenseCategories
+
+// Earn and Salary share the same income behavior across entry, list, and detail screens.
+internal fun isIncomeCategory(category: String): Boolean =
+    category.equals("Earn", ignoreCase = true) || category.equals("Salary", ignoreCase = true)
 
 /** Draft rows produced by the full-screen add/split flows before they are persisted. */
 internal data class ExpenseDraft(val category: String = "Other", val amount: String = "", val note: String = "")

@@ -65,3 +65,5 @@ backup_local_db/
 *.db-wal
 *.db-shm
 
+# Agents
+.agents

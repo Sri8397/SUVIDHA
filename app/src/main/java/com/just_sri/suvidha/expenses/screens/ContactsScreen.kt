@@ -1,5 +1,9 @@
 package com.just_sri.suvidha.expenses
 
+import com.just_sri.suvidha.expenses.components.AppPrimaryButton
+import com.just_sri.suvidha.expenses.components.AppSearchBar
+import com.just_sri.suvidha.expenses.components.AppTopBar
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
@@ -12,17 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,10 +45,10 @@ internal fun ContactsScreen(
     existingFriendIds: Set<String>,
     assignedContactIds: Set<String> = emptySet(),
     friendToLink: FriendBalance? = null,
-    currentUserPhone: String? = null,
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onAddFriend: (id: String, name: String, number: String) -> Unit,
+    // Adding is unavailable while assigning a contact to an existing friend.
+    onAddFriend: (id: String, name: String, number: String) -> Unit = { _, _, _ -> },
     onLinkContact: (friend: FriendBalance, contactId: String, number: String) -> Unit = { _, _, _ -> }
 ) {
     BackHandler(onBack = onBack)
@@ -110,14 +110,8 @@ internal fun ContactsScreen(
         if (hasPermission) loadContacts()
     }
 
-    val ownE164 = remember(currentUserPhone) {
-        val phone = currentUserPhone ?: com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.phoneNumber
-        phone?.let { PhoneUtils.normalizeToE164(it) }
-    }
-
-    val availableContacts = remember(contacts, existingFriendIds, assignedContactIds, addedContactIds.toList(), friendToLink, ownE164) {
+    val availableContacts = remember(contacts, existingFriendIds, assignedContactIds, addedContactIds.toList(), friendToLink) {
         contacts.filterNot { contact ->
-            (ownE164 != null && contact.normalizedNumber == ownE164) ||
             if (friendToLink != null) {
                 contact.id in assignedContactIds
             } else {
@@ -139,45 +133,17 @@ internal fun ContactsScreen(
         modifier = modifier.fillMaxSize().background(Canvas).statusBarsPadding().navigationBarsPadding().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(top = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = Ink)
-            }
-            Column {
-                Text(if (friendToLink != null) "Assign contact" else "Start splitting", color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    if (hasPermission) "${availableContacts.size} contacts" else "Select people from your contacts",
-                    color = Muted,
-                    fontSize = 12.sp
-                )
-            }
-        }
+        AppTopBar(
+            title = if (friendToLink != null) "Assign contact" else "Start splitting",
+            subtitle = if (hasPermission) "${availableContacts.size} contacts" else "Select people from your contacts",
+            onBack = onBack,
+            modifier = Modifier.padding(top = 12.dp),
+            horizontalPadding = 0.dp,
+            verticalPadding = 0.dp
+        )
 
         if (hasPermission) {
-            Surface(shape = RoundedCornerShape(16.dp), color = CardSurface, border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight)) {
-                Row(
-                    Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Outlined.Search, contentDescription = null, tint = Muted, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
-                    BasicTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        singleLine = true,
-                        textStyle = androidx.compose.ui.text.TextStyle(color = Ink, fontSize = 15.sp),
-                        cursorBrush = SolidColor(Green),
-                        modifier = Modifier.weight(1f),
-                        decorationBox = { inner ->
-                            if (query.isBlank()) Text("Search contacts", color = Muted, fontSize = 15.sp)
-                            inner()
-                        }
-                    )
-                }
-            }
+            AppSearchBar(value = query, onValueChange = { query = it }, placeholder = "Search contacts")
             when {
                 loading -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Green)
@@ -247,9 +213,10 @@ internal fun ContactsScreen(
                 Spacer(Modifier.height(8.dp))
                 Text("Allow contact access to browse and search your phone contacts.", color = Muted, fontSize = 14.sp)
                 Spacer(Modifier.height(18.dp))
-                Button(onClick = { permissionLauncher.launch(Manifest.permission.READ_CONTACTS) }, colors = ButtonDefaults.buttonColors(containerColor = Green)) {
-                    Text("Show contacts", color = OffWhite)
-                }
+                AppPrimaryButton(
+                    text = "Show contacts",
+                    onClick = { permissionLauncher.launch(Manifest.permission.READ_CONTACTS) }
+                )
             }
         }
     }

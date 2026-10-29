@@ -1,0 +1,91 @@
+package com.just_sri.suvidha.expenses.constants
+
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.time.Instant
+import java.time.ZoneId
+import java.util.Locale
+
+/**
+ * Centralized constants, tokens, and formats for the SUVIDHA app.
+ */
+
+// ---------------------------------------------------------------------------
+// 1. Color Tokens
+// ---------------------------------------------------------------------------
+val Ink = Color(0xFF17231E)
+val Muted = Color(0xFF728078)
+val Green = Color(0xFF16845B)
+val Canvas = Color(0xFFEFF2EE)
+val CardSurface = Color(0xFFFAFBF8)
+val OffWhite = Color(0xFFF4F7F5)
+val BorderLight = Color(0xFFE2E7E2)
+val Danger = Color(0xFFB64C45)
+
+// ---------------------------------------------------------------------------
+// 2. Categories
+// ---------------------------------------------------------------------------
+val defaultExpenseCategories = listOf(
+    "Rent", "Utilities", "Food", "Transport", "Health", "Shopping", "Salary", "Earn", "Other"
+)
+
+// ---------------------------------------------------------------------------
+// 3. Currency Configuration
+// ---------------------------------------------------------------------------
+val LocalCurrency = compositionLocalOf { "₹" }
+
+val supportedCurrencies = listOf(
+    "₹" to "₹  Rupee",
+    "$" to "$  Dollar",
+    "€" to "€  Euro",
+    "£" to "£  Pound",
+    "¥" to "¥  Yen / Yuan",
+    "₩" to "₩  Won",
+    "CHF" to "CHF  Franc",
+    "AED" to "AED  Dirham",
+    "฿" to "฿  Baht",
+    "₱" to "₱  Peso",
+    "₫" to "₫  Dong",
+    "kr" to "kr  Krona / Krone"
+)
+
+// ---------------------------------------------------------------------------
+// 4. Timezone Configuration
+// ---------------------------------------------------------------------------
+val LocalZoneId = compositionLocalOf { ZoneId.systemDefault() }
+
+data class TimezoneOption(
+    val id: String,
+    val continent: String,
+    val city: String,
+    val offsetString: String
+)
+
+private val timezoneContinents = setOf(
+    "Africa", "America", "Antarctica", "Asia", "Atlantic", "Australia", "Europe", "Indian", "Pacific"
+)
+
+val timezoneIds: List<String> by lazy {
+    ZoneId.getAvailableZoneIds()
+        .filter { it.substringBefore('/') in timezoneContinents && '/' in it }
+        .sortedWith(compareBy<String>({ it.substringBefore('/') }, { it.substringAfter('/').replace('_', ' ') }))
+}
+
+fun timezoneOption(id: String, now: Instant = Instant.now()): TimezoneOption {
+    val offset = ZoneId.of(id).rules.getOffset(now)
+    val continent = id.substringBefore('/')
+    val city = id.substringAfter('/').replace('_', ' ')
+    val offsetString = if (offset.totalSeconds == 0) "UTC" else "UTC${offset.id}"
+    return TimezoneOption(id, continent, city, offsetString)
+}
+
+// ---------------------------------------------------------------------------
+// 5. Money Formatting
+// ---------------------------------------------------------------------------
+private val moneyFmt = ThreadLocal.withInitial {
+    DecimalFormat("#,##0.##", DecimalFormatSymbols(Locale("en", "IN")))
+}
+
+fun money(value: Double): String = moneyFmt.get()!!.format(value)

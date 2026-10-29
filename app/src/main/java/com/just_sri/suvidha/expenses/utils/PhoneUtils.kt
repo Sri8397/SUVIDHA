@@ -65,12 +65,6 @@ object PhoneUtils {
         return clean(raw)?.second ?: raw.trim()
     }
 
-    /**
-     * Returns the strict E.164 format "+91XXXXXXXXXX" for storage and Firestore querying.
-     */
-    fun normalizeToE164(raw: String?): String? {
-        return clean(raw)?.first
-    }
 
     private fun formatInternational(number: String): String {
         return if (number.length > 5) {

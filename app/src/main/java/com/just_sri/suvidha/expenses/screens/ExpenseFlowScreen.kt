@@ -1,7 +1,6 @@
-package com.just_sri.suvidha.expenses
+package com.just_sri.suvidha.expenses.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,15 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,6 +34,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.just_sri.suvidha.expenses.AmountEntryStep
+import com.just_sri.suvidha.expenses.Canvas
+import com.just_sri.suvidha.expenses.CardSurface
+import com.just_sri.suvidha.expenses.ExpenseDraft
+import com.just_sri.suvidha.expenses.FlowAmountHero
+import com.just_sri.suvidha.expenses.FlowSaveBar
+import com.just_sri.suvidha.expenses.FlowTopBar
+import com.just_sri.suvidha.expenses.Green
+import com.just_sri.suvidha.expenses.Ink
+import com.just_sri.suvidha.expenses.LocalCurrency
+import com.just_sri.suvidha.expenses.Muted
+import com.just_sri.suvidha.expenses.NoteEntryDialog
+import com.just_sri.suvidha.expenses.OffWhite
+import com.just_sri.suvidha.expenses.isIncomeCategory
+import com.just_sri.suvidha.expenses.money
 
 private enum class ExpenseStep {
     AMOUNT_INPUT,
@@ -160,7 +169,7 @@ private fun ExpenseDetailsStep(
     onSaveAndNew: () -> Unit
 ) {
     val amount = amountText.toDoubleOrNull() ?: 0.0
-    val isEarn = category.equals("Earn", true) || category.equals("Salary", true)
+    val isEarn = isIncomeCategory(category)
 
     Scaffold(
         containerColor = Canvas,
@@ -187,77 +196,14 @@ private fun ExpenseDetailsStep(
 
             // Hero amount — tap to go back to the keypad.
             item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Amount",
-                        color = Muted,
-                        fontSize = 14.sp
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onEditAmount() }
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = currency,
-                            color = Ink,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier.padding(end = 6.dp)
-                        )
-                        Text(
-                            text = money(amount),
-                            color = Ink,
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit amount",
-                            tint = Green,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Spacer(Modifier.height(10.dp))
-
-                    // "What's this for?" chip
-                    Surface(
-                        onClick = onOpenNoteDialog,
-                        color = CardSurface,
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, BorderLight),
-                        modifier = Modifier.height(38.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        ) {
-                            Text(
-                                text = if (note.isBlank()) "What’s this for?" else note,
-                                color = if (note.isBlank()) Muted else Ink,
-                                fontSize = 13.sp,
-                                fontWeight = if (note.isBlank()) FontWeight.Normal else FontWeight.SemiBold
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Edit note",
-                                tint = Green,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
-                }
+                FlowAmountHero(
+                    title = "Amount",
+                    currency = currency,
+                    amount = amount,
+                    note = note,
+                    onOpenNoteDialog = onOpenNoteDialog,
+                    onEditAmount = onEditAmount
+                )
             }
 
             // Category picker

@@ -1,5 +1,6 @@
 package com.just_sri.suvidha.expenses
 
+import com.just_sri.suvidha.expenses.components.AppOutlinedTextField
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,9 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.abs
 
-internal enum class SplitMode {
+private enum class SplitMode {
     EQUAL,
     EXACT,
     SHARES
@@ -116,7 +115,7 @@ internal fun SplitFlowScreen(
                 onAmountChange = { amountInput = it },
                 onBack = onBack,
                 onPrimary = {
-                    if (amountInput.toDoubleOrNull() != null && amountInput.toDouble() > 0) {
+                    if ((amountInput.toDoubleOrNull() ?: 0.0) > 0.0) {
                         splitMode = SplitMode.EQUAL
                         step = SplitStep.DISTRIBUTION
                     }
@@ -285,77 +284,17 @@ private fun DistributionStep(
             // Hero Amount Card
             item {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = if (splitMode == SplitMode.EXACT) "Total from friends" else "Enter amount to split",
-                        color = Muted,
-                        fontSize = 14.sp
+                    FlowAmountHero(
+                        title = if (splitMode == SplitMode.EXACT) "Total from friends" else "Enter amount to split",
+                        currency = currency,
+                        amount = computedTotal,
+                        note = note,
+                        onOpenNoteDialog = onOpenNoteDialog,
+                        onEditAmount = if (splitMode != SplitMode.EXACT) onEditAmount else null
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable(enabled = splitMode != SplitMode.EXACT) { onEditAmount() }
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = currency,
-                            color = Ink,
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier.padding(end = 6.dp)
-                        )
-                        Text(
-                            text = money(computedTotal),
-                            color = Ink,
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (splitMode != SplitMode.EXACT) {
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Edit amount",
-                                tint = Green,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(10.dp))
-
-                    // "What's this for?" Chip
-                    Surface(
-                        onClick = onOpenNoteDialog,
-                        color = CardSurface,
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, BorderLight),
-                        modifier = Modifier.height(38.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        ) {
-                            Text(
-                                text = if (note.isBlank()) "What’s this for?" else note,
-                                color = if (note.isBlank()) Muted else Ink,
-                                fontSize = 13.sp,
-                                fontWeight = if (note.isBlank()) FontWeight.Normal else FontWeight.SemiBold
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Edit note",
-                                tint = Green,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
 
                     Spacer(Modifier.height(14.dp))
 
@@ -607,17 +546,13 @@ private fun DistributionStep(
                         }
                         isSelected && splitMode == SplitMode.EXACT -> {
                             val currentAmount = exactAmounts[friend.id].orEmpty()
-                            OutlinedTextField(
+                            AppOutlinedTextField(
                                 value = currentAmount,
                                 onValueChange = { onExactAmountChange(friend.id, it) },
-                                placeholder = { Text("0") },
+                                placeholder = "0",
                                 prefix = { Text(currency, color = Muted, fontSize = 13.sp) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Green,
-                                    cursorColor = Green
-                                ),
                                 modifier = Modifier.width(110.dp)
                             )
                         }
@@ -698,7 +633,8 @@ private val avatarPalettes = listOf(
 @Composable
 private fun FriendAvatarBadge(name: String, modifier: Modifier = Modifier) {
     val initial = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?"
-    val colorPair = avatarPalettes[abs(name.hashCode()) % avatarPalettes.size]
+    // Mask the sign bit so Int.MIN_VALUE cannot produce an invalid palette index.
+    val colorPair = avatarPalettes[(name.hashCode() and Int.MAX_VALUE) % avatarPalettes.size]
     Box(
         modifier = modifier
             .size(40.dp)
