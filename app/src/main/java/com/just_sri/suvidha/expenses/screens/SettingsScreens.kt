@@ -69,6 +69,7 @@ internal fun SettingsMenu(
         SettingsRow("Timezone", tzSubtitle, icon = "🌐", onClick = { onOpen("timezone") })
         SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") })
         SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") })
+        SettingsRow("Encrypted backup", "Manual file recovery", icon = "B", onClick = { onOpen("backup") })
     }
 }
 
@@ -548,7 +549,7 @@ internal fun FriendsManagementPage(
     pendingDelete?.let { friend ->
         ConfirmDeleteDialog(
             title = "Remove friend?",
-            message = "${friend.name} and their balance will be removed. This cannot be undone.",
+            message = "${friend.name} and their local balance will be removed. Shared group membership and shared history remain. This cannot be undone.",
             confirmLabel = "Remove",
             onConfirm = { persist(editable.filterNot { it.id == friend.id }); pendingDelete = null },
             onDismiss = { pendingDelete = null }

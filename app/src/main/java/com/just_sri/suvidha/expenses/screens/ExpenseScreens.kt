@@ -585,7 +585,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            ScreenHeader("BAKAYA  /  FRIENDS", "Split expenses")
+            ScreenHeader("BAKAYA  /  FRIENDS", "Friends")
         }
         item {
             HeroBalanceCard(
@@ -672,7 +672,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
     pendingDelete?.let { friend ->
         ConfirmDeleteDialog(
             title = "Remove friend?",
-            message = "${friend.name} and their balance of ${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))} will be removed. This cannot be undone.",
+            message = "${friend.name} and their local balance of ${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))} will be removed. Shared group membership and shared history remain. This cannot be undone.",
             confirmLabel = "Remove",
             onConfirm = { onDeleteFriend(friend.id); pendingDelete = null },
             onDismiss = { pendingDelete = null }

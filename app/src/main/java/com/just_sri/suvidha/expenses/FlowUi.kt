@@ -69,7 +69,9 @@ internal fun AmountEntryStep(
     onBack: () -> Unit,
     onPrimary: () -> Unit,
     primaryLabel: String = "Next",
-    trailingAction: (@Composable () -> Unit)? = null
+    trailingAction: (@Composable () -> Unit)? = null,
+    primaryEnabled: Boolean? = null,
+    fractionDigits: Int = 2,
 ) {
     Column(
         modifier = Modifier
@@ -125,7 +127,7 @@ internal fun AmountEntryStep(
 
         Spacer(Modifier.weight(1f))
 
-        val isValid = (amountText.toDoubleOrNull() ?: 0.0) > 0.0
+        val isValid = primaryEnabled ?: ((amountText.toDoubleOrNull() ?: 0.0) > 0.0)
         AppPrimaryButton(
             text = primaryLabel,
             onClick = onPrimary,
@@ -137,7 +139,8 @@ internal fun AmountEntryStep(
 
         NumericKeypad(
             amountText = amountText,
-            onAmountChange = onAmountChange
+            onAmountChange = onAmountChange,
+            fractionDigits = fractionDigits,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -147,7 +150,8 @@ internal fun AmountEntryStep(
 @Composable
 internal fun NumericKeypad(
     amountText: String,
-    onAmountChange: (String) -> Unit
+    onAmountChange: (String) -> Unit,
+    fractionDigits: Int = 2,
 ) {
     val keys = listOf(
         listOf("1", "2", "3"),
@@ -172,7 +176,7 @@ internal fun NumericKeypad(
                             .height(56.dp)
                             .background(CardSurface, RoundedCornerShape(16.dp))
                             .clickable {
-                                handleKeyPress(key, amountText, onAmountChange)
+                                handleKeyPress(key, amountText, onAmountChange, fractionDigits)
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -189,21 +193,21 @@ internal fun NumericKeypad(
     }
 }
 
-private fun handleKeyPress(key: String, current: String, onChange: (String) -> Unit) {
+private fun handleKeyPress(key: String, current: String, onChange: (String) -> Unit, fractionDigits: Int) {
     when (key) {
         "⌫" -> {
             if (current.isNotEmpty()) onChange(current.dropLast(1))
         }
         "." -> {
-            if (!current.contains(".")) {
+            if (fractionDigits > 0 && !current.contains(".")) {
                 onChange(if (current.isEmpty()) "0." else "$current.")
             }
         }
         else -> {
-            // Max two decimal places.
+            // Personal flows default to two places; shared groups pass currency precision.
             if (current.contains(".")) {
                 val decimals = current.substringAfter(".")
-                if (decimals.length >= 2) return
+                if (decimals.length >= fractionDigits) return
             }
             if (current == "0") {
                 onChange(key)

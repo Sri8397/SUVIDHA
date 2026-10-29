@@ -12,7 +12,15 @@ Evolve SUVIDHA from a single-device, offline expense splitter into a private, re
 4. **What is the first release promise?** Recommended: encrypted invite-based group sync and manual encrypted export/import first. Do not promise automatic cross-device recovery until account linking, restore, key recovery, and delete/uninstall behavior are all proven.
 5. **What metadata may relays see?** Encryption can hide payload contents, but relays still see transport metadata such as event times, sizes, connections, and any unencrypted tags. Do not claim “zero knowledge” or metadata privacy without a concrete protocol and threat model.
 
-## Current foundation and gaps
+## Implementation status — 30 October 2026
+
+**Saved checkpoint:** The latest detailed outcome and exact resume point are in [HANDOFF.md](docs/peersplit/HANDOFF.md). Both variants are installed, 12 unit tests and 14 device tests pass, shared-group keypad/member linking is checked, and Friends has no + split action. Final normal/preview event-set reconciliation remains pending; later roadmap phases remain planned.
+
+The detailed status and evidence live in [the migration record](docs/peersplit/migration-record.md). Both `standard` (normal application ID) and `deviceTest` (separate preview application ID) build from the same sources. Unit checks and ten instrumentation checks on the physical OnePlus pass. Current code includes local identity, KeyPackage publication, group creation, Welcome ingestion into Room, expense/payment entry, encrypted MLS application messages, a durable ledger outbox, a durable Welcome outbox, and manual relay retry. The actual two-identity relay flow is being verified; this is not yet a completed product or release-security claim.
+
+Background scheduling, relay pagination and gap repair, group removal and epoch tests, Drive backup, and release hardening remain planned. No emulator is used for current checks.
+
+## Baseline before the migrations
 
 - The Android project uses Kotlin, Compose, coroutines, and Room. `ExpenseData.kt` stores expenses, friends, and per-friend split transactions.
 - `MainActivity.kt` currently calculates balances from unsettled rows and persists settlement by changing the original split row to `isSettled = true`. This works for one local device, but a shared replicated model should represent settlement as a separate immutable action rather than overwriting the earlier fact.
@@ -32,6 +40,20 @@ Compose UI
 ```
 
 All user actions commit to Room first. A committed shared action also writes an outbox record in the same Room transaction. Background sync only transports events; it never becomes the authority for what the UI displays. Incoming events are validated and deduplicated before they affect projections. Keep relay, identity, cryptography, and backup behind interfaces so no screen or DAO depends on a specific provider.
+
+### Review of the supplied architecture diagram
+
+Keep its high-level boundary between the Android client, local storage, background sync, relay infrastructure, and optional backup. Make these label/architecture corrections before using it as an implementation specification:
+
+- **“Decentralized” still means remote services.** Nostr relays are independently operated servers. They receive and store/publish events according to their policies, can be unavailable or prune history, and observe connection and event metadata. Label the link “relay publish/fetch (encrypted event payload)” rather than generic “P2P gossip”; direct device-to-device gossip is a separate, later transport.
+- **Do not promise “zero knowledge.”** Payload encryption can prevent a relay from reading transaction content if key handling is correct, but event timing, size, network address, and any public tags/filters can leak information. Say “relay cannot decrypt payload content” only after the event envelope and metadata have been reviewed.
+- **Room is not encrypted by default.** Room uses SQLite; the “encrypted local DB” box requires an explicitly selected and maintained database-encryption implementation, key-wrapping/storage design, migration plan, and recovery behavior. Do not label the database encrypted until this exists and is verified. Android Keystore can protect key material but does not encrypt the Room file by itself.
+- **Keep cryptography labels protocol-accurate.** Do not show Ed25519 as the signer for standard NIP-01 events; NIP-01 uses secp256k1 Schnorr. NIP-44 is pairwise encryption, not the pictured generic AES-GCM group layer. The group envelope/key-epoch protocol is a distinct design decision.
+- **“Local CRDT log” needs domain rules.** Show an append-only domain event log and deterministic projection until specific event types have proven CRDT semantics. In particular, settlement must reference exact debt items and membership/key changes must identify their epoch.
+- **Backup is not the relay sync path.** Drive snapshots are an optional recovery copy, not live one-way replication. A successful backup needs a versioned manifest, integrity validation, and a way to keep the previous valid snapshot if upload is interrupted. AppData's hidden, app-specific behavior and uninstall deletion must be reflected in the recovery UX.
+- **Rename “custom recovery data” to a concrete secret model.** Decide whether the user creates a recovery passphrase, uses a generated recovery key, or both. The secret must not be stored beside the encrypted snapshot; recovery instructions and loss consequences need to be explicit.
+
+Use the diagram as a conceptual boundary map only. A revised diagram should mark protocol-specific cryptography and local database encryption as “selected and implemented” only after their decisions and verification gates are complete.
 
 ### Data model direction
 

@@ -8,16 +8,23 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 android {
     namespace = "com.just_sri.suvidha.expenses"
-    compileSdk = 35
+    compileSdk = 37
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 
     defaultConfig {
         applicationId = "com.just_sri.suvidha.expenses"
         minSdk = 26
-    targetSdk = 35
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+        manifestPlaceholders["appLabel"] = "Suvidha Expenses"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
     compileOptions {
@@ -55,6 +62,19 @@ android {
         }
     }
 
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("standard") {
+            dimension = "distribution"
+        }
+        create("deviceTest") {
+            dimension = "distribution"
+            applicationIdSuffix = ".peersplitpreview"
+            versionNameSuffix = "-peersplitpreview"
+            manifestPlaceholders["appLabel"] = "Suvidha PeerSplit Test"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -73,6 +93,7 @@ kotlin { jvmToolchain(17) }
 
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2025.02.00"))
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
@@ -82,6 +103,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.room:room-runtime:2.7.0")
     implementation("androidx.room:room-ktx:2.7.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.1")
+    implementation("com.vitorpamplona.marmot:marmot-jvm:2.2.1")
     ksp("androidx.room:room-compiler:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.room:room-testing:2.7.0")
 }

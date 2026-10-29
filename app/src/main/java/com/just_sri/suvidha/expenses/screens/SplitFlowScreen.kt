@@ -427,7 +427,7 @@ private fun DistributionStep(
                             }
 
                             if (splitMode == SplitMode.SHARES && includeMyself) {
-                                StepperControl(
+                                SplitShareStepper(
                                     value = myShares,
                                     onValueChange = onMySharesChange
                                 )
@@ -539,7 +539,7 @@ private fun DistributionStep(
                     when {
                         isSelected && splitMode == SplitMode.SHARES -> {
                             val currentShares = friendShares[friend.id] ?: 1
-                            StepperControl(
+                            SplitShareStepper(
                                 value = currentShares,
                                 onValueChange = { onFriendSharesChange(friend.id, it) }
                             )
@@ -588,7 +588,7 @@ private fun SplitTabItem(
 }
 
 @Composable
-private fun StepperControl(
+internal fun SplitShareStepper(
     value: Int,
     onValueChange: (Int) -> Unit
 ) {

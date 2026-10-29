@@ -49,7 +49,9 @@ internal fun ContactsScreen(
     onBack: () -> Unit,
     // Adding is unavailable while assigning a contact to an existing friend.
     onAddFriend: (id: String, name: String, number: String) -> Unit = { _, _, _ -> },
-    onLinkContact: (friend: FriendBalance, contactId: String, number: String) -> Unit = { _, _, _ -> }
+    onLinkContact: (friend: FriendBalance, contactId: String, number: String) -> Unit = { _, _, _ -> },
+    titleOverride: String? = null,
+    actionLabel: String? = null,
 ) {
     BackHandler(onBack = onBack)
     val context = LocalContext.current
@@ -134,7 +136,7 @@ internal fun ContactsScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         AppTopBar(
-            title = if (friendToLink != null) "Assign contact" else "Start splitting",
+            title = titleOverride ?: if (friendToLink != null) "Assign contact" else "Start splitting",
             subtitle = if (hasPermission) "${availableContacts.size} contacts" else "Select people from your contacts",
             onBack = onBack,
             modifier = Modifier.padding(top = 12.dp),
@@ -198,7 +200,7 @@ internal fun ContactsScreen(
                                     containerColor = Green,
                                     contentColor = OffWhite
                                 )
-                            ) { Text(if (friendToLink != null) "Assign" else "Add", fontWeight = FontWeight.SemiBold) }
+                            ) { Text(actionLabel ?: if (friendToLink != null) "Assign" else "Add", fontWeight = FontWeight.SemiBold) }
                         }
                     }
                 }

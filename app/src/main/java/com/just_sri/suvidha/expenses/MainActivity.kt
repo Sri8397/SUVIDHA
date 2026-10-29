@@ -1,6 +1,7 @@
 package com.just_sri.suvidha.expenses
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -35,19 +36,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import com.just_sri.suvidha.expenses.screens.ExpenseFlowScreen
+import com.just_sri.suvidha.expenses.screens.BackupManagementPage
+import com.just_sri.suvidha.expenses.screens.SharedGroupsPage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.ZoneId
-import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     private val prefs by lazy { getSharedPreferences("expense_settings", Context.MODE_PRIVATE) }
+    private var currentIntent by mutableStateOf<Intent?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        currentIntent = intent
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        currentIntent = intent
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
                 android.graphics.Color.TRANSPARENT,
@@ -62,6 +71,8 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = true
             isAppearanceLightNavigationBars = true
         }
+
+        SyncNotificationHelper.ensureChannel(this)
 
         setContent {
             var databaseState by remember {
@@ -98,20 +109,11 @@ class MainActivity : ComponentActivity() {
                 )
                 is DatabaseStartupState.Ready -> {
                 val database = state.database
-                val dao = remember(database) { database.expenses() }
-                val friendDao = remember(database) { database.friends() }
+                val repository = remember(database) { ExpenseRepository(database) }
                 val splitDao = remember(database) { database.splitTransactions() }
 
-                val expenses by dao.observeAll().collectAsStateWithLifecycle(emptyList())
-                val allSplits by splitDao.observeAll().collectAsStateWithLifecycle(emptyList())
-                val rawFriends by friendDao.observeAll().collectAsStateWithLifecycle(emptyList())
-                val friends = remember(rawFriends, allSplits) {
-                    val unsettledByFriend = allSplits.filterNot { it.isSettled }.groupBy { it.friendId }
-                    rawFriends.map { friend ->
-                        val trueBalance = unsettledByFriend[friend.id]?.sumOf { it.amount } ?: 0.0
-                        friend.withAmount(trueBalance)
-                    }
-                }
+                val expenses by repository.observeExpenses().collectAsStateWithLifecycle(emptyList())
+                val friends by repository.observeFriendsWithBalances().collectAsStateWithLifecycle(emptyList())
 
                 var categories by remember {
                     mutableStateOf(
@@ -138,7 +140,13 @@ class MainActivity : ComponentActivity() {
                     LocalZoneId provides effectiveZoneId
                 ) {
                     MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
+                        val activeIntent = currentIntent ?: intent
+                        val initialTab = remember(activeIntent) {
+                            if (activeIntent?.getStringExtra("navigate_to") == "shared_groups") 2 else 0
+                        }
                         ExpenseHome(
+                            initialTab = initialTab,
+                            database = database,
                             expenses = expenses,
                             friends = friends,
                             categories = categories,
@@ -158,96 +166,46 @@ class MainActivity : ComponentActivity() {
                                 prefs.edit().putString("timezone_id", tz).apply()
                             },
                             onFriendsChange = { updated ->
-                                lifecycleScope.launch {
-                                    val ids = updated.map { it.id }.toSet()
-                                    friends.filter { it.id !in ids }.forEach { friendDao.delete(it.id) }
-                                    updated.forEach { friendDao.save(it) }
+                                scope.launch {
+                                    repository.replaceFriends(friends, updated)
                                 }
                             },
                             onAssignContact = { friend, contactId, number ->
-                                lifecycleScope.launch {
+                                scope.launch {
                                     val linkedFriend = friend.copy(contactId = contactId, phoneNumber = number)
-                                    friendDao.save(linkedFriend)
+                                    repository.saveFriend(linkedFriend)
                                     Toast.makeText(this@MainActivity, "Contact linked to ${friend.name}.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onDeleteFriend = { id ->
-                                lifecycleScope.launch {
-                                    friendDao.delete(id)
+                                scope.launch {
+                                    repository.deleteFriend(id)
                                 }
                             },
                             onAdd = { draft ->
-                                lifecycleScope.launch {
-                                    dao.insert(
-                                        Expense(
-                                            id = UUID.randomUUID().toString(),
-                                            category = draft.category,
-                                            amount = draft.amount.toDouble(),
-                                            description = draft.note.ifBlank { draft.category },
-                                            date = System.currentTimeMillis()
-                                        )
-                                    )
+                                scope.launch {
+                                    repository.addExpense(draft)
                                 }
                             },
                             onDelete = { id ->
-                                lifecycleScope.launch {
-                                    dao.delete(id)
+                                scope.launch {
+                                    repository.deleteExpense(id)
                                 }
                             },
                             onSaveSplitTransactions = { entries, friendsMap ->
-                                lifecycleScope.launch {
-                                    val txns = entries.map { entry ->
-                                        SplitTransaction(
-                                            id = UUID.randomUUID().toString(),
-                                            friendId = entry.friendId,
-                                            amount = entry.amount.toDouble(),
-                                            note = entry.note.trim(),
-                                            date = System.currentTimeMillis()
-                                        )
-                                    }
-                                    splitDao.insertAll(txns)
-                                    val affectedFriendIds = entries.map { it.friendId }.distinct()
-                                    affectedFriendIds.forEach { friendId ->
-                                        val friend = friendsMap[friendId] ?: friends.firstOrNull { it.id == friendId }
-                                        if (friend != null) {
-                                            friendDao.save(friend.copy(updatedAt = System.currentTimeMillis()))
-                                        }
-                                    }
+                                scope.launch {
+                                    repository.saveSplitTransactions(entries, friendsMap, friends)
                                 }
                             },
                             onDeleteSplitTransaction = { txn ->
-                                lifecycleScope.launch {
-                                    splitDao.delete(txn.id)
-                                    val friend = friends.firstOrNull { it.id == txn.friendId }
-                                    if (friend != null) {
-                                        friendDao.save(friend.copy(updatedAt = System.currentTimeMillis()))
-                                    }
+                                scope.launch {
+                                    repository.deleteSplitTransaction(txn, friends)
                                 }
                             },
                             onSettleSplitTransaction = { txn ->
-                                lifecycleScope.launch {
-                                    val now = System.currentTimeMillis()
-                                    val friend = friends.firstOrNull { it.id == txn.friendId }
-                                    val friendName = friend?.name ?: "Friend"
-
-                                    val settledTxn = txn.copy(isSettled = true, settledAt = now)
-                                    splitDao.save(settledTxn)
-                                    if (friend != null) {
-                                        friendDao.save(friend.copy(updatedAt = now))
-                                    }
-
-                                    if (txn.amount != 0.0) {
-                                        val isOwed = txn.amount > 0
-                                        dao.insert(
-                                            Expense(
-                                                id = UUID.randomUUID().toString(),
-                                                category = if (isOwed) "Earn" else "Other",
-                                                amount = kotlin.math.abs(txn.amount),
-                                                description = "Settled ${if (isOwed) "by" else "to"} $friendName: ${txn.note.ifBlank { "Split" }}",
-                                                date = now
-                                            )
-                                        )
-                                    }
+                                scope.launch {
+                                    val friendName = friends.firstOrNull { it.id == txn.friendId }?.name ?: "Friend"
+                                    repository.settleSplitTransaction(txn, friendName, friends)
                                 }
                             }
                         )
@@ -328,6 +286,8 @@ private fun DatabaseRecoveryScreen(
 
 @Composable
 private fun ExpenseHome(
+    initialTab: Int = 0,
+    database: ExpenseDatabase,
     expenses: List<Expense>,
     friends: List<FriendBalance>,
     categories: List<String>,
@@ -346,7 +306,7 @@ private fun ExpenseHome(
     onDeleteSplitTransaction: (SplitTransaction) -> Unit,
     onSettleSplitTransaction: (SplitTransaction) -> Unit
 ) {
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by remember(initialTab) { mutableIntStateOf(initialTab) }
     var settingsPage by remember { mutableStateOf<String?>(null) }
     var showAddExpense by remember { mutableStateOf(false) }
     var showSplitForm by remember { mutableStateOf(false) }
@@ -447,12 +407,18 @@ private fun ExpenseHome(
                                 NavigationBarItem(
                                     selected = tab == 1,
                                     onClick = { tab = 1 },
-                                    icon = { Icon(painterResource(R.drawable.ic_community), contentDescription = "Split", modifier = Modifier.size(33.dp)) },
+                                    icon = { Icon(painterResource(R.drawable.ic_community), contentDescription = "Friends", modifier = Modifier.size(33.dp)) },
                                     colors = itemColors
                                 )
                                 NavigationBarItem(
                                     selected = tab == 2,
                                     onClick = { tab = 2 },
+                                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Groups", modifier = Modifier.size(26.dp)) },
+                                    colors = itemColors
+                                )
+                                NavigationBarItem(
+                                    selected = tab == 3,
+                                    onClick = { tab = 3 },
                                     icon = { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings", modifier = Modifier.size(26.dp)) },
                                     colors = itemColors
                                 )
@@ -462,7 +428,7 @@ private fun ExpenseHome(
                 }
             },
             floatingActionButton = {
-                if (tab == 0 || tab == 1 || viewingFriend != null) {
+                if ((tab == 0 || tab == 1) && viewingFriend == null) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (tab == 1 && viewingFriend == null) {
                             SmallFloatingActionButton(
@@ -474,14 +440,8 @@ private fun ExpenseHome(
                                 Icon(Icons.Outlined.Person, contentDescription = "Add from contacts", modifier = Modifier.size(22.dp))
                             }
                         }
-                        SmallFloatingActionButton(
-                            onClick = {
-                                val vf = viewingFriend
-                                if (vf != null) { selectedSplitFriend = vf.id; showSplitForm = true }
-                                else if (tab == 0) showAddExpense = true
-                                else if (friends.isEmpty()) { tab = 2; settingsPage = "friends" }
-                                else { selectedSplitFriend = null; showSplitForm = true }
-                            },
+                        if (tab == 0) SmallFloatingActionButton(
+                            onClick = { showAddExpense = true },
                             containerColor = Green,
                             contentColor = OffWhite,
                             shape = CircleShape
@@ -514,7 +474,9 @@ private fun ExpenseHome(
                     onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true },
                     onViewFriend = { friend -> viewingFriend = friend }
                 )
+                tab == 2 -> SharedGroupsPage(database, Modifier.padding(padding))
                 else -> when (settingsPage) {
+                    "backup" -> BackupManagementPage(database, Modifier.padding(padding), onBack = { settingsPage = null })
                     "currency" -> CurrencyManagementPage(currency, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = { onCurrencyChange(it); settingsPage = null })
                     "timezone" -> TimezoneManagementPage(timezoneId, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = { onTimezoneChange(it); settingsPage = null })
                     "categories" -> CategoryManagementPage(categories, Modifier.padding(padding), onBack = { settingsPage = null }, onSave = onCategoriesChange)
@@ -533,6 +495,6 @@ private fun ExpenseHome(
         }
         BackHandler(enabled = viewingFriend != null) { viewingFriend = null }
         BackHandler(enabled = showContactPicker) { showContactPicker = false }
-        BackHandler(enabled = tab == 2 && settingsPage != null) { settingsPage = null }
+        BackHandler(enabled = tab == 3 && settingsPage != null) { settingsPage = null }
     }
 }
