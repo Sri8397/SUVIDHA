@@ -18,13 +18,14 @@ android {
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 
     defaultConfig {
-        applicationId = "com.just_sri.suvidha.expenses"
+        applicationId = "com.just_sri.suvidhaapp"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        targetSdk = 36
+        versionCode = 12
+        versionName = "1.0.2"
         manifestPlaceholders["appLabel"] = "Suvidha Expenses"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk { debugSymbolLevel = "FULL" }
     }
     buildFeatures { compose = true }
     compileOptions {
@@ -77,7 +78,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
