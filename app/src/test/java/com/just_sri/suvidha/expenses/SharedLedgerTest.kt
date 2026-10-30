@@ -127,6 +127,31 @@ class SharedLedgerTest {
     }
 
     @Test
+    fun ownerSoftDeletesOnlyTheOutstandingDebtAndKeepsHistory() {
+        val payment = SharedLedgerEvent("payment", "group-1", "bob", setOf("expense-event"), 20,
+            SharedLedgerAction.SettlementRecorded(listOf(SharedSettlementAllocation("debt-1", 350))))
+        val removal = SharedLedgerEvent("removal", "group-1", "owner", setOf("payment"), 30,
+            SharedLedgerAction.DebtRemoved("debt-1"))
+        val projection = projectSharedLedger("group-1", listOf(removal, payment, expenseEvent), "INR", "owner")
+        assertEquals(setOf("expense-event", "payment", "removal"), projection.acceptedEventIds)
+        assertEquals(0L, projection.debtById.getValue("debt-1").remainingAmountMinor)
+        assertTrue(projection.balanceByMemberId.isEmpty())
+        assertTrue(projection.rejectedEvents.isEmpty())
+    }
+
+    @Test
+    fun softDeleteRequiresOwnerAndCausalExpense() {
+        val removal = SharedLedgerEvent("removal", "group-1", "bob", setOf("expense-event"), 30,
+            SharedLedgerAction.DebtRemoved("debt-1"))
+        val unauthorized = projectSharedLedger("group-1", listOf(expenseEvent, removal), "INR", "owner")
+        assertTrue("removal" in unauthorized.rejectedEvents)
+        assertEquals(1000L, unauthorized.debtById.getValue("debt-1").remainingAmountMinor)
+        val nonCausal = removal.copy(actorMemberId = "owner", parentEventIds = emptySet())
+        val projection = projectSharedLedger("group-1", listOf(expenseEvent, nonCausal), "INR", "owner")
+        assertTrue("removal" in projection.rejectedEvents)
+    }
+
+    @Test
     fun mismatchedGroupCurrencyIsRejected() {
         val projection = projectSharedLedger("group-1", listOf(expenseEvent), "USD")
 

@@ -1,5 +1,9 @@
 package com.just_sri.suvidha.expenses
 
+import com.just_sri.suvidha.expenses.components.AppListRow
+import com.just_sri.suvidha.expenses.components.AppListStyle
+import com.just_sri.suvidha.expenses.components.AppSectionHeader
+import com.just_sri.suvidha.expenses.components.AppTopBar
 import com.just_sri.suvidha.expenses.components.AppBackButton
 import com.just_sri.suvidha.expenses.components.AppConfirmDialog
 import com.just_sri.suvidha.expenses.components.AppInputDialog
@@ -43,15 +47,13 @@ internal fun SettingsMenu(
     modifier: Modifier,
     onOpen: (String) -> Unit
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .then(modifier)
-            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    LazyColumn(
+        Modifier.fillMaxSize().then(modifier),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
     ) {
-        ScreenHeader("SETTINGS", "Manage preferences")
-        SettingsRow("Currency", currency, icon = "¤", onClick = { onOpen("currency") })
+        item { ScreenHeader("SETTINGS", "Preferences") }
+        item { SettingsRow("Currency", currency, icon = "¤", onClick = { onOpen("currency") }) }
         val tzSubtitle = if (timezoneId == "AUTO") {
             val devZone = ZoneId.systemDefault()
             val offset = try {
@@ -66,118 +68,44 @@ internal fun SettingsMenu(
             } catch (_: Exception) { "" }
             "${timezoneId.replace('_', ' ')} · $offset"
         }
-        SettingsRow("Timezone", tzSubtitle, icon = "🌐", onClick = { onOpen("timezone") })
-        SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") })
-        SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") })
-        SettingsRow("Encrypted backup", "Manual file recovery", icon = "B", onClick = { onOpen("backup") })
+        item { SettingsRow("Timezone", tzSubtitle, icon = "🌐", onClick = { onOpen("timezone") }) }
+        item { SettingsRow("Categories", "$categoryCount expense categories", icon = "C", onClick = { onOpen("categories") }) }
+        item { SettingsRow("Friends", "$friendCount friends", icon = "F", onClick = { onOpen("friends") }) }
+        item { SettingsRow("Encrypted backup", "Manual file recovery", icon = "B", onClick = { onOpen("backup") }) }
     }
 }
 
 @Composable
 private fun SettingsRow(title: String, subtitle: String, icon: String = title.take(1), onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(CardSurface, RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(icon, color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-            Text(title, color = Ink, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            Spacer(Modifier.height(2.dp))
-            Text(subtitle, color = Muted, fontSize = 12.sp)
-        }
-        Icon(
-            Icons.AutoMirrored.Outlined.ArrowForward,
-            contentDescription = null,
-            tint = Muted,
-            modifier = Modifier.size(18.dp)
-        )
-    }
+    AppListRow(title = title, subtitle = subtitle, leadingText = icon, onClick = onClick)
 }
 
 @Composable
 private fun SettingsSubHeader(title: String, modifier: Modifier = Modifier, onBack: () -> Unit, onDone: (() -> Unit)? = null) {
-    Row(
-        modifier = Modifier.fillMaxWidth().then(modifier),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.size(36.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Back",
-                tint = Green
-            )
+    AppTopBar(title, onBack, modifier, horizontalPadding = 0.dp, verticalPadding = 0.dp, actions = {
+        if (onDone != null) IconButton(onClick = onDone) {
+            Icon(Icons.Outlined.Check, contentDescription = "Done", tint = Green)
         }
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = title,
-            color = Ink,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
-        if (onDone != null) {
-            IconButton(
-                onClick = onDone,
-                modifier = Modifier.size(40.dp).background(Green, CircleShape)
-            ) {
-                Icon(Icons.Outlined.Check, contentDescription = "Done", tint = OffWhite)
-            }
-        }
-    }
+    })
 }
 
 @Composable
 internal fun CurrencyManagementPage(current: String, modifier: Modifier, onBack: () -> Unit, onSave: (String) -> Unit) {
-    LazyColumn(
-        Modifier.fillMaxSize().then(modifier),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item { SettingsSubHeader("Currency", onBack = onBack) }
-        item { Text("Select your currency", color = Muted, fontSize = 14.sp) }
-        items(supportedCurrencies, key = { it.first }) { (symbol, label) ->
-            val selected = symbol == current
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        if (selected) Color(0xFFEAF4EE) else CardSurface,
-                        RoundedCornerShape(16.dp)
-                    )
-                    .clickable { onSave(symbol) }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    Modifier.size(44.dp).background(
-                        if (selected) Green else Color(0xFFEAF4EE), CircleShape
-                    ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(symbol, color = if (selected) OffWhite else Green, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                }
-                Text(
-                    label,
-                    color = if (selected) Ink else Muted,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(start = 14.dp).weight(1f)
+    Column(Modifier.fillMaxSize().then(modifier)) {
+        SettingsSubHeader("Currency", Modifier.padding(horizontal = 20.dp, vertical = 12.dp), onBack = onBack)
+        LazyColumn(
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing),
+        ) {
+            item { Text("Select your currency", color = Muted, fontSize = 14.sp) }
+            items(supportedCurrencies, key = { it.first }) { (symbol, label) ->
+                AppListRow(
+                    title = label.substringAfter("  ", label),
+                    leadingText = symbol,
+                    onClick = { onSave(symbol) },
+                    trailing = { if (symbol == current) Icon(Icons.Outlined.Check, contentDescription = "Selected", tint = Green) },
                 )
-                if (selected) {
-                    Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                }
             }
         }
     }
@@ -220,7 +148,7 @@ internal fun TimezoneManagementPage(
       LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
       ) {
         item {
             AppSearchBar(
@@ -245,45 +173,13 @@ internal fun TimezoneManagementPage(
         if (showAuto) {
             item {
                 val isSelected = current == "AUTO"
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (isSelected) Color(0xFFEAF4EE) else CardSurface,
-                            RoundedCornerShape(16.dp)
-                        )
-                        .clickable { onSave("AUTO") }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(44.dp).background(
-                            if (isSelected) Green else Color(0xFFEAF4EE), CircleShape
-                        ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("🌐", fontSize = 16.sp)
-                    }
-                    Column(
-                        Modifier.padding(horizontal = 14.dp).weight(1f)
-                    ) {
-                        Text(
-                            "Automatic (Device Time)",
-                            color = if (isSelected) Ink else Muted,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            fontSize = 15.sp
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            "Current device timezone: ${defaultDeviceZone.id.replace('_', ' ')} · $defaultDeviceOffset",
-                            color = Muted,
-                            fontSize = 12.sp
-                        )
-                    }
-                    if (isSelected) {
-                        Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
+                AppListRow(
+                    title = "Automatic",
+                    subtitle = "${defaultDeviceZone.id.replace('_', ' ')} · $defaultDeviceOffset",
+                    leadingText = "A",
+                    onClick = { onSave("AUTO") },
+                    trailing = { if (isSelected) Icon(Icons.Outlined.Check, contentDescription = "Selected", tint = Green) },
+                )
             }
         }
 
@@ -304,60 +200,13 @@ internal fun TimezoneManagementPage(
             items(filteredIds, key = { it }) { timezoneId ->
                 val option = remember(timezoneId) { timezoneOption(timezoneId) }
                 val isSelected = current == option.id
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (isSelected) Color(0xFFEAF4EE) else CardSurface,
-                            RoundedCornerShape(16.dp)
-                        )
-                        .clickable { onSave(option.id) }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(44.dp).background(
-                            if (isSelected) Green else Color(0xFFEAF4EE), CircleShape
-                        ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            option.continent.take(2).uppercase(),
-                            color = if (isSelected) OffWhite else Green,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                    }
-                    Column(
-                        Modifier.padding(horizontal = 14.dp).weight(1f)
-                    ) {
-                        Text(
-                            "${option.city} (${option.continent})",
-                            color = if (isSelected) Ink else Muted,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 14.sp
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            option.id,
-                            color = Muted.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                    }
-                    Text(
-                        option.offsetString,
-                        color = if (isSelected) Green else Muted,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        modifier = Modifier
-                            .background(if (isSelected) Color(0xFFD4EAD9) else Color(0xFFEFF2EE), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                    if (isSelected) {
-                        Spacer(Modifier.width(8.dp))
-                        Text("✓", color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                }
+                AppListRow(
+                    title = option.city,
+                    subtitle = "${option.continent} · ${option.offsetString}",
+                    leadingText = option.continent.take(2).uppercase(),
+                    onClick = { onSave(option.id) },
+                    trailing = { if (isSelected) Icon(Icons.Outlined.Check, contentDescription = "Selected", tint = Green) },
+                )
             }
         }
       }
@@ -380,9 +229,9 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
         ) {
-        item { Text("Expense categories", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        item { AppSectionHeader("Expense categories", editable.size) }
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 AppTextInput(
@@ -414,13 +263,11 @@ internal fun CategoryManagementPage(categories: List<String>, modifier: Modifier
                 onDeleteRequested = { if (!category.equals("Other", true)) pendingDelete = category },
                 canDelete = !category.equals("Other", true)
             ) {
-                Row(
-                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(14.dp)).padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(category, modifier = Modifier.weight(1f), color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                    if (category.equals("Other", true)) Text("Default", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
+                AppListRow(
+                    title = category,
+                    subtitle = if (category.equals("Other", true)) "Default category" else null,
+                    onClick = { editingCategory = category; editCategoryText = category },
+                )
             }
         }
         item {
@@ -476,7 +323,7 @@ internal fun FriendsManagementPage(
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
         ) {
         item { Text("People you split expenses with", color = Muted, fontSize = 14.sp) }
         item {
@@ -509,39 +356,16 @@ internal fun FriendsManagementPage(
                 onEditRequested = { editingFriend = friend; editFriendText = friend.name },
                 onDeleteRequested = { pendingDelete = friend }
             ) {
-                Row(
-                    Modifier.fillMaxWidth().background(CardSurface, RoundedCornerShape(14.dp)).padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(friend.name, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                        friend.phoneNumber?.takeIf { it.isNotBlank() }?.let {
-                            Text(PhoneUtils.formatDisplay(it), color = Muted, fontSize = 12.sp)
-                        }
-                    }
-                    if (friend.contactId == null) {
-                        Box(
-                            modifier = Modifier
-                                .height(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onAssignContact(friend) }
-                                .padding(horizontal = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Assign contact",
-                                color = Green,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier
-                                    .background(Color(0xFFEAF4EE), RoundedCornerShape(10.dp))
-                                    .padding(horizontal = 8.dp, vertical = 6.dp)
-                            )
-                        }
-                    } else {
-                        Text("Assigned", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp))
-                    }
-                }
+                AppListRow(
+                    title = friend.name,
+                    subtitle = friend.phoneNumber?.takeIf { it.isNotBlank() }?.let { PhoneUtils.formatDisplay(it) }
+                        ?: if (friend.contactId != null) "Contact linked" else "No contact linked",
+                    trailing = {
+                        if (friend.contactId == null) TextButton(onClick = { onAssignContact(friend) }) { Text("Link", color = Green) }
+                        else Icon(Icons.Outlined.Check, contentDescription = "Contact linked", tint = Green, modifier = Modifier.size(18.dp))
+                    },
+                    onClick = { editingFriend = friend; editFriendText = friend.name },
+                )
             }
         }
         }

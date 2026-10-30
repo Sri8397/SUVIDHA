@@ -3,6 +3,10 @@ package com.just_sri.suvidha.expenses
 import android.app.DatePickerDialog
 import android.content.Intent
 import com.just_sri.suvidha.expenses.components.AppConfirmDialog
+import com.just_sri.suvidha.expenses.components.AppListRow
+import com.just_sri.suvidha.expenses.components.AppListStyle
+import com.just_sri.suvidha.expenses.components.AppSectionHeader
+import com.just_sri.suvidha.expenses.components.AppEmptyState
 import com.just_sri.suvidha.expenses.components.AppSwipeItem
 import com.just_sri.suvidha.expenses.components.DetailField
 import com.just_sri.suvidha.expenses.components.ScreenHeader
@@ -52,13 +56,6 @@ import java.util.Locale
 private val detailTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy · hh:mm:ss a", Locale.getDefault())
 private val rowDateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
 private val rowDateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy, h:mm a", Locale.getDefault())
-
-private fun rowAmountFontSize(length: Int) = when {
-    length > 20 -> 12.sp
-    length > 15 -> 13.sp
-    length > 11 -> 14.sp
-    else -> 15.sp
-}
 
 private fun Modifier.verticalScrollbar(
     scrollState: androidx.compose.foundation.ScrollState,
@@ -339,7 +336,7 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
     LazyColumn(
         modifier = Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
     ) {
         item {
             Row(
@@ -394,23 +391,11 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
             )
         }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val headerTitle = if (hasSelection) {
-                    val periodText = periodLabel(periodMode, displaySpan, compact = true)
-                    if (activeSection == "Spend") "Expenses · $periodText  ·  ${visible.size}" else "Earned · $periodText  ·  ${visible.size}"
-                } else {
-                    if (activeSection == "Spend") "Recent expenses  ·  ${spendExpenses.size}" else "Earned records  ·  ${earnExpenses.size}"
-                }
-                Text(
-                    headerTitle,
-                    color = Ink,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            val headerTitle = if (hasSelection) {
+                val periodText = periodLabel(periodMode, displaySpan, compact = true)
+                if (activeSection == "Spend") "Expenses · $periodText" else "Earned · $periodText"
+            } else if (activeSection == "Spend") "Recent expenses" else "Earned records"
+            AppSectionHeader(headerTitle, visible.size)
             if (activeSection == "Spend") {
                 val availableCategories = listOf("All") + categories.filter { !it.equals("Earn", true) }
                 Spacer(Modifier.height(10.dp))
@@ -518,61 +503,14 @@ internal fun ExpensesPage(expenses: List<Expense>, categories: List<String>, mod
 @Composable
 private fun ExpenseRow(expense: Expense, zoneId: ZoneId, onClick: (() -> Unit)? = null) {
     val isEarn = isIncomeCategory(expense.category)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(CardSurface)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier.size(44.dp).background(if (isEarn) Color(0xFFEAF4EE) else Color(0xFFF5F7F4), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                if (isEarn) "↑" else expense.category.take(1).uppercase(),
-                color = if (isEarn) Green else Ink,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
-        val cleanDesc = expense.description.replace('\n', ' ').trim().ifEmpty { expense.category }
-        Column(
-            Modifier
-                .weight(1f)
-                .padding(horizontal = 14.dp)
-        ) {
-            Text(
-                text = cleanDesc,
-                color = Ink,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = "${expense.category}  ·  ${rowDateFormatter.format(Instant.ofEpochMilli(expense.date).atZone(zoneId))}",
-                color = Muted,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        val formattedAmount = "${if (isEarn) "+" else "−"} ${LocalCurrency.current} ${money(expense.amount)}"
-        Text(
-            text = formattedAmount,
-            color = if (isEarn) Green else Ink,
-            fontWeight = FontWeight.Bold,
-            fontSize = rowAmountFontSize(formattedAmount.length),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.End,
-            modifier = Modifier.widthIn(max = 160.dp)
-        )
-    }
+    AppListRow(
+        title = expense.description.replace('\n', ' ').trim().ifEmpty { expense.category },
+        subtitle = "${expense.category} · ${rowDateFormatter.format(Instant.ofEpochMilli(expense.date).atZone(zoneId))}",
+        leadingText = if (isEarn) "↑" else expense.category.take(1).uppercase(),
+        accent = if (isEarn) Green else Ink,
+        value = "${if (isEarn) "+" else "−"} ${LocalCurrency.current} ${money(expense.amount)}",
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -582,7 +520,7 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
     ) {
         item {
             ScreenHeader("BAKAYA  /  FRIENDS", "Friends")
@@ -596,76 +534,17 @@ internal fun SplitPage(friends: List<FriendBalance>, modifier: Modifier, onDelet
             )
         }
         if (friends.isEmpty()) item {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(CardSurface, RoundedCornerShape(18.dp))
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("No friends yet", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(6.dp))
-                Text("Add friends in Settings to start tracking.", color = Muted, fontSize = 13.sp)
-            }
-        } else {
-            item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Friends  ·  ${friends.size}",
-                        color = Ink,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
+            AppEmptyState("No friends yet", "Add friends in Settings to start tracking.")
+        } else item { AppSectionHeader("Friends", friends.size) }
         items(friends, key = { it.id }) { friend ->
             SwipeToDeleteItem(onDeleteRequested = { pendingDelete = friend }) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(CardSurface, RoundedCornerShape(18.dp))
-                        .clickable { onViewFriend(friend) }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(44.dp).background(Color(0xFFEAF4EE), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(friend.name.take(1).uppercase(), color = Green, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                    Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                        Text(
-                            friend.name.replace('\n', ' ').trim(),
-                            color = Ink,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            if (friend.amount > 0) "Owes you" else if (friend.amount < 0) "You owe" else "Settled",
-                            color = Muted,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    val formattedAmount = "${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))}"
-                    Text(
-                        formattedAmount,
-                        color = if (friend.amount > 0) Green else if (friend.amount < 0) Color(0xFFB64C45) else Muted,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = rowAmountFontSize(formattedAmount.length),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.widthIn(max = 160.dp)
-                    )
-                }
+                AppListRow(
+                    title = friend.name,
+                    subtitle = if (friend.amount > 0) "Owes you" else if (friend.amount < 0) "You owe" else "All settled",
+                    accent = if (friend.amount > 0) Green else if (friend.amount < 0) Danger else Muted,
+                    value = "${LocalCurrency.current} ${money(kotlin.math.abs(friend.amount))}",
+                    onClick = { onViewFriend(friend) },
+                )
             }
         }
     }
@@ -708,46 +587,6 @@ internal fun ConfirmDeleteDialog(
         message = message,
         confirmLabel = confirmLabel,
         confirmColor = Danger,
-        onConfirm = onConfirm,
-        onDismiss = onDismiss
-    )
-}
-
-@Composable
-private fun SwipeTransactionItem(
-    onDeleteRequested: () -> Unit,
-    onSettleRequested: () -> Unit,
-    enabledDelete: Boolean = true,
-    enabledSettle: Boolean = true,
-    shape: Shape = RoundedCornerShape(18.dp),
-    content: @Composable () -> Unit
-) = AppSwipeItem(
-    shape = shape,
-    onLeftSwipe = if (enabledSettle) onSettleRequested else null,
-    leftLabel = "Settle",
-    leftIcon = Icons.Outlined.Check,
-    leftColor = Color(0xFFE5A000),
-    onRightSwipe = if (enabledDelete) onDeleteRequested else null,
-    rightLabel = "Delete",
-    rightIcon = Icons.Outlined.Delete,
-    rightColor = Danger,
-    threshold = 0.28f,
-    content = content
-)
-
-@Composable
-private fun ConfirmSettleDialog(
-    title: String,
-    message: String,
-    confirmLabel: String = "Settle",
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AppConfirmDialog(
-        title = title,
-        message = message,
-        confirmLabel = confirmLabel,
-        confirmColor = Color(0xFFD97706),
         onConfirm = onConfirm,
         onDismiss = onDismiss
     )
@@ -990,19 +829,15 @@ internal fun FriendTransactionsPage(
     modifier: Modifier,
     onBack: () -> Unit,
     onAddSplit: (String) -> Unit,
-    onDeleteTransaction: (SplitTransaction) -> Unit,
-    onSettleTransaction: (SplitTransaction) -> Unit = {}
 ) {
     val context = LocalContext.current
     val currency = LocalCurrency.current
-    var pendingDelete by remember { mutableStateOf<SplitTransaction?>(null) }
-    var pendingSettle by remember { mutableStateOf<SplitTransaction?>(null) }
     var selectedTxnForDetail by remember { mutableStateOf<SplitTransaction?>(null) }
     val zoneId = LocalZoneId.current
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing)
     ) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1036,7 +871,7 @@ internal fun FriendTransactionsPage(
                 transactions.filterNot { it.isSettled }.sumOf { it.amount }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Transactions  ·  ${transactions.size}", color = Ink, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Box(Modifier.weight(1f)) { AppSectionHeader("Transactions", transactions.size) }
                 IconButton(
                     onClick = {
                         val message = "Hi ${friend.name}, a quick reminder that your balance with me is $currency ${money(kotlin.math.abs(netBalance))}. When you get a chance, could you settle it? Thanks!"
@@ -1057,109 +892,19 @@ internal fun FriendTransactionsPage(
             }
         }
         if (transactions.isEmpty()) item {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(CardSurface, RoundedCornerShape(18.dp))
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("No transactions yet", color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(6.dp))
-                Text("Tap + to add a split with ${friend.name}.", color = Muted, fontSize = 13.sp)
-            }
+            AppEmptyState("No transactions yet", "Tap + to add a split with ${friend.name}.")
         }
         items(transactions, key = { it.id }) { txn ->
-            val isSettled = txn.isSettled
-            SwipeTransactionItem(
-                onDeleteRequested = { pendingDelete = txn },
-                onSettleRequested = { if (!isSettled) pendingSettle = txn },
-                enabledDelete = true,
-                enabledSettle = !isSettled
-            ) {
-                val settleColor = Color(0xFFD97706)
-                val settleBg = Color(0xFFFEF3C7)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(CardSurface)
-                        .clickable { selectedTxnForDetail = txn }
-                        .then(
-                            if (isSettled) Modifier.border(1.5.dp, Color(0xFFFDE68A), RoundedCornerShape(18.dp))
-                            else Modifier
-                        )
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        Modifier.size(44.dp).background(
-                            if (isSettled) settleBg else if (txn.amount > 0) Color(0xFFEAF4EE) else Color(0xFFFBECEB),
-                            CircleShape
-                        ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            if (isSettled) "✓" else if (txn.amount > 0) "↑" else "↓",
-                            color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                    }
-                    Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                        Text(
-                            txn.note.replace('\n', ' ').trim().ifBlank { if (txn.amount > 0) "They owe you" else "You owe" },
-                            color = Ink,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            rowDateTimeFormatter.format(Instant.ofEpochMilli(txn.date).atZone(zoneId)),
-                            color = Muted,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    val sign = if (txn.amount < 0) "− " else "+ "
-                    val formattedAmount = "${if (isSettled) "✓ " else ""}$sign${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}"
-                    Text(
-                        formattedAmount,
-                        color = if (isSettled) settleColor else if (txn.amount > 0) Green else Danger,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = rowAmountFontSize(formattedAmount.length),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.widthIn(max = 160.dp)
-                    )
-                }
-            }
+            AppListRow(
+                title = txn.note.replace('\n', ' ').trim().ifBlank { if (txn.amount > 0) "They owe you" else "You owe" },
+                subtitle = rowDateTimeFormatter.format(Instant.ofEpochMilli(txn.date).atZone(zoneId)),
+                leadingText = if (txn.isSettled) "✓" else if (txn.amount > 0) "↑" else "↓",
+                accent = if (txn.isSettled) Muted else if (txn.amount > 0) Green else Danger,
+                value = "${if (txn.amount < 0) "−" else "+"} ${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}",
+                valueLabel = if (txn.isSettled) "Settled" else "Outstanding",
+                onClick = { selectedTxnForDetail = txn },
+            )
         }
-    }
-    pendingDelete?.let { txn ->
-        ConfirmDeleteDialog(
-            title = "Delete transaction?",
-            message = "${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))} split with ${friend.name} will be removed and the balance will be adjusted.",
-            confirmLabel = "Delete",
-            onConfirm = { onDeleteTransaction(txn); pendingDelete = null },
-            onDismiss = { pendingDelete = null }
-        )
-    }
-    pendingSettle?.let { txn ->
-        ConfirmSettleDialog(
-            title = "Settle transaction?",
-            message = "${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))} with ${friend.name} will be marked as settled. ${if (txn.amount > 0) "This money will be added to your Earn section." else ""}",
-            confirmLabel = "Settle",
-            onConfirm = {
-                onSettleTransaction(txn)
-                pendingSettle = null
-            },
-            onDismiss = { pendingSettle = null }
-        )
     }
     selectedTxnForDetail?.let { txn ->
         val currency = LocalCurrency.current

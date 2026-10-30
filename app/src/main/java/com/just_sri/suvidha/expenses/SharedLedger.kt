@@ -22,6 +22,9 @@ sealed interface SharedLedgerAction {
 
     /** Settles exact debt units, optionally in part. All allocations apply atomically. */
     data class SettlementRecorded(val allocations: List<SharedSettlementAllocation>) : SharedLedgerAction
+
+    /** Removes one outstanding debt while preserving the causal history. */
+    data class DebtRemoved(val debtUnitId: String) : SharedLedgerAction
 }
 
 /** Local domain event. Authentication and encryption fields are intentionally added with their protocol. */
@@ -203,6 +206,20 @@ fun projectSharedLedger(
                     )
                 }
             }
+            is SharedLedgerAction.DebtRemoved -> {
+                val debt = debts[action.debtUnitId]
+                val creator = orderedIds.firstOrNull { parentId ->
+                    (byId[parentId]?.action as? SharedLedgerAction.ExpenseAdded)
+                        ?.debts?.any { it.id == action.debtUnitId } == true
+                }
+                if (ownerMemberId == null || event.actorMemberId != ownerMemberId ||
+                    debt == null || debt.remainingAmountMinor <= 0 || creator !in ancestors) {
+                    rejected[id] = "Only the owner can remove an outstanding, causal debt."
+                    return@forEach
+                }
+                debts[action.debtUnitId] = debt.copy(remainingAmountMinor = 0)
+            }
+
         }
         accepted += id
         ancestorIds[id] = ancestors

@@ -149,7 +149,7 @@ internal class SharedGroupRepository(private val database: ExpenseDatabase) {
         val previousRecord = events.findById(event.eventId)
         if (previousRecord != null) {
             require(SharedLedgerCodec.toDomainEvent(previousRecord) == event) { "A different event already uses this event ID." }
-            return replay(group, events.getByGroup(event.groupId))
+            return replay(group, events.getByGroup(event.groupId), members.getByGroup(event.groupId).find { it.role == "owner" }?.memberId)
         }
 
         val existing = events.getByGroup(event.groupId)

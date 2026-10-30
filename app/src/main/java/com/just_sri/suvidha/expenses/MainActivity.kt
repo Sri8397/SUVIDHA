@@ -461,9 +461,7 @@ private fun ExpenseHome(
                         transactions = transactions,
                         modifier = Modifier.padding(padding),
                         onBack = { viewingFriend = null },
-                        onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true },
-                        onDeleteTransaction = onDeleteSplitTransaction,
-                        onSettleTransaction = onSettleSplitTransaction
+                        onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true }
                     )
                 }
                 tab == 0 -> ExpensesPage(expenses, categories, scrollModifier, onDelete)

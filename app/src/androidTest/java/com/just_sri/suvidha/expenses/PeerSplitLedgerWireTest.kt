@@ -22,6 +22,15 @@ class PeerSplitLedgerWireTest {
     }
 
     @Test
+    fun softDeletionRoundTripsAndBindsTheOwnerIdentity() {
+        val event = SharedLedgerEvent("remove", "g", "owner", setOf("expense"), 20,
+            SharedLedgerAction.DebtRemoved("debt"))
+        val encoded = PeerSplitLedgerWire.encode(event)
+        assertEquals(event, PeerSplitLedgerWire.decode(encoded, "g", "owner"))
+        assertNull(PeerSplitLedgerWire.decode(encoded, "g", "other"))
+    }
+
+    @Test
     fun envelopeBindsLedgerAuthorAndGroupToTheAuthenticatedMlsMessage() {
         val event = SharedLedgerEvent("e", "g", "alice", setOf("parent"), 10,
             SharedLedgerAction.ExpenseAdded("INR", listOf(SharedDebtUnit("d", "alice", "bob", 1250))), "Lunch")

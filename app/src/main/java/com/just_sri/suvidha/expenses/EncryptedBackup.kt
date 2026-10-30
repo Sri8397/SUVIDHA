@@ -228,7 +228,8 @@ internal object BackupJsonCodec {
             if (records.any { record -> SharedLedgerCodec.decodeParents(record.parentEventIdsJson).any { it !in knownEventIds } }) {
                 throw BackupFormatException("Backup is missing group event dependencies.")
             }
-            val p = projectSharedLedger(group.id, decoded, group.currencyCode)
+            val owner = s.members.find { it.groupId == group.id && it.role == "owner" }?.memberId
+            val p = projectSharedLedger(group.id, decoded, group.currencyCode, owner)
             if (p.pendingEventIds.isNotEmpty() || p.rejectedEvents.isNotEmpty()) throw BackupFormatException("Group event history cannot be replayed safely.")
         }
     }

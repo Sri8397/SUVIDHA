@@ -23,6 +23,8 @@ internal object SharedLedgerCodec {
                 .toString()
         }
 
+        is SharedLedgerAction.DebtRemoved -> "debt_removed" to JSONObject().put("debtUnitId", action.debtUnitId).toString()
+
         is SharedLedgerAction.SettlementRecorded -> {
             val allocations = JSONArray()
             action.allocations.forEach { allocation ->
@@ -56,6 +58,8 @@ internal object SharedLedgerCodec {
                     },
                 )
             }
+
+            "debt_removed" -> SharedLedgerAction.DebtRemoved(payload.getString("debtUnitId"))
 
             "settlement_recorded" -> {
                 val allocations = payload.getJSONArray("allocations")
