@@ -212,9 +212,11 @@ fun projectSharedLedger(
                     (byId[parentId]?.action as? SharedLedgerAction.ExpenseAdded)
                         ?.debts?.any { it.id == action.debtUnitId } == true
                 }
-                if (ownerMemberId == null || event.actorMemberId != ownerMemberId ||
-                    debt == null || debt.remainingAmountMinor <= 0 || creator !in ancestors) {
-                    rejected[id] = "Only the owner can remove an outstanding, causal debt."
+                // Keep accepting historical owner removals so upgrading does not invalidate
+                // existing ledger history; new UI actions are limited to the expense author.
+                if (debt == null || (event.actorMemberId != debt.creditorMemberId && event.actorMemberId != ownerMemberId) ||
+                    debt.remainingAmountMinor <= 0 || creator !in ancestors) {
+                    rejected[id] = "Only the expense author or group owner can remove an outstanding, causal debt."
                     return@forEach
                 }
                 debts[action.debtUnitId] = debt.copy(remainingAmountMinor = 0)

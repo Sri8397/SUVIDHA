@@ -17,18 +17,30 @@ object SyncNotificationHelper {
     private const val CHANNEL_NAME = "Shared Groups Sync"
     private const val NOTIFICATION_ID_SYNC = 1001
 
+    const val BACKUP_CHANNEL_ID = "suvidha_backup_channel"
+    private const val BACKUP_CHANNEL_NAME = "Backup & Recovery"
+    private const val NOTIFICATION_ID_BACKUP = 1002
+
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
                 ?: return
-            val channel = NotificationChannel(
+            val syncChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "Status updates and reports for shared group sync"
             }
-            notificationManager.createNotificationChannel(channel)
+            val backupChannel = NotificationChannel(
+                BACKUP_CHANNEL_ID,
+                BACKUP_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Status updates for encrypted backup and restore"
+            }
+            notificationManager.createNotificationChannel(syncChannel)
+            notificationManager.createNotificationChannel(backupChannel)
         }
     }
 
@@ -81,6 +93,50 @@ object SyncNotificationHelper {
 
         return try {
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID_SYNC, notification)
+            true
+        } catch (_: SecurityException) {
+            false
+        }
+    }
+
+    /**
+     * Posts a system notification for backup creation or restore result.
+     * Returns true if the notification was successfully posted, false otherwise.
+     */
+    fun showBackupNotification(
+        context: Context,
+        title: String,
+        message: String
+    ): Boolean {
+        ensureChannel(context)
+
+        if (!hasNotificationPermission(context)) {
+            return false
+        }
+
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("navigate_to", "backup")
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            1,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, BACKUP_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_sync_notification)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        return try {
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID_BACKUP, notification)
             true
         } catch (_: SecurityException) {
             false

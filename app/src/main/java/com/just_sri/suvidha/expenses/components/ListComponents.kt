@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
 
 internal object AppListStyle {
-    val Shape = RoundedCornerShape(18.dp)
-    val Spacing = 10.dp
+    val Shape = RoundedCornerShape(14.dp)
+    val Spacing = 8.dp
     val PagePadding = 20.dp
 }
 
@@ -48,25 +48,28 @@ internal fun AppListRow(
         modifier = modifier.fillMaxWidth().clip(AppListStyle.Shape)
             .then(if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.size(40.dp).background(accent.copy(alpha = 0.09f), CircleShape), contentAlignment = Alignment.Center) {
-                    Text(leadingText, color = accent, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        Column(
+            Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(Modifier.size(30.dp).background(accent.copy(alpha = 0.09f), CircleShape), contentAlignment = Alignment.Center) {
+                    Text(leadingText, color = accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(title.replace('\n', ' ').trim(), color = Ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(title.replace('\n', ' ').trim(), color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     subtitle?.takeIf { it.isNotBlank() }?.let {
-                        Text(it, color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
+                        Text(it, color = Muted, fontSize = 11.sp, lineHeight = 14.sp)
                     }
                 }
                 if (trailing != null) trailing()
-                else if (onClick != null && value == null) Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = Muted, modifier = Modifier.size(18.dp))
+                else if (onClick != null && value == null) Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, tint = Muted, modifier = Modifier.size(16.dp))
             }
             // Values get their own line so long names, currencies and large font sizes do not collide.
             value?.let {
-                Row(Modifier.fillMaxWidth().padding(start = 52.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    valueLabel?.let { label -> Text(label, modifier = Modifier.weight(1f), color = Muted, fontSize = 12.sp) }
-                    Text(it, modifier = if (valueLabel == null) Modifier.fillMaxWidth() else Modifier.weight(1f), color = accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
+                Row(Modifier.fillMaxWidth().padding(start = 40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    valueLabel?.let { label -> Text(label, modifier = Modifier.weight(1f), color = Muted, fontSize = 11.sp) }
+                    Text(it, modifier = if (valueLabel == null) Modifier.fillMaxWidth() else Modifier.weight(1f), color = accent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.End)
                 }
             }
         }

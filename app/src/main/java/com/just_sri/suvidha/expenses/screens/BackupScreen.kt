@@ -1,6 +1,9 @@
 package com.just_sri.suvidha.expenses.screens
 
+import android.Manifest
 import android.net.Uri
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +60,7 @@ import com.just_sri.suvidha.expenses.Green
 import com.just_sri.suvidha.expenses.Ink
 import com.just_sri.suvidha.expenses.Muted
 import com.just_sri.suvidha.expenses.R
+import com.just_sri.suvidha.expenses.SyncNotificationHelper
 import com.just_sri.suvidha.expenses.components.AppPrimaryButton
 import com.just_sri.suvidha.expenses.components.AppSecondaryButton
 import com.just_sri.suvidha.expenses.components.AppTopBar
@@ -87,7 +91,14 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
     var pending by remember { mutableStateOf<AppBackupSnapshot?>(null) }
     var preview by remember { mutableStateOf<BackupPreview?>(null) }
     var busy by remember { mutableStateOf(false) }
-    var message by remember { mutableStateOf<String?>(null) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+    val notifyUser: (String, String) -> Unit = { title, msg ->
+        SyncNotificationHelper.showBackupNotification(context, title, msg)
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+    }
 
     val createFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         val encrypted = fileToSave
@@ -99,14 +110,16 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
                     val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Could not open selected destination.")
                     output.use { it.write(encrypted) }
                 }
-                message = "Encrypted backup saved. Store its passphrase separately."
-            } catch (_: Exception) { message = "Could not save the backup file." }
+                notifyUser("Encrypted Backup", "Encrypted backup saved. Store its passphrase separately.")
+            } catch (_: Exception) {
+                notifyUser("Backup Failed", "Could not save the backup file.")
+            }
             finally { Arrays.fill(encrypted, 0); busy = false }
         } else encrypted?.let { Arrays.fill(it, 0) }
     }
     val openFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            importUri = uri; passphrase = ""; importDialog = true; message = null
+            importUri = uri; passphrase = ""; importDialog = true
         }
     }
 
@@ -169,13 +182,27 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppPrimaryButton(
                     text = "Create encrypted backup",
-                    onClick = { passphrase = ""; confirm = ""; exportDialog = true },
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            !SyncNotificationHelper.hasNotificationPermission(context)
+                        ) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        passphrase = ""; confirm = ""; exportDialog = true
+                    },
                     enabled = !busy,
                     height = 56.dp,
                 )
                 AppSecondaryButton(
                     text = "Restore from backup",
-                    onClick = { openFile.launch(arrayOf("application/octet-stream", "application/*")) },
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            !SyncNotificationHelper.hasNotificationPermission(context)
+                        ) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        openFile.launch(arrayOf("application/octet-stream", "application/*"))
+                    },
                     enabled = !busy,
                     height = 56.dp,
                 )
@@ -185,34 +212,33 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
                 CircularProgressIndicator(color = Green, modifier = Modifier.height(22.dp))
                 Text("Processing on this device…", color = Muted, fontSize = 14.sp)
             }
-            message?.let { Text(it, color = if (it.startsWith("Could not")) Ink else Green, fontSize = 14.sp) }
         }
     }
 
-    if (exportDialog) AlertDialog(
-        onDismissRequest = { exportDialog = false; passphrase = ""; confirm = "" },
-        title = { Text("Set a recovery passphrase") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Use at least 12 characters; a longer phrase is easier to remember and harder to guess.")
-                PasswordField(passphrase, { passphrase = it }, "Passphrase")
-                PasswordField(confirm, { confirm = it }, "Confirm passphrase")
-                when {
-                    confirm.isNotEmpty() && passphrase != confirm -> Text("Passphrases do not match.", color = Danger, fontSize = 13.sp)
-                    passphrase.isNotEmpty() && passphrase.length < 12 -> Text("Use at least 12 characters.", color = Muted, fontSize = 13.sp)
-                    passphrase.length >= 12 && passphrase == confirm -> Text("Passphrases match.", color = Green, fontSize = 13.sp)
+    if (exportDialog) {
+        var passwordsVisible by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { exportDialog = false; passphrase = ""; confirm = "" },
+            title = { Text("Set a recovery passphrase") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Use at least 12 characters; a longer phrase is easier to remember and harder to guess.")
+                    PasswordField(passphrase, { passphrase = it }, "Passphrase", passwordsVisible, { passwordsVisible = it })
+                    PasswordField(confirm, { confirm = it }, "Confirm passphrase", passwordsVisible, { passwordsVisible = it })
+                    when {
+                        confirm.isNotEmpty() && passphrase != confirm -> Text("Passphrases do not match.", color = Danger, fontSize = 13.sp)
+                        passphrase.isNotEmpty() && passphrase.length < 12 -> Text("Use at least 12 characters.", color = Muted, fontSize = 13.sp)
+                        passphrase.length >= 12 && passphrase == confirm -> Text("Passphrases match.", color = Green, fontSize = 13.sp)
+                    }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(enabled = !busy, onClick = {
-                when {
-                    passphrase.length < 12 -> message = "Use a recovery passphrase with at least 12 characters."
-                    passphrase != confirm -> message = "The recovery passphrases do not match."
-                    else -> {
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !busy && passphrase.length >= 12 && passphrase == confirm,
+                    onClick = {
                         val secret = passphrase.toCharArray(); passphrase = ""; confirm = ""; exportDialog = false
                         scope.launch {
-                            busy = true; message = null
+                            busy = true
                             try {
                                 val snapshot = withContext(Dispatchers.IO) {
                                     val identity = identityStore.exportPrivateKeyForEncryptedBackup()
@@ -240,44 +266,49 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
                                 createFile.launch("suvidha-backup-${System.currentTimeMillis()}.suvb")
                             } catch (e: Exception) {
                                 Arrays.fill(secret, '\u0000')
-                                message = if (e is BackupFormatException) e.message else "Could not prepare this backup."
+                                val msg = if (e is BackupFormatException) e.message ?: "Could not prepare this backup." else "Could not prepare this backup."
+                                notifyUser("Backup Failed", msg)
                             } finally { busy = false }
                         }
                     }
-                }
-            }) { Text("Continue") }
-        },
-        dismissButton = { TextButton(onClick = { exportDialog = false; passphrase = ""; confirm = "" }) { Text("Cancel") } },
-    )
+                ) { Text("Continue") }
+            },
+            dismissButton = { TextButton(onClick = { exportDialog = false; passphrase = ""; confirm = "" }) { Text("Cancel") } },
+        )
+    }
 
-    if (importDialog) AlertDialog(
-        onDismissRequest = { importDialog = false; passphrase = ""; importUri = null },
-        title = { Text("Enter the recovery passphrase") },
-        text = { PasswordField(passphrase, { passphrase = it }, "Passphrase") },
-        confirmButton = {
-            TextButton(enabled = passphrase.isNotEmpty() && !busy, onClick = {
-                val secret = passphrase.toCharArray(); val uri = importUri; passphrase = ""; importDialog = false
-                if (uri == null) return@TextButton
-                scope.launch {
-                    busy = true; message = null
-                    try {
-                        val encrypted = withContext(Dispatchers.IO) {
-                            context.contentResolver.openInputStream(uri)?.use(::readBounded) ?: error("Could not open selected backup.")
-                        }
-                        val plaintext = withContext(Dispatchers.Default) { EncryptedBackup.decrypt(encrypted, secret) }
+    if (importDialog) {
+        var importPasswordVisible by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { importDialog = false; passphrase = ""; importUri = null },
+            title = { Text("Enter the recovery passphrase") },
+            text = { PasswordField(passphrase, { passphrase = it }, "Passphrase", importPasswordVisible, { importPasswordVisible = it }) },
+            confirmButton = {
+                TextButton(enabled = passphrase.isNotEmpty() && !busy, onClick = {
+                    val secret = passphrase.toCharArray(); val uri = importUri; passphrase = ""; importDialog = false
+                    if (uri == null) return@TextButton
+                    scope.launch {
+                        busy = true
                         try {
-                            val snapshot = BackupJsonCodec.decode(plaintext)
-                            pending = snapshot; preview = BackupJsonCodec.preview(snapshot)
-                        } finally { Arrays.fill(plaintext, 0) }
-                    } catch (e: Exception) {
-                        Arrays.fill(secret, '\u0000')
-                        message = if (e is BackupFormatException) e.message else "Could not open this backup file."
-                    } finally { importUri = null; busy = false }
-                }
-            }) { Text("Preview backup") }
-        },
-        dismissButton = { TextButton(onClick = { importDialog = false; passphrase = ""; importUri = null }) { Text("Cancel") } },
-    )
+                            val encrypted = withContext(Dispatchers.IO) {
+                                context.contentResolver.openInputStream(uri)?.use(::readBounded) ?: error("Could not open selected backup.")
+                            }
+                            val plaintext = withContext(Dispatchers.Default) { EncryptedBackup.decrypt(encrypted, secret) }
+                            try {
+                                val snapshot = BackupJsonCodec.decode(plaintext)
+                                pending = snapshot; preview = BackupJsonCodec.preview(snapshot)
+                            } finally { Arrays.fill(plaintext, 0) }
+                        } catch (e: Exception) {
+                            Arrays.fill(secret, '\u0000')
+                            val msg = if (e is BackupFormatException) e.message ?: "Could not open this backup file." else "Could not open this backup file."
+                            notifyUser("Restore Failed", msg)
+                        } finally { importUri = null; busy = false }
+                    }
+                }) { Text("Preview backup") }
+            },
+            dismissButton = { TextButton(onClick = { importDialog = false; passphrase = ""; importUri = null }) { Text("Cancel") } },
+        )
+    }
 
     val p = preview
     val snapshot = pending
@@ -298,7 +329,7 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
             val restoreSnapshot = snapshot
             preview = null
             scope.launch {
-                busy = true; message = null
+                busy = true
                 try {
                     withContext(Dispatchers.IO) {
                         val previousIdentity = identityStore.exportPrivateKeyForEncryptedBackup()
@@ -338,9 +369,12 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
                             importedKeyPackage?.fill(0)
                         }
                     }
-                    pending = null; message = "Backup restored successfully."
+                    pending = null
+                    notifyUser("Backup Restored", "Backup restored successfully.")
                 }
-                catch (_: Exception) { message = "Restore failed; the current database was left unchanged." }
+                catch (_: Exception) {
+                    notifyUser("Restore Failed", "Restore failed; the current database was left unchanged.")
+                }
                 finally { busy = false }
             }
         }) { Text("Replace local data") } },
@@ -349,8 +383,13 @@ internal fun BackupManagementPage(database: ExpenseDatabase, modifier: Modifier 
 }
 
 @Composable
-private fun PasswordField(value: String, onValueChange: (String) -> Unit, label: String) {
-    var visible by remember { mutableStateOf(false) }
+private fun PasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    visible: Boolean,
+    onVisibleChange: (Boolean) -> Unit,
+) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -358,7 +397,7 @@ private fun PasswordField(value: String, onValueChange: (String) -> Unit, label:
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         trailingIcon = {
-            IconButton(onClick = { visible = !visible }) {
+            IconButton(onClick = { onVisibleChange(!visible) }) {
                 Icon(
                     painter = painterResource(if (visible) R.drawable.ic_visibility_off else R.drawable.ic_visibility),
                     contentDescription = if (visible) "Hide $label" else "Show $label",

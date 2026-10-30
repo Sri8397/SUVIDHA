@@ -239,6 +239,9 @@ interface SharedGroupMemberDao {
     fun observeByGroup(groupId: String): Flow<List<SharedGroupMemberEntity>>
 
     @Query("SELECT * FROM shared_group_members ORDER BY groupId, displayName COLLATE NOCASE")
+    fun observeAll(): Flow<List<SharedGroupMemberEntity>>
+
+    @Query("SELECT * FROM shared_group_members ORDER BY groupId, displayName COLLATE NOCASE")
     suspend fun getAll(): List<SharedGroupMemberEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
@@ -268,8 +271,11 @@ interface SharedGroupMemberDao {
 
 @Dao
 interface SharedLedgerEventDao {
-    @Query("SELECT * FROM shared_ledger_events WHERE groupId = :groupId ORDER BY createdAtMillis, id")
+    @Query("SELECT * FROM shared_ledger_events WHERE groupId = :groupId ORDER BY createdAtMillis DESC, id DESC")
     fun observeByGroup(groupId: String): Flow<List<SharedLedgerEventRecord>>
+
+    @Query("SELECT * FROM shared_ledger_events ORDER BY groupId, createdAtMillis, id")
+    fun observeAll(): Flow<List<SharedLedgerEventRecord>>
 
     @Query("SELECT * FROM shared_ledger_events WHERE groupId = :groupId ORDER BY createdAtMillis, id")
     suspend fun getByGroup(groupId: String): List<SharedLedgerEventRecord>

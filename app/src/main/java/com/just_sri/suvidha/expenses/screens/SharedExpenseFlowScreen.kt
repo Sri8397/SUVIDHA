@@ -45,7 +45,7 @@ internal fun SharedExpenseFlowScreen(
     var selected by remember(memberIds) { mutableStateOf(memberIds.toSet()) }
     val weights = remember(memberIds) { mutableStateMapOf<String, Int>().apply { memberIds.forEach { put(it, 1) } } }
     val exact = remember(memberIds) { mutableStateMapOf<String, String>().apply { memberIds.forEach { put(it, "") } } }
-    val symbol = remember(currencyCode) { Currency.getInstance(currencyCode).symbol }
+    val symbol = remember(currencyCode) { com.just_sri.suvidha.expenses.constants.currencySymbol(currencyCode) }
     val enteredTotal = SharedSplitMoney.parseMinor(amountInput, currencyCode) ?: 0L
     val chosen = members.filter { it.memberId in selected }
     val calculated = runCatching {

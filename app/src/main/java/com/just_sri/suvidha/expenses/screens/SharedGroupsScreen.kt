@@ -32,8 +32,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -41,9 +43,12 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,6 +56,10 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.just_sri.suvidha.expenses.LocalCurrency
+import com.just_sri.suvidha.expenses.supportedCurrencies
+import com.just_sri.suvidha.expenses.currencySymbol
+import com.just_sri.suvidha.expenses.currencyCodeFor
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -87,6 +96,7 @@ import com.just_sri.suvidha.expenses.SharedLedgerAction
 import com.just_sri.suvidha.expenses.SharedLedgerEvent
 import com.just_sri.suvidha.expenses.SharedDebtUnit
 import com.just_sri.suvidha.expenses.SharedDebtBalance
+import com.just_sri.suvidha.expenses.SharedLedgerEventRecord
 import com.just_sri.suvidha.expenses.SharedSettlementAllocation
 import com.just_sri.suvidha.expenses.SharedExpenseParticipant
 import com.just_sri.suvidha.expenses.SharedLedgerCodec
@@ -130,9 +140,11 @@ internal fun SharedGroupsPage(database: ExpenseDatabase, modifier: Modifier = Mo
     val groups by repository.observeGroups().collectAsState(emptyList())
     val pendingWelcomes by repository.observePendingWelcomes().collectAsState(emptyList())
     val scope = rememberCoroutineScope()
+    val activeCurrency = LocalCurrency.current
     var showCreate by remember { mutableStateOf(false) }
     var groupName by remember { mutableStateOf("") }
-    var currency by remember { mutableStateOf("INR") }
+    var selectedCurrencySymbol by remember { mutableStateOf(activeCurrency) }
+    var showCurrencyPicker by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<SharedGroupEntity?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var syncing by remember { mutableStateOf(false) }
@@ -179,7 +191,7 @@ internal fun SharedGroupsPage(database: ExpenseDatabase, modifier: Modifier = Mo
         ) {
             AppPrimaryButton(
                 text = "New group",
-                onClick = { error = null; showCreate = true },
+                onClick = { error = null; selectedCurrencySymbol = activeCurrency; showCreate = true },
                 enabled = !syncing && !publishingKeyPackage,
                 height = 52.dp,
             )
@@ -276,7 +288,7 @@ internal fun SharedGroupsPage(database: ExpenseDatabase, modifier: Modifier = Mo
                 items(groups, key = { it.id }) { group ->
                     AppListRow(
                         title = group.name,
-                        subtitle = "${group.currencyCode} · Shared expenses",
+                        subtitle = "${currencySymbol(group.currencyCode)} · Shared expenses",
                         onClick = { selected = group },
                         enabled = !syncing && !publishingKeyPackage,
                     )
@@ -290,18 +302,60 @@ internal fun SharedGroupsPage(database: ExpenseDatabase, modifier: Modifier = Mo
             onDismissRequest = { showCreate = false },
             title = { Text("Create a group") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = groupName, onValueChange = { groupName = it; error = null }, label = { Text("Group name") }, singleLine = true)
-                    OutlinedTextField(value = currency, onValueChange = { currency = it.uppercase().take(3); error = null }, label = { Text("Currency code") }, singleLine = true)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = groupName,
+                        onValueChange = { groupName = it; error = null },
+                        label = { Text("Group name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Column(Modifier.fillMaxWidth()) {
+                        Text("Currency", color = Muted, fontSize = 12.sp)
+                        Spacer(Modifier.height(4.dp))
+                        Box(Modifier.fillMaxWidth()) {
+                            OutlinedCard(
+                                onClick = { showCurrencyPicker = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val label = supportedCurrencies.find { it.first == selectedCurrencySymbol }?.second
+                                        ?: "$selectedCurrencySymbol  ${currencyCodeFor(selectedCurrencySymbol)}"
+                                    Text(label, color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                                    Text("Change", color = Green, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                            DropdownMenu(
+                                expanded = showCurrencyPicker,
+                                onDismissRequest = { showCurrencyPicker = false }
+                            ) {
+                                supportedCurrencies.forEach { (symbol, label) ->
+                                    DropdownMenuItem(
+                                        text = { Text(label, color = Ink) },
+                                        trailingIcon = if (symbol == selectedCurrencySymbol) {{
+                                            Icon(Icons.Outlined.Check, contentDescription = "Selected", tint = Green)
+                                        }} else null,
+                                        onClick = {
+                                            selectedCurrencySymbol = symbol
+                                            showCurrencyPicker = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                     error?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     val name = groupName.trim()
-                    val code = currency.trim().uppercase()
+                    val code = currencyCodeFor(selectedCurrencySymbol)
                     if (name.isBlank()) { error = "Enter a group name."; return@TextButton }
-                    if (!code.matches(Regex("[A-Z]{3}")) || runCatching { Currency.getInstance(code).defaultFractionDigits < 0 }.getOrDefault(true)) { error = "Enter a valid currency code, such as INR."; return@TextButton }
                     scope.launch {
                         runCatching {
                             val identity = withContext(Dispatchers.IO) { identityStore.getOrCreate() }
@@ -432,7 +486,8 @@ private suspend fun persistJoinedGroup(
 
 private fun formatMinor(value: Long, currencyCode: String): String {
     val digits = runCatching { Currency.getInstance(currencyCode).defaultFractionDigits.coerceAtLeast(0) }.getOrDefault(2)
-    return "$currencyCode ${BigDecimal.valueOf(value, digits).setScale(digits).toPlainString()}"
+    val symbol = currencySymbol(currencyCode)
+    return "$symbol ${BigDecimal.valueOf(value, digits).setScale(digits).toPlainString()}"
 }
 
 private suspend fun saveAndPublishLedgerEvent(
@@ -503,11 +558,15 @@ private fun GroupDetailPage(
     BackHandler(enabled = !showExpense && !showInvite && selectedDebt == null && pendingDeleteDebt == null && linkMemberId == null, onBack = onBack)
     fun memberLabel(id: String): String = if (id == actorMemberId) "You" else linkedFriends[id]?.name ?: members.find { it.memberId == id }?.displayName ?: "Nostr · ${id.take(8)}…"
     val membersScroll = rememberLazyListState()
+    val debtsScroll = rememberLazyListState()
     val activitiesScroll = rememberLazyListState()
     val zoneId = LocalZoneId.current
     val activityDate = remember { DateTimeFormatter.ofPattern("d MMM · h:mm a", Locale.getDefault()) }
     val outstandingDebts = projection.debtById.values.filter { it.remainingAmountMinor > 0 }
     val ownBalance = actorMemberId?.let { projection.balanceByMemberId[it] } ?: 0L
+    val activities = remember(records) {
+        records.sortedWith(compareByDescending<SharedLedgerEventRecord> { it.createdAtMillis }.thenByDescending { it.id })
+    }
     fun openPayment(debt: SharedDebtBalance) {
         selectedDebt = debt
         val digits = Currency.getInstance(group.currencyCode).defaultFractionDigits.coerceAtLeast(0)
@@ -517,7 +576,7 @@ private fun GroupDetailPage(
     Column(Modifier.fillMaxSize().then(modifier)) {
         AppTopBar(
             title = group.name,
-            subtitle = "${members.count { it.isActive }} members · ${group.currencyCode}",
+            subtitle = "${members.count { it.isActive }} members · ${currencySymbol(group.currencyCode)}",
             onBack = onBack,
             actions = {
                 if (isOwner) TextButton(onClick = { inviteKey = ""; inviteStatus = null; showInvite = true }) {
@@ -525,14 +584,34 @@ private fun GroupDetailPage(
                 }
             },
         )
-        TabRow(selectedTabIndex = selectedTab, containerColor = OffWhite, contentColor = Green) {
-            listOf("Members", "Activities").forEachIndexed { index, title ->
-                Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
+        val tabs = listOf(
+            "Members" to members.size,
+            "Debts" to outstandingDebts.size,
+            "Activities" to activities.size,
+        )
+        TabRow(selectedTabIndex = selectedTab.coerceIn(0, tabs.lastIndex), containerColor = OffWhite, contentColor = Green) {
+            tabs.forEachIndexed { index, (title, count) ->
+                val isSelected = selectedTab == index
+                Tab(
+                    selected = isSelected,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            text = if (isSelected) "$title ($count)" else title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
             }
         }
         LazyColumn(
             modifier = Modifier.weight(1f),
-            state = if (selectedTab == 0) membersScroll else activitiesScroll,
+            state = when (selectedTab) {
+                0 -> membersScroll
+                1 -> debtsScroll
+                else -> activitiesScroll
+            },
             contentPadding = PaddingValues(horizontal = AppListStyle.PagePadding, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(AppListStyle.Spacing),
         ) {
@@ -542,107 +621,99 @@ private fun GroupDetailPage(
             if (projection.rejectedEvents.isNotEmpty()) item {
                 Text("${projection.rejectedEvents.size} conflicting updates could not be applied.", color = Danger, fontSize = 12.sp)
             }
-            if (selectedTab == 0) {
-                item {
-                    AppListRow(
-                        title = "Your group balance",
-                        subtitle = if (ownBalance > 0) "You are owed" else if (ownBalance < 0) "You owe" else "All settled",
-                        leadingText = "↔",
-                        value = formatMinor(kotlin.math.abs(ownBalance), group.currencyCode),
-                        accent = if (ownBalance < 0) Danger else Green,
-                    )
-                }
-                item {
-                    AppPrimaryButton(
-                        text = "Add shared expense",
-                        onClick = { expenseFlowResetKey++; expenseStatus = null; showExpense = true },
-                        enabled = actorMemberId != null && members.count { it.isActive } > 1,
-                        height = 48.dp,
-                    )
-                }
-                if (members.count { it.isActive } <= 1) item {
-                    Text("Invite someone to start sharing expenses.", color = Muted, fontSize = 12.sp)
-                }
-                inviteStatus?.let { status -> item { Text(status, color = Muted, fontSize = 12.sp) } }
-                item { AppSectionHeader("Members", members.size) }
-                items(members, key = { "member:${it.memberId}" }) { member ->
-                    val own = member.memberId == actorMemberId
-                    val balance = if (own) ownBalance else projection.debtById.values.sumOf { debt ->
-                        when {
-                            debt.creditorMemberId == actorMemberId && debt.debtorMemberId == member.memberId -> debt.remainingAmountMinor
-                            debt.debtorMemberId == actorMemberId && debt.creditorMemberId == member.memberId -> -debt.remainingAmountMinor
-                            else -> 0L
-                        }
+            when (selectedTab) {
+                0 -> {
+                    item {
+                        AppPrimaryButton(
+                            text = "Add shared expense",
+                            onClick = { expenseFlowResetKey++; expenseStatus = null; showExpense = true },
+                            enabled = actorMemberId != null && members.count { it.isActive } > 1,
+                            height = 48.dp,
+                        )
                     }
-                    val balanceLabel = when {
-                        own && balance > 0 -> "You are owed"
-                        own && balance < 0 -> "You owe"
-                        balance > 0 -> "Owes you"
-                        balance < 0 -> "You owe"
-                        else -> "Settled"
+                    if (members.count { it.isActive } <= 1) item {
+                        Text("Invite someone to start sharing expenses.", color = Muted, fontSize = 12.sp)
                     }
-                    AppListRow(
-                        title = memberLabel(member.memberId),
-                        subtitle = if (!member.isActive) "Former member" else if (member.role == "owner") "Group owner" else "Member",
-                        value = formatMinor(kotlin.math.abs(balance), group.currencyCode),
-                        valueLabel = balanceLabel,
-                        accent = if (balance < 0) Danger else if (balance > 0) Green else Muted,
-                        trailing = if (!own) {{
-                            TextButton(onClick = { linkMemberId = member.memberId }) {
-                                Text(if (member.memberId in linkedFriends) "Contact" else "Link", color = Green, fontSize = 12.sp)
+                    inviteStatus?.let { status -> item { Text(status, color = Muted, fontSize = 12.sp) } }
+                    items(members, key = { "member:${it.memberId}" }) { member ->
+                        val own = member.memberId == actorMemberId
+                        val balance = if (own) 0L else projection.debtById.values.sumOf { debt ->
+                            when {
+                                debt.creditorMemberId == actorMemberId && debt.debtorMemberId == member.memberId -> debt.remainingAmountMinor
+                                debt.debtorMemberId == actorMemberId && debt.creditorMemberId == member.memberId -> -debt.remainingAmountMinor
+                                else -> 0L
                             }
-                        }} else null,
-                    )
-                }
-                item { AppSectionHeader("Outstanding debts", outstandingDebts.size) }
-                if (outstandingDebts.isEmpty()) item {
-                    AppEmptyState("All caught up", "There are no outstanding debts in this group.")
-                }
-                if (isOwner && outstandingDebts.isNotEmpty()) item {
-                    Text("Swipe left to delete · right to record payment", color = Muted, fontSize = 12.sp)
-                }
-                items(outstandingDebts, key = { "debt:${it.debtUnitId}" }) { debt ->
-                    val debtor = memberLabel(debt.debtorMemberId)
-                    val creditor = memberLabel(debt.creditorMemberId)
-                    AppSwipeItem(
-                        onLeftSwipe = if (isOwner) {{ deleteDebtError = null; pendingDeleteDebt = debt }} else null,
-                        leftIcon = Icons.Outlined.Delete,
-                        onRightSwipe = if (isOwner) {{ openPayment(debt) }} else null,
-                        rightLabel = "Settle",
-                        rightIcon = Icons.Outlined.Check,
-                    ) {
+                        }
+                        val balanceLabel = when {
+                            own -> "Settled"
+                            balance > 0 -> "Owes you"
+                            balance < 0 -> "You owe"
+                            else -> "Settled"
+                        }
                         AppListRow(
-                            title = if (debt.debtorMemberId == actorMemberId) "You owe $creditor" else "$debtor owes $creditor",
-                            subtitle = "Outstanding payment",
-                            leadingText = "↗",
-                            value = formatMinor(debt.remainingAmountMinor, group.currencyCode),
-                            accent = if (debt.debtorMemberId == actorMemberId) Danger else Green,
+                            title = memberLabel(member.memberId),
+                            subtitle = if (!member.isActive) "Former member" else if (member.role == "owner") "Group owner" else "Member",
+                            value = formatMinor(kotlin.math.abs(balance), group.currencyCode),
+                            valueLabel = balanceLabel,
+                            accent = if (balance < 0) Danger else if (balance > 0) Green else Muted,
+                            trailing = if (!own) {{
+                                TextButton(onClick = { linkMemberId = member.memberId }) {
+                                    Text(if (member.memberId in linkedFriends) "Contact" else "Link", color = Green, fontSize = 12.sp)
+                                }
+                            }} else null,
                         )
                     }
                 }
-            } else {
-                item { AppSectionHeader("Group activity", records.size) }
-                if (records.isEmpty()) item {
-                    AppEmptyState("No activity yet", "Shared expenses, payments and deleted debts will appear here.")
+                1 -> {
+                    if (outstandingDebts.isEmpty()) item {
+                        AppEmptyState("All caught up", "There are no outstanding debts in this group.")
+                    }
+                    if (outstandingDebts.any { it.creditorMemberId == actorMemberId }) item {
+                        Text("Swipe left to delete · right to record payment", color = Muted, fontSize = 12.sp)
+                    }
+                    items(outstandingDebts, key = { "debt:${it.debtUnitId}" }) { debt ->
+                        val debtor = memberLabel(debt.debtorMemberId)
+                        val creditor = memberLabel(debt.creditorMemberId)
+                        AppSwipeItem(
+                            onLeftSwipe = if (debt.creditorMemberId == actorMemberId) {{ deleteDebtError = null; pendingDeleteDebt = debt }} else null,
+                            leftIcon = Icons.Outlined.Delete,
+                            onRightSwipe = if (debt.creditorMemberId == actorMemberId) {{ openPayment(debt) }} else null,
+                            rightLabel = "Settle",
+                            rightIcon = Icons.Outlined.Check,
+                        ) {
+                            AppListRow(
+                                title = if (debt.debtorMemberId == actorMemberId) "You owe $creditor" else "$debtor owes $creditor",
+                                subtitle = "Outstanding payment",
+                                leadingText = "↗",
+                                value = formatMinor(debt.remainingAmountMinor, group.currencyCode),
+                                accent = if (debt.debtorMemberId == actorMemberId) Danger else Green,
+                            )
+                        }
+                    }
                 }
-                items(records, key = { "event:${it.id}" }) { record ->
-                    val actionTitle = when (record.actionType) {
-                        "expense_added" -> "Shared expense"
-                        "settlement_recorded" -> "Payment recorded"
-                        "debt_removed" -> "Debt deleted"
-                        else -> "Group update"
+                else -> {
+                    if (activities.isEmpty()) item {
+                        AppEmptyState("No activity yet", "Shared expenses, payments and deleted debts will appear here.")
                     }
-                    val syncLabel = when (record.syncState) {
-                        "published", "received" -> "Synced"
-                        else -> "Waiting to sync"
+                    items(activities, key = { "event:${it.id}" }) { record ->
+                        val actionTitle = when (record.actionType) {
+                            "expense_added" -> "Shared expense"
+                            "settlement_recorded" -> "Payment recorded"
+                            "debt_removed" -> "Debt deleted"
+                            else -> "Group update"
+                        }
+                        val syncLabel = when (record.syncState) {
+                            "published", "received" -> "Synced"
+                            else -> "Waiting to sync"
+                        }
+                        val date = activityDate.format(Instant.ofEpochMilli(record.createdAtMillis).atZone(zoneId))
+                        AppListRow(
+                            title = record.description.ifBlank { actionTitle },
+                            subtitle = "$actionTitle · ${memberLabel(record.actorMemberId)}\n$date · $syncLabel",
+                            leadingText = when (record.actionType) { "settlement_recorded" -> "✓"; "debt_removed" -> "−"; else -> "+" },
+                            accent = if (record.actionType == "debt_removed") Muted else Green,
+                        )
                     }
-                    val date = activityDate.format(Instant.ofEpochMilli(record.createdAtMillis).atZone(zoneId))
-                    AppListRow(
-                        title = record.description.ifBlank { actionTitle },
-                        subtitle = "$actionTitle · ${memberLabel(record.actorMemberId)}\n$date · $syncLabel",
-                        leadingText = when (record.actionType) { "settlement_recorded" -> "✓"; "debt_removed" -> "−"; else -> "+" },
-                        accent = if (record.actionType == "debt_removed") Muted else Green,
-                    )
                 }
             }
         }
@@ -706,7 +777,7 @@ private fun GroupDetailPage(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Record money already paid. This action updates the shared ledger and does not transfer money.", color = Muted)
-                    OutlinedTextField(settlementAmount, { settlementAmount = it.take(16); settlementStatus = null }, label = { Text("Paid (${group.currencyCode})") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
+                    OutlinedTextField(settlementAmount, { settlementAmount = it.take(16); settlementStatus = null }, label = { Text("Paid (${currencySymbol(group.currencyCode)})") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
                     settlementStatus?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
                 }
             },
@@ -725,8 +796,8 @@ private fun GroupDetailPage(
                         var committed = false
                         try {
                             val identity = withContext(Dispatchers.IO) { identityStore.getOrCreate() }
-                            require(isOwner && identity.publicKeyHex == ownerMemberId) {
-                                "Only the group owner can record this payment."
+                            require(identity.publicKeyHex == debt.creditorMemberId) {
+                                "Only the person who added this split can record its payment."
                             }
                             val event = SharedLedgerEvent(
                                 eventId = UUID.randomUUID().toString(),
@@ -771,7 +842,7 @@ private fun GroupDetailPage(
                         var committed = false
                         try {
                             val identity = withContext(Dispatchers.IO) { identityStore.getOrCreate() }
-                            require(isOwner && identity.publicKeyHex == ownerMemberId) { "Only the group owner can delete a debt." }
+                            require(identity.publicKeyHex == debt.creditorMemberId) { "Only the person who added this split can delete it." }
                             val event = SharedLedgerEvent(
                                 eventId = UUID.randomUUID().toString(),
                                 groupId = group.id,

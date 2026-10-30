@@ -37,6 +37,8 @@ internal fun money(value: Double): String = _money(value)
 internal val LocalCurrency: ProvidableCompositionLocal<String> get() = _LocalCurrency
 internal val LocalZoneId: ProvidableCompositionLocal<ZoneId> get() = _LocalZoneId
 internal val supportedCurrencies: List<Pair<String, String>> get() = _supportedCurrencies
+internal fun currencySymbol(currencyCodeOrSymbol: String): String = com.just_sri.suvidha.expenses.constants.currencySymbol(currencyCodeOrSymbol)
+internal fun currencyCodeFor(symbolOrCode: String): String = com.just_sri.suvidha.expenses.constants.currencyCodeFor(symbolOrCode)
 
 internal typealias TimezoneOption = _TimezoneOption
 internal val timezoneIds: List<String> get() = _timezoneIds

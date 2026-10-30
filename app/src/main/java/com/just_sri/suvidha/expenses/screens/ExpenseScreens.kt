@@ -822,18 +822,38 @@ private fun SplitPreview() {
     }
 }
 
+private sealed class FriendHistoryRow(val sortDate: Long, val key: String) {
+    data class Personal(val txn: SplitTransaction) : FriendHistoryRow(txn.date, "personal_${txn.id}")
+    data class Group(val txn: FriendGroupTransaction) : FriendHistoryRow(txn.occurredAtMillis, "group_${txn.debtUnitId}")
+}
+
 @Composable
 internal fun FriendTransactionsPage(
     friend: FriendBalance,
     transactions: List<SplitTransaction>,
     modifier: Modifier,
+    groupTransactions: List<FriendGroupTransaction> = emptyList(),
     onBack: () -> Unit,
     onAddSplit: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val currency = LocalCurrency.current
     var selectedTxnForDetail by remember { mutableStateOf<SplitTransaction?>(null) }
+    var selectedGroupTxnForDetail by remember { mutableStateOf<FriendGroupTransaction?>(null) }
     val zoneId = LocalZoneId.current
+
+    val netBalance = remember(transactions, groupTransactions) {
+        val personalUnsettled = transactions.filterNot { it.isSettled }.sumOf { it.amount }
+        val groupUnsettled = groupTransactions.filterNot { it.isSettled }.sumOf { it.remainingAmount }
+        personalUnsettled + groupUnsettled
+    }
+
+    val allItems = remember(transactions, groupTransactions) {
+        val personalRows = transactions.map { FriendHistoryRow.Personal(it) }
+        val groupRows = groupTransactions.map { FriendHistoryRow.Group(it) }
+        (personalRows + groupRows).sortedByDescending { it.sortDate }
+    }
+
     LazyColumn(
         Modifier.fillMaxSize().then(modifier),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 80.dp),
@@ -856,9 +876,6 @@ internal fun FriendTransactionsPage(
             }
         }
         item {
-            val netBalance = remember(transactions) {
-                transactions.filterNot { it.isSettled }.sumOf { it.amount }
-            }
             HeroBalanceCard(
                 eyebrow = "NET BALANCE",
                 amount = kotlin.math.abs(netBalance),
@@ -867,11 +884,8 @@ internal fun FriendTransactionsPage(
             )
         }
         item {
-            val netBalance = remember(transactions) {
-                transactions.filterNot { it.isSettled }.sumOf { it.amount }
-            }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { AppSectionHeader("Transactions", transactions.size) }
+                Box(Modifier.weight(1f)) { AppSectionHeader("Transactions", allItems.size) }
                 IconButton(
                     onClick = {
                         val message = "Hi ${friend.name}, a quick reminder that your balance with me is $currency ${money(kotlin.math.abs(netBalance))}. When you get a chance, could you settle it? Thanks!"
@@ -891,23 +905,39 @@ internal fun FriendTransactionsPage(
                 }
             }
         }
-        if (transactions.isEmpty()) item {
+        if (allItems.isEmpty()) item {
             AppEmptyState("No transactions yet", "Tap + to add a split with ${friend.name}.")
         }
-        items(transactions, key = { it.id }) { txn ->
-            AppListRow(
-                title = txn.note.replace('\n', ' ').trim().ifBlank { if (txn.amount > 0) "They owe you" else "You owe" },
-                subtitle = rowDateTimeFormatter.format(Instant.ofEpochMilli(txn.date).atZone(zoneId)),
-                leadingText = if (txn.isSettled) "✓" else if (txn.amount > 0) "↑" else "↓",
-                accent = if (txn.isSettled) Muted else if (txn.amount > 0) Green else Danger,
-                value = "${if (txn.amount < 0) "−" else "+"} ${LocalCurrency.current} ${money(kotlin.math.abs(txn.amount))}",
-                valueLabel = if (txn.isSettled) "Settled" else "Outstanding",
-                onClick = { selectedTxnForDetail = txn },
-            )
+        items(allItems, key = { it.key }) { row ->
+            when (row) {
+                is FriendHistoryRow.Personal -> {
+                    val txn = row.txn
+                    AppListRow(
+                        title = txn.note.replace('\n', ' ').trim().ifBlank { if (txn.amount > 0) "They owe you" else "You owe" },
+                        subtitle = rowDateTimeFormatter.format(Instant.ofEpochMilli(txn.date).atZone(zoneId)),
+                        leadingText = if (txn.isSettled) "✓" else if (txn.amount > 0) "↑" else "↓",
+                        accent = if (txn.isSettled) Muted else if (txn.amount > 0) Green else Danger,
+                        value = "${if (txn.amount < 0) "−" else "+"} $currency ${money(kotlin.math.abs(txn.amount))}",
+                        valueLabel = if (txn.isSettled) "Settled" else "Outstanding",
+                        onClick = { selectedTxnForDetail = txn },
+                    )
+                }
+                is FriendHistoryRow.Group -> {
+                    val gtxn = row.txn
+                    AppListRow(
+                        title = "${gtxn.groupName} · ${gtxn.description.ifBlank { "Shared expense" }}",
+                        subtitle = rowDateTimeFormatter.format(Instant.ofEpochMilli(gtxn.occurredAtMillis).atZone(zoneId)),
+                        leadingText = if (gtxn.isSettled) "✓" else if (gtxn.amount > 0) "↑" else "↓",
+                        accent = if (gtxn.isSettled) Muted else if (gtxn.amount > 0) Green else Danger,
+                        value = "${if (gtxn.amount < 0) "−" else "+"} $currency ${money(kotlin.math.abs(gtxn.amount))}",
+                        valueLabel = "${gtxn.groupName} · ${if (gtxn.isSettled) "Settled" else "Outstanding"}",
+                        onClick = { selectedGroupTxnForDetail = gtxn },
+                    )
+                }
+            }
         }
     }
     selectedTxnForDetail?.let { txn ->
-        val currency = LocalCurrency.current
         SplitTransactionDetailDialog(
             txn = txn,
             friendName = friend.name,
@@ -916,6 +946,74 @@ internal fun FriendTransactionsPage(
             onDismiss = { selectedTxnForDetail = null }
         )
     }
+    selectedGroupTxnForDetail?.let { gtxn ->
+        GroupSplitDetailDialog(
+            txn = gtxn,
+            friendName = friend.name,
+            zoneId = zoneId,
+            currency = currency,
+            onDismiss = { selectedGroupTxnForDetail = null }
+        )
+    }
+}
+
+@Composable
+private fun GroupSplitDetailDialog(
+    txn: FriendGroupTransaction,
+    friendName: String,
+    zoneId: ZoneId,
+    currency: String,
+    onDismiss: () -> Unit
+) {
+    val date = detailTimeFormatter.format(Instant.ofEpochMilli(txn.occurredAtMillis).atZone(zoneId))
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(txn.description.ifBlank { "Shared expense" }, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "${if (txn.amount < 0) "−" else "+"} $currency ${money(kotlin.math.abs(txn.amount))}",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (txn.isSettled) Muted else if (txn.amount > 0) Green else Danger
+                )
+                Text(
+                    text = if (txn.amount > 0) "$friendName owes you" else "You owe $friendName",
+                    color = Muted,
+                    fontSize = 14.sp
+                )
+                HorizontalDivider(color = Canvas)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Group", color = Muted, fontSize = 13.sp)
+                    Text(txn.groupName, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Status", color = Muted, fontSize = 13.sp)
+                    Text(
+                        if (txn.isSettled) "Settled in group" else "Outstanding in group",
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (txn.isSettled) Muted else Green,
+                        fontSize = 13.sp
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Date", color = Muted, fontSize = 13.sp)
+                    Text(date, fontSize = 13.sp)
+                }
+                Text(
+                    text = "This shared split belongs to group \"${txn.groupName}\". To record payments or manage this debt, please visit the group in the Groups tab.",
+                    color = Muted,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done", color = Green)
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true, name = "Settings")

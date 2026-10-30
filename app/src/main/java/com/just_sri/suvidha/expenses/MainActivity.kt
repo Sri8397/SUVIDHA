@@ -111,9 +111,17 @@ class MainActivity : ComponentActivity() {
                 val database = state.database
                 val repository = remember(database) { ExpenseRepository(database) }
                 val splitDao = remember(database) { database.splitTransactions() }
+                val identityStore = remember { NostrIdentityStore(applicationContext) }
+                var actorMemberId by remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(identityStore) {
+                    actorMemberId = withContext(Dispatchers.IO) {
+                        runCatching { identityStore.getOrCreate().publicKeyHex }.getOrNull()
+                    }
+                }
 
                 val expenses by repository.observeExpenses().collectAsStateWithLifecycle(emptyList())
-                val friends by repository.observeFriendsWithBalances().collectAsStateWithLifecycle(emptyList())
+                val friends by remember(actorMemberId) { repository.observeFriendsWithBalances(actorMemberId) }.collectAsStateWithLifecycle(emptyList())
+                val groupTransactionsByFriend by remember(actorMemberId) { repository.observeFriendGroupTransactions(actorMemberId) }.collectAsStateWithLifecycle(emptyMap())
 
                 var categories by remember {
                     mutableStateOf(
@@ -142,7 +150,11 @@ class MainActivity : ComponentActivity() {
                     MaterialTheme(colorScheme = lightColorScheme(primary = Green, background = Canvas, surface = CardSurface)) {
                         val activeIntent = currentIntent ?: intent
                         val initialTab = remember(activeIntent) {
-                            if (activeIntent?.getStringExtra("navigate_to") == "shared_groups") 2 else 0
+                            when (activeIntent?.getStringExtra("navigate_to")) {
+                                "shared_groups" -> 2
+                                "backup" -> 3
+                                else -> 0
+                            }
                         }
                         ExpenseHome(
                             initialTab = initialTab,
@@ -153,6 +165,7 @@ class MainActivity : ComponentActivity() {
                             currency = currency,
                             timezoneId = timezoneId,
                             splitDao = splitDao,
+                            groupTransactionsByFriend = groupTransactionsByFriend,
                             onCategoriesChange = {
                                 categories = (it.filter { name -> name.isNotBlank() && !name.equals("Other", true) } + "Other").distinct()
                                 prefs.edit().putString("categories", categories.joinToString("|")).apply()
@@ -294,6 +307,7 @@ private fun ExpenseHome(
     currency: String,
     timezoneId: String,
     splitDao: SplitTransactionDao,
+    groupTransactionsByFriend: Map<String, List<FriendGroupTransaction>> = emptyMap(),
     onCategoriesChange: (List<String>) -> Unit,
     onCurrencyChange: (String) -> Unit,
     onTimezoneChange: (String) -> Unit,
@@ -459,6 +473,7 @@ private fun ExpenseHome(
                     FriendTransactionsPage(
                         friend = liveFriend,
                         transactions = transactions,
+                        groupTransactions = groupTransactionsByFriend[liveFriend.id].orEmpty(),
                         modifier = Modifier.padding(padding),
                         onBack = { viewingFriend = null },
                         onAddSplit = { friendId -> selectedSplitFriend = friendId; showSplitForm = true }

@@ -51,6 +51,48 @@ val supportedCurrencies = listOf(
     "kr" to "kr  Krona / Krone"
 )
 
+val currencyCodeToSymbol = mapOf(
+    "INR" to "₹",
+    "USD" to "$",
+    "EUR" to "€",
+    "GBP" to "£",
+    "JPY" to "¥",
+    "KRW" to "₩",
+    "CHF" to "CHF",
+    "AED" to "AED",
+    "THB" to "฿",
+    "PHP" to "₱",
+    "VND" to "₫",
+    "SEK" to "kr",
+)
+
+val symbolToCurrencyCode = mapOf(
+    "₹" to "INR",
+    "$" to "USD",
+    "€" to "EUR",
+    "£" to "GBP",
+    "¥" to "JPY",
+    "₩" to "KRW",
+    "CHF" to "CHF",
+    "AED" to "AED",
+    "฿" to "THB",
+    "₱" to "PHP",
+    "₫" to "VND",
+    "kr" to "SEK",
+)
+
+fun currencySymbol(currencyCodeOrSymbol: String): String {
+    symbolToCurrencyCode[currencyCodeOrSymbol]?.let { return currencyCodeOrSymbol }
+    currencyCodeToSymbol[currencyCodeOrSymbol]?.let { return it }
+    return runCatching { java.util.Currency.getInstance(currencyCodeOrSymbol).symbol }.getOrDefault(currencyCodeOrSymbol)
+}
+
+fun currencyCodeFor(symbolOrCode: String): String {
+    symbolToCurrencyCode[symbolOrCode]?.let { return it }
+    if (symbolOrCode.matches(Regex("[A-Z]{3}"))) return symbolOrCode
+    return "INR"
+}
+
 // ---------------------------------------------------------------------------
 // 4. Timezone Configuration
 // ---------------------------------------------------------------------------
