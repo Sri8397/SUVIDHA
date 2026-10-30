@@ -21,7 +21,7 @@ android {
         applicationId = "com.just_sri.suvidhaapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
+        versionCode = 14
         versionName = "1.0.2"
         manifestPlaceholders["appLabel"] = "Suvidha Expenses"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
