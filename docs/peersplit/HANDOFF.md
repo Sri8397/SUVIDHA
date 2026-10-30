@@ -55,9 +55,13 @@ Next useful steps, only when the user resumes:
 
 ## Local artifacts
 
-- APKs: `app/build/outputs/apk/standard/debug/app-standard-debug.apk` and `app/build/outputs/apk/deviceTest/debug/app-deviceTest-debug.apk`.
-- Device logs and row-digest summaries: `/tmp/suvidha-device-evidence/` (temporary local files, not committed evidence storage).
+- APKs archived during cleanup: `artifacts/apks/suvidha-normal-debug.apk` and `artifacts/apks/suvidha-peersplit-test-debug.apk`; copy checksums are in `artifacts/apks/SHA256SUMS`. These are local debug APKs. Later source edits may require a new build.
+- Retained device/build logs, unit-test XML reports and row-digest summaries: `artifacts/verification/`. This local artifacts directory is Git-ignored. Temporary database copies and ADB helper scripts under `/tmp` were removed after retaining the verification records.
 - UI captures remain in `suvidha-screenshots/`, including `shared-group-exact-20261030.png`, `shared-linked-member-20261030.png`, and `shared-group-settled-20261030.png`. Some captures precede the final visual polish; retain the source/build as the current implementation.
 - Sync notification helper/icon files were also present from concurrent workspace work. They are preserved in the checkpoint; their notification behavior was not verified in this task.
 
 No code was pushed or published.
+
+## Workspace cleanup
+
+Generated `app/build/`, root `build/`, project `.gradle/` and `.kotlin/` caches, and the tracked `.DS_Store` were removed. Latest APKs were copied and checksum-checked before deleting build output. Source code, migration schemas, tests, project/IDE settings, local SDK configuration, database recovery backups and screenshot references were retained. No application source was changed or tests rerun for this file cleanup.

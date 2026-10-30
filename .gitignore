@@ -55,6 +55,9 @@ Thumbs.db
 # Local screenshots
 /suvidha-screenshots/
 
+# Local APK archives and verification reports
+/artifacts/
+
 # Firebase configuration
 google-services.json
 app/google-services.json

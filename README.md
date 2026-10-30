@@ -32,14 +32,6 @@ It works completely offline, keeping 100% of your data private and local on your
 
 ---
 
-## 📱 Screenshots
-
-| Home & Analytics |
-|:---:|
-| <img src="suvidha-screenshots/suvidha-20261025-192918.png" width="300" alt="Suvidha App Screenshot"/> |
-
----
-
 ## 🛠️ Tech Stack
 
 - **Language:** [Kotlin](https://kotlinlang.org/)
