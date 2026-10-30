@@ -46,7 +46,7 @@ Next useful steps, only when the user resumes:
 
 ## Remaining planned / incomplete scope
 
-- Background scheduling/retry, relay pagination/cursors and automatic gap repair.
+- Relay pagination/cursors and automatic gap repair. Background scheduling/retry is now implemented; see README and ADR-003 for its behavior and limits.
 - Member removal/rekeying UI and revoked-member epoch tests.
 - Recovery/reinvite for interruption between a successful membership change and queuing the returned Welcome.
 - Complete clean-install encrypted-backup restoration with real identity/MLS state; store/format/Room recovery checks pass, but that full UI scenario remains unverified.
@@ -65,3 +65,9 @@ No code was pushed or published.
 ## Workspace cleanup
 
 Generated `app/build/`, root `build/`, project `.gradle/` and `.kotlin/` caches, and the tracked `.DS_Store` were removed. Latest APKs were copied and checksum-checked before deleting build output. Source code, migration schemas, tests, project/IDE settings, local SDK configuration, database recovery backups and screenshot references were retained. No application source was changed or tests rerun for this file cleanup.
+
+## Background group sync — 30 October 2026
+
+WorkManager background sync, automatic outbox delivery, app-resume catch-up, shared protocol locking, and lifecycle-aware polling are implemented. See README and ADR-003 for timing, retry behavior, and remaining transport limits.
+
+Validation: debug APK build, all 24 local unit tests, lint (no errors), and Android test APK compilation passed. The initial Android run passed 10 worker tests and six existing encryption/backup checks; the scheduler suite initially had a JUnit return-type declaration issue, which was corrected. Emulator testing was then stopped at the user's request before the scheduler rerun completed. No completed emulator scheduler or background process-restart validation is claimed. The temporary emulator and its profile were removed. No physical device was modified.

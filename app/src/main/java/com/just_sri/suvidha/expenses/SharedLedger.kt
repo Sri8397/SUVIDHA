@@ -25,6 +25,9 @@ sealed interface SharedLedgerAction {
 
     /** Removes one outstanding debt while preserving the causal history. */
     data class DebtRemoved(val debtUnitId: String) : SharedLedgerAction
+
+    /** Peer-to-peer chat message sent within the group. */
+    data class ChatMessage(val text: String) : SharedLedgerAction
 }
 
 /** Local domain event. Authentication and encryption fields are intentionally added with their protocol. */
@@ -221,7 +224,12 @@ fun projectSharedLedger(
                 }
                 debts[action.debtUnitId] = debt.copy(remainingAmountMinor = 0)
             }
-
+            is SharedLedgerAction.ChatMessage -> {
+                if (action.text.isBlank()) {
+                    rejected[id] = "Chat message text cannot be blank."
+                    return@forEach
+                }
+            }
         }
         accepted += id
         ancestorIds[id] = ancestors

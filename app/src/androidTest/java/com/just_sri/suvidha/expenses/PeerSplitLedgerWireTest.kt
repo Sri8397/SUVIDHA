@@ -40,4 +40,20 @@ class PeerSplitLedgerWireTest {
         assertNull(PeerSplitLedgerWire.decode(encoded, "g", "mallory"))
         assertNull(PeerSplitLedgerWire.decode("x".repeat(128 * 1024 + 1), "g", "alice"))
     }
+
+    @Test
+    fun chatMessageRoundTripsAndBindsAuthor() {
+        val event = SharedLedgerEvent(
+            eventId = "chat-1",
+            groupId = "g",
+            actorMemberId = "alice",
+            parentEventIds = setOf("parent"),
+            occurredAtMillis = 10,
+            action = SharedLedgerAction.ChatMessage("Hey everyone, let's meet at 8!"),
+            description = "Hey everyone, let's meet at 8!"
+        )
+        val encoded = PeerSplitLedgerWire.encode(event)
+        assertEquals(event, PeerSplitLedgerWire.decode(encoded, "g", "alice"))
+        assertNull(PeerSplitLedgerWire.decode(encoded, "g", "mallory"))
+    }
 }

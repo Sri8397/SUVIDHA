@@ -38,7 +38,11 @@ internal object SharedLedgerCodec {
                 .put("allocations", allocations)
                 .toString()
         }
+
+        is SharedLedgerAction.ChatMessage -> "chat_message" to JSONObject().put("text", action.text.take(MAX_CHAT_LENGTH)).toString()
     }
+
+    const val MAX_CHAT_LENGTH = 2000
 
     fun decodeAction(actionType: String, payloadJson: String): SharedLedgerAction {
         val payload = JSONObject(payloadJson)
@@ -73,6 +77,8 @@ internal object SharedLedgerCodec {
                     },
                 )
             }
+
+            "chat_message" -> SharedLedgerAction.ChatMessage(payload.getString("text").take(MAX_CHAT_LENGTH))
 
             else -> throw IllegalArgumentException("Unsupported shared ledger action: $actionType")
         }

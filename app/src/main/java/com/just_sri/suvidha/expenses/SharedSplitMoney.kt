@@ -29,7 +29,8 @@ internal object SharedSplitMoney {
         val denominator = weights.values.sumOf { it.toLong() }.toBigInteger()
         val parts = weights.toSortedMap().map { (id, weight) ->
             val division = BigInteger.valueOf(totalMinor).multiply(weight.toBigInteger()).divideAndRemainder(denominator)
-            Triple(id, division[0].longValueExact(), division[1])
+            // Positive weights ensure this quotient is between zero and totalMinor (a Long).
+            Triple(id, division[0].toLong(), division[1])
         }
         val remainder = totalMinor - parts.sumOf { it.second }
         val extra = parts.sortedWith(compareByDescending<Triple<String, Long, BigInteger>> { it.third }.thenBy { it.first })

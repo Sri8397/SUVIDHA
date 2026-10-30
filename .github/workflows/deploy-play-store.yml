@@ -38,7 +38,7 @@ jobs:
 
       # ── Build signed AAB ──────────────────────────────────────
       - name: Build release AAB
-        run: ./gradlew :app:bundleStandardRelease --no-daemon
+        run: ./gradlew :app:bundleRelease --no-daemon
         env:
           SUVIDHA_KEYSTORE_PATH: ${{ github.workspace }}/app/release.keystore
           SUVIDHA_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-aab
-          path: app/build/outputs/bundle/standardRelease/app-standard-release.aab
+          path: app/build/outputs/bundle/release/app-release.aab
           retention-days: 7
           if-no-files-found: error
 
@@ -70,7 +70,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-aab
-          path: app/build/outputs/bundle/standardRelease
+          path: app/build/outputs/bundle/release
 
       # ── Upload to Play Store (Closed Testing) ─────────────────
       - name: Upload to Google Play
@@ -78,7 +78,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.just_sri.suvidhaapp
-          releaseFiles: app/build/outputs/bundle/standardRelease/app-standard-release.aab
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: alpha
           status: completed
           whatsNewDirectory: whatsnew/

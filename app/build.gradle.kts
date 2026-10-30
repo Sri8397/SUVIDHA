@@ -63,19 +63,6 @@ android {
         }
     }
 
-    flavorDimensions += "distribution"
-    productFlavors {
-        create("standard") {
-            dimension = "distribution"
-        }
-        create("deviceTest") {
-            dimension = "distribution"
-            applicationIdSuffix = ".peersplitpreview"
-            versionNameSuffix = "-peersplitpreview"
-            manifestPlaceholders["appLabel"] = "Suvidha PeerSplit Test"
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -103,14 +90,21 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("androidx.room:room-runtime:2.7.0")
     implementation("androidx.room:room-ktx:2.7.0")
     implementation("com.squareup.okhttp3:okhttp:5.5.1")
     implementation("com.vitorpamplona.marmot:marmot-jvm:2.2.1")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     ksp("androidx.room:room-compiler:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.02.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.9.0")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.0")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.room:room-testing:2.7.0")
+    androidTestImplementation("androidx.work:work-testing:2.12.0")
 }

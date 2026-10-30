@@ -34,6 +34,7 @@ internal data class RelaySyncReport(
     val welcomesProcessed: Int,
     val groupEventsProcessed: Int,
     val errors: Int,
+    val relayFailures: Int = 0,
 )
 
 /** Manual Nostr relay transport. Relays see event timing, IP, and routing tags; payloads are encrypted. */
@@ -63,6 +64,7 @@ internal class PeerSplitRelaySync(
         if (relayUrls.isEmpty()) return RelaySyncReport(0, 0, 0, 0, 0)
         val responded = mutableSetOf<String>()
         var errors = 0
+        var relayFailures = 0
         val incoming = linkedMapOf<String, Event>()
         // Always check invitations, including on a device with no groups yet.
         for (relay in relayUrls.distinct()) {
@@ -77,6 +79,7 @@ internal class PeerSplitRelaySync(
                 throw cancelled
             } catch (_: Exception) {
                 errors++
+                relayFailures++
             }
         }
 
@@ -111,7 +114,7 @@ internal class PeerSplitRelaySync(
                     .forEach { incoming.putIfAbsent(it.id, it) }
                 responded += relay.url
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { errors++ }
+            catch (_: Exception) { errors++; relayFailures++ }
         }
 
         for (event in incoming.values.filterIsInstance<GroupEvent>().sortedWith(compareBy<GroupEvent> { it.createdAt }.thenBy { it.id })) {
@@ -139,7 +142,7 @@ internal class PeerSplitRelaySync(
                 errors++
             }
         }
-        return RelaySyncReport(responded.size, incoming.values.count { it is GroupEvent }, welcomesProcessed, groupProcessed, errors)
+        return RelaySyncReport(responded.size, incoming.values.count { it is GroupEvent }, welcomesProcessed, groupProcessed, errors, relayFailures)
     }
 
     suspend fun fetchKeyPackageEvents(pubKeyHex: String, relayUrls: List<NormalizedRelayUrl> = DEFAULT_RELAYS): List<Event> = coroutineScope {

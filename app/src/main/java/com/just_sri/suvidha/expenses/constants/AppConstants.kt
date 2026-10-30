@@ -15,13 +15,13 @@ import java.util.Locale
 // ---------------------------------------------------------------------------
 // 1. Color Tokens
 // ---------------------------------------------------------------------------
-val Ink = Color(0xFF17231E)
-val Muted = Color(0xFF728078)
-val Green = Color(0xFF16845B)
-val Canvas = Color(0xFFEFF2EE)
-val CardSurface = Color(0xFFFAFBF8)
+val Ink = Color(0xFF1A211B)
+val Muted = Color(0xFF5E6B61)
+val Green = Color(0xFF1E5E3A)
+val Canvas = Color(0xFFF5F7F3)
+val CardSurface = Color(0xFFF7F9F5)
 val OffWhite = Color(0xFFF4F7F5)
-val BorderLight = Color(0xFFE2E7E2)
+val BorderLight = Color(0xFFE8EDE5)
 val Danger = Color(0xFFB64C45)
 
 // ---------------------------------------------------------------------------

@@ -170,4 +170,39 @@ class SharedLedgerTest {
         assertTrue(projection.acceptedEventIds.isEmpty())
         assertTrue("expense-event" in projection.rejectedEvents)
     }
+
+    @Test
+    fun chatMessageIsAcceptedAndDoesNotAlterDebtsOrBalances() {
+        val chat = SharedLedgerEvent(
+            eventId = "chat-1",
+            groupId = "group-1",
+            actorMemberId = "bob",
+            parentEventIds = setOf("expense-event"),
+            occurredAtMillis = 25L,
+            action = SharedLedgerAction.ChatMessage("Sounds good, see you guys in Goa!")
+        )
+        val projection = projectSharedLedger("group-1", listOf(expenseEvent, chat), "INR")
+
+        assertEquals(setOf("expense-event", "chat-1"), projection.acceptedEventIds)
+        assertTrue(projection.rejectedEvents.isEmpty())
+        assertEquals(1000L, projection.balanceByMemberId["alice"])
+        assertEquals(-1000L, projection.balanceByMemberId["bob"])
+        assertEquals(1000L, projection.debtById.getValue("debt-1").remainingAmountMinor)
+    }
+
+    @Test
+    fun blankChatMessageIsRejected() {
+        val chat = SharedLedgerEvent(
+            eventId = "chat-blank",
+            groupId = "group-1",
+            actorMemberId = "bob",
+            parentEventIds = setOf("expense-event"),
+            occurredAtMillis = 25L,
+            action = SharedLedgerAction.ChatMessage("   ")
+        )
+        val projection = projectSharedLedger("group-1", listOf(expenseEvent, chat), "INR")
+
+        assertEquals(setOf("expense-event"), projection.acceptedEventIds)
+        assertTrue("chat-blank" in projection.rejectedEvents)
+    }
 }

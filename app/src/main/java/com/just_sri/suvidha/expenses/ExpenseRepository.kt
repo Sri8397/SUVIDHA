@@ -121,6 +121,19 @@ internal class ExpenseRepository(private val database: ExpenseDatabase) {
 
     suspend fun saveFriend(friend: Friend) = friendDao.save(friend)
 
+    /** Save a local label and its public identity together, even before joining a group. */
+    suspend fun addFriend(name: String, publicId: String, ownPublicId: String?): Friend = database.withTransaction {
+        val key = publicId.trim().lowercase(java.util.Locale.ROOT)
+        require(key.matches(Regex("[0-9a-f]{64}"))) { "Enter a full 64-character public ID using a–f and 0–9." }
+        require(key != ownPublicId) { "This is your own public ID. Ask your friend for theirs." }
+        require(name.trim().length in 1..60) { "Enter a name with up to 60 characters." }
+        require(database.sharedMemberFriendLinks().getAll().none { it.memberId == key }) { "This public ID is already saved as a friend." }
+        val friend = Friend(UUID.randomUUID().toString(), name.trim(), System.currentTimeMillis())
+        friendDao.save(friend)
+        database.sharedMemberFriendLinks().save(SharedMemberFriendLinkEntity(key, friend.id, friend.updatedAt))
+        friend
+    }
+
     suspend fun deleteFriend(id: String) = friendDao.delete(id)
 
     suspend fun addExpense(draft: ExpenseDraft) {
