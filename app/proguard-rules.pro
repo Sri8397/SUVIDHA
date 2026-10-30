@@ -1,37 +1,28 @@
-# Default ProGuard/R8 rules for Suvidha
+# ProGuard/R8 rules for Suvidha Expense
 # -------------------------------------------
 
-# Keep Kotlin metadata for reflection
+# Preserve annotations and signatures required for generics / coroutines
 -keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
--keep class kotlin.Metadata { *; }
 
-# Keep Compose
--keep class androidx.compose.** { *; }
--dontwarn androidx.compose.**
-
-# Keep Room entities and DAOs
--keep class * extends androidx.room.RoomDatabase { *; }
+# Room Database, Entities, and DAOs
+-keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class * { *; }
 -keep @androidx.room.Dao interface * { *; }
+-dontwarn androidx.room.paging.**
 
-# Keep data classes used with Firestore/serialization
--keepclassmembers class * {
-    @com.google.firebase.firestore.PropertyName <fields>;
+# Native methods (JNI) & secp256k1 crypto library
+-keepclasseswithmembernames class * {
+    native <methods>;
 }
--keep class com.just_sri.suvidha.expenses.** { *; }
+-keep class fr.acinq.secp256k1.** { *; }
+-dontwarn fr.acinq.secp256k1.**
 
-# Keep native libraries
--keep class * { native <methods>; }
-
-# OkHttp / WebSocket
+# OkHttp & Okio (consumer rules are in library, suppress benign platform warnings)
 -dontwarn okhttp3.**
 -dontwarn okio.**
--keep class okhttp3.** { *; }
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
 
-# Firebase
--keep class com.google.firebase.** { *; }
--dontwarn com.google.firebase.**
-
-# Crypto / secp256k1
--keep class fr.nickel.secp256k1.** { *; }
--keep class org.bitcoin.** { *; }
+# Marmot / Nostr protocol
+-dontwarn com.vitorpamplona.**
