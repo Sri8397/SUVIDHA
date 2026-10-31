@@ -26,3 +26,11 @@
 
 # Marmot / Nostr protocol
 -dontwarn com.vitorpamplona.**
+
+# Google Play Services Code Scanner and ML Kit
+-keep class com.google.android.gms.internal.mlkit_code_scanner.** { *; }
+-keep class com.google.mlkit.vision.codescanner.** { *; }
+-keep class com.google.mlkit.vision.barcode.** { *; }
+-keep class com.google.mlkit.vision.common.** { *; }
+-keep class com.google.mlkit.common.** { *; }
+-keep class com.google.firebase.components.** { *; }

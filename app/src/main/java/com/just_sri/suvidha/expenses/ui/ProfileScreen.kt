@@ -15,7 +15,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
@@ -304,6 +306,46 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                     }
                 )
             } }
+            item { SectionHeading("About") }
+            item {
+                Panel {
+                    LedgerRow(
+                        title = "Version number",
+                        onClick = { model.message = "Suvidha v1.0.4 (18) · Up to date" },
+                        leading = {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp, 36.dp)
+                                    .background(Color(0xFFEAF0E8), RoundedCornerShape(11.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Outlined.Info, null, Modifier.size(19.dp), tint = Color(0xFF628467))
+                            }
+                        },
+                        trailing = {
+                            Text("18", color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
+                        },
+                        divider = true
+                    )
+                    LedgerRow(
+                        title = "Release version",
+                        onClick = { model.message = "Suvidha v1.0.4 (18) · Up to date" },
+                        leading = {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp, 36.dp)
+                                    .background(Color(0xFFE5F2EA), RoundedCornerShape(11.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(19.dp), tint = Color(0xFF1E5E3A))
+                            }
+                        },
+                        trailing = {
+                            Text("1.0.4", color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
+                        }
+                    )
+                }
+            }
             item { SectionHeading("Data & privacy", "Always local") }
             item { Panel {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

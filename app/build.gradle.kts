@@ -21,8 +21,8 @@ android {
         applicationId = "com.just_sri.suvidhaapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 17
-        versionName = "1.0.3"
+        versionCode = 18
+        versionName = "1.0.4"
         manifestPlaceholders["appLabel"] = "Suvidha Expenses"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { debugSymbolLevel = "FULL" }
@@ -64,6 +64,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-dev"
+            manifestPlaceholders["appLabel"] = "Suvidha Local"
+        }
+        
         release {
             isMinifyEnabled = true
             isShrinkResources = true

@@ -110,38 +110,25 @@ internal fun BalanceFigure(label: String, amount: String, modifier: Modifier = M
 
 @Composable
 internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
-    val context = LocalContext.current
-    var name by rememberSaveable { mutableStateOf("") }
-    var publicId by rememberSaveable { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    val scanner = remember(context) {
-        val options = GmsBarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .enableAutoZoom()
-            .build()
-        GmsBarcodeScanning.getClient(context, options)
-    }
-
-    fun startScan() {
-        scanner.startScan()
-            .addOnSuccessListener { barcode ->
-                val raw = barcode.rawValue ?: barcode.displayValue ?: ""
-                val matched = Regex("[0-9a-fA-F]{64}").find(raw)?.value?.lowercase()
-                if (matched != null) {
-                    publicId = matched
-                    error = null
+    val context: Context = LocalContext.current
+    var name: String by rememberSaveable { mutableStateOf("") }
+    var publicId: String by rememberSaveable { mutableStateOf("") }
+    var error: String? by remember { mutableStateOf<String?>(null) }
+    fun startScan(): Unit {
+        launchQrScanner(
+            context = context,
+            onSuccess = { detectedId: String ->
+                publicId = detectedId
+                error = null
+                if (detectedId.length == 64) {
                     model.message = "Public ID detected"
-                } else if (raw.isNotBlank()) {
-                    publicId = raw.trim()
-                    error = null
                 }
+            },
+            onError = { message: String ->
+                model.message = message
             }
-            .addOnFailureListener { e ->
-                model.message = "Scan failed: ${e.localizedMessage ?: "Could not open scanner"}"
-            }
+        )
     }
-
     PageColumn {
         PageHeader("Add friend", back)
         PageList {
@@ -197,6 +184,33 @@ internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+private fun launchQrScanner(
+    context: Context,
+    onSuccess: (String) -> Unit,
+    onError: (String) -> Unit
+): Unit {
+    try {
+        val options: GmsBarcodeScannerOptions = GmsBarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .enableAutoZoom()
+            .build()
+        GmsBarcodeScanning.getClient(context, options).startScan()
+            .addOnSuccessListener { barcode: Barcode ->
+                val raw: String = barcode.rawValue ?: barcode.displayValue ?: ""
+                val matched: String? = Regex("[0-9a-fA-F]{64}").find(raw)?.value?.lowercase()
+                when {
+                    matched != null -> onSuccess(matched)
+                    raw.isNotBlank() -> onSuccess(raw.trim())
+                }
+            }
+            .addOnFailureListener { e: Exception ->
+                onError("Scan failed: ${e.localizedMessage ?: "Could not open scanner"}")
+            }
+    } catch (e: Exception) {
+        onError("Scanner unavailable: ${e.localizedMessage ?: "Could not open scanner"}")
     }
 }
 
