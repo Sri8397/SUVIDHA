@@ -168,7 +168,7 @@ Two workflows live in [`.github/workflows/`](.github/workflows/):
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci.yml` (CI) | Pull requests, pushes to `main` / `develop`, manual | Runs `assembleDebug`, `testDebugUnitTest`, `lintDebug` and `assembleDebugAndroidTest` on JDK 17. Uploads test and lint reports when a run fails. |
-| `deploy-play-store.yml` | Manual only | Builds a signed release AAB and uploads it to the Google Play internal-testing track. |
+| `deploy-play-store.yml` | Pushes to `develop`, manual | Builds a signed release AAB and uploads it to the Google Play internal-testing track. |
 
 To skip the Play Store deploy for a push, include `[skip deploy]` in the head commit message. CI still runs. To skip everything, use `[skip ci]`.
 

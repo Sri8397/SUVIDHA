@@ -1,7 +1,9 @@
 name: Deploy to Play Store (Internal Testing)
 
 on:
-  workflow_dispatch: # Manual trigger only, from GitHub UI or `gh workflow run`
+  push:
+    branches: [develop]
+  workflow_dispatch: # Also allow manual trigger from GitHub UI or `gh workflow run`
 
 # Cancel any in-progress runs on the same branch
 concurrency:
