@@ -66,15 +66,11 @@ private fun trendPointCount(mode: TrendMode): Int = when (mode) {
  * Builds the chart window (oldest → newest). It normally ends on the current period; when a
  * selection older than the window exists the window slides so the selection stays visible.
  */
-internal fun buildTrendPeriods(mode: TrendMode, today: LocalDate, selectedStart: LocalDate?): List<PeriodSpan> {
-    val count = trendPointCount(mode)
-    val currentStart = trendPeriodSpan(mode, today).start
-    fun window(anchorStart: LocalDate): List<PeriodSpan> =
-        (count - 1 downTo 0).map { shiftPeriod(mode, anchorStart, it) }
-
-    val anchoredAtToday = window(currentStart)
-    if (selectedStart == null || anchoredAtToday.any { it.start == selectedStart }) return anchoredAtToday
-    return window(trendPeriodSpan(mode, selectedStart).start)
+internal fun buildTrendPeriods(mode: TrendMode, today: LocalDate, anchor: LocalDate?): List<PeriodSpan> {
+    val count: Int = trendPointCount(mode)
+    val target: LocalDate = anchor ?: today
+    val targetStart: LocalDate = trendPeriodSpan(mode, target).start
+    return (count - 1 downTo 0).map { offset: Int -> shiftPeriod(mode, targetStart, offset) }
 }
 
 internal fun trendPointLabel(mode: TrendMode, span: PeriodSpan, index: Int): String = when (mode) {

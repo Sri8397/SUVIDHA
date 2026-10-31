@@ -79,6 +79,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.just_sri.suvidhaapp
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: alpha
+          tracks: alpha
           status: completed
           whatsNewDirectory: whatsnew/

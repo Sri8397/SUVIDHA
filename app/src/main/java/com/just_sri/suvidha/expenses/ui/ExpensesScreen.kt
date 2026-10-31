@@ -161,7 +161,6 @@ internal fun ExpensesScreen(
                         modeName = modeName,
                         onModeChange = { selectedMode: String ->
                             modeName = selectedMode
-                            anchorText = null
                         },
                         anchor = anchor,
                         source = source,
@@ -622,7 +621,7 @@ private fun SpendingTrendPanel(
     onSelectPeriod: (LocalDate) -> Unit
 ): Unit {
     val today: LocalDate = LocalDate.now(model.zone)
-    val periods: List<PeriodSpan> = buildTrendPeriods(mode, today, anchor?.let { trendPeriodSpan(mode, it).start })
+    val periods: List<PeriodSpan> = buildTrendPeriods(mode, today, anchor)
     val rangeText: String = trendRangeText(mode, periods)
     Panel {
         Column(
