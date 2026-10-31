@@ -127,7 +127,7 @@ fun timezoneOption(id: String, now: Instant = Instant.now()): TimezoneOption {
 // 5. Money Formatting
 // ---------------------------------------------------------------------------
 private val moneyFmt = ThreadLocal.withInitial {
-    DecimalFormat("#,##0.##", DecimalFormatSymbols(Locale("en", "IN")))
+    DecimalFormat("#,##0.##", DecimalFormatSymbols(Locale.Builder().setLanguage("en").setRegion("IN").build()))
 }
 
 fun money(value: Double): String = moneyFmt.get()!!.format(value)

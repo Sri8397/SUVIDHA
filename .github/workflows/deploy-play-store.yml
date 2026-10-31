@@ -13,6 +13,8 @@ concurrency:
 jobs:
   build:
     name: Build Release Bundle
+    # Skips the build and deploy when the head commit contains [skip deploy]
+    if: ${{ !contains(github.event.head_commit.message, '[skip deploy]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

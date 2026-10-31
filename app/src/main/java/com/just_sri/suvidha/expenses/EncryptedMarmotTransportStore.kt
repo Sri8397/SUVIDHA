@@ -25,10 +25,10 @@ internal class EncryptedMarmotTransportStore(context: Context) : MarmotPublishOb
     private val file = File(context.noBackupFilesDir, "peersplit/transport.enc")
     private val mutex = Mutex()
 
-    override suspend fun save(obligationId: String, encoded: ByteArray) = mutex.withLock {
-        require(obligationId.matches(ID) && encoded.size in 1..MAX_BYTES)
+    override suspend fun save(obligationId: String, bytes: ByteArray) = mutex.withLock {
+        require(obligationId.matches(ID) && bytes.size in 1..MAX_BYTES)
         val root = read()
-        root.getJSONObject("obligations").put(obligationId, Base64.getEncoder().encodeToString(encoded))
+        root.getJSONObject("obligations").put(obligationId, Base64.getEncoder().encodeToString(bytes))
         write(root)
     }
 
@@ -41,9 +41,9 @@ internal class EncryptedMarmotTransportStore(context: Context) : MarmotPublishOb
         obligations.keys().asSequence().map { Base64.getDecoder().decode(obligations.getString(it)) }.toList()
     }
 
-    override suspend fun saveGate(groupId: String, encodedGate: String) = mutex.withLock {
+    override suspend fun saveGate(groupId: String, gate: String) = mutex.withLock {
         require(groupId.matches(ID))
-        val root = read(); root.getJSONObject("gates").put(groupId, encodedGate); write(root)
+        val root = read(); root.getJSONObject("gates").put(groupId, gate); write(root)
     }
 
     override suspend fun deleteGate(groupId: String) = mutex.withLock {
