@@ -1,22 +1,60 @@
-version: "1.2"
+version: "1.3"
 category: group_membership
 
+# Every group workflow is declared here. Actors and conditions are the only permission
+# checks; the actions in PeerSplitService/GroupMembershipService do protocol work only.
+#
+# Actors:     active_member (active in the group roster), owner_only (active admin), user (any local user)
+# Context:    groupId, actorMemberId, targetMemberId, note (free text),
+#             attributes[eventId|debtUnitId|splitDraft|amountMinor|currencyCode]
+
 rules:
+  create_group:
+    actor: user
+    conditions:
+      - group_name_valid
+      - has_nostr_identity
+    actions:
+      - create_mls_group
+
+  post_message:
+    actor: active_member
+    conditions:
+      - message_text_valid
+    actions:
+      - publish_chat_message
+
+  add_split:
+    actor: active_member
+    conditions:
+      - split_participants_are_active_members
+    actions:
+      - publish_split_expense
+
+  record_payment:
+    actor: active_member
+    conditions:
+      - actor_is_outstanding_debt_creditor
+      - payment_amount_within_balance
+    actions:
+      - publish_settlement
+
   self_exit:
     actor: active_member
     conditions:
       - owner_must_transfer_or_close
+      - own_balance_settled
     confirm: "Leave group?"
     actions:
-      - cancel_authored_active_splits
       - request_mls_self_removal
       - sync_causal_ledger_event
+      - confirm_self_removal
     message: "{member} left the group"
 
   admin_removal:
     actor: owner_only
     conditions:
-      - net_balance_zero
+      - target_is_other_active_member
       - no_outstanding_pairwise_debts
     confirm: "Remove member?"
     actions:
@@ -24,32 +62,66 @@ rules:
       - sync_causal_ledger_event
     message: "{member} was removed by admin"
 
-  departed_member:
-    actor: system
-    conditions: []
+  transfer_ownership:
+    actor: owner_only
+    conditions:
+      - target_is_other_active_member
+    confirm: "Transfer ownership?"
     actions:
-      - enforce_read_only_history
-      - preserve_chat_history
-      - preserve_settled_transactions
-      - display_as_former_member
+      - mls_set_group_admins
+      - sync_causal_ledger_event
+    message: "{member} is now the group owner"
 
-  invitation_candidate_visibility:
-    actor: active_member
+  close_group:
+    actor: owner_only
+    conditions:
+      - no_open_transactions
+    confirm: "Close group?"
+    actions:
+      - mls_remove_all_members
+      - request_mls_self_removal
+      - sync_causal_ledger_event
+    message: "Group closed by owner"
+
+  rename_group:
+    actor: owner_only
+    conditions:
+      - group_name_valid
+    actions:
+      - publish_group_rename
+      - sync_causal_ledger_event
+    message: "Group renamed"
+
+  invite_member:
+    actor: owner_only
     conditions:
       - recipient_is_friend
       - recipient_has_nostr_id
-    actions:
-      - show_recipient_in_invitation_list
-
-  invitation_action_enablement:
-    actor: active_member
-    conditions:
-      - recipient_is_friend
-      - recipient_has_nostr_id
-      - recipient_invitation_status_enabled
+      - recipient_not_member
       - recipient_has_valid_keypackage
     actions:
-      - enable_invite_action
+      - mls_add_member
+
+  cancel_split:
+    actor: active_member
+    conditions:
+      - actor_is_split_author
+      - split_has_outstanding_debts
+    confirm: "Cancel split?"
+    actions:
+      - publish_split_debt_removals
+      - sync_causal_ledger_event
+    message: "Split cancelled"
+
+  delete_debt:
+    actor: active_member
+    conditions:
+      - actor_is_outstanding_debt_creditor
+    confirm: "Delete outstanding debt?"
+    actions:
+      - publish_debt_removal
+      - sync_causal_ledger_event
+    message: "Debt removed"
 
   invitation_enabled:
     actor: user
@@ -57,18 +129,9 @@ rules:
       - has_nostr_identity
     actions:
       - generate_fresh_mls_keypackage
-      - publish_keypackage_kind_30443
-      - publish_signed_invitation_status_enabled
       - sync_pending_welcomes
-      - process_valid_previous_invitations
-      - sync_joined_groups
 
   invitation_disabled:
     actor: user
     conditions: []
-    actions:
-      - publish_signed_invitation_status_disabled
-      - stop_keypackage_publication
-      - request_deletion_of_published_keypackages
-      - preserve_pending_welcome_keys
-      - defer_incoming_welcomes
+    actions: []

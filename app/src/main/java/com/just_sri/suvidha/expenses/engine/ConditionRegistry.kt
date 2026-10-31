@@ -2,6 +2,16 @@ package com.just_sri.suvidha.expenses.engine
 
 class ConditionRegistry {
     private val evaluators: MutableMap<String, suspend (RuleContext) -> ValidationResult> = mutableMapOf()
+    private val actorEvaluators: MutableMap<String, suspend (RuleContext) -> ValidationResult> = mutableMapOf()
+
+    /** Guards a rule's `actor:` value; it is checked before any of the rule's conditions. */
+    fun registerActor(actorName: String, evaluator: suspend (RuleContext) -> ValidationResult): Unit {
+        actorEvaluators[actorName] = evaluator
+    }
+
+    fun hasActor(actorName: String): Boolean {
+        return actorEvaluators.containsKey(actorName)
+    }
 
     fun register(conditionName: String, evaluator: suspend (RuleContext) -> ValidationResult): Unit {
         evaluators[conditionName] = evaluator
@@ -15,6 +25,8 @@ class ConditionRegistry {
     }
 
     suspend fun validate(rule: Rule, context: RuleContext): ValidationResult {
+        val actorResult: ValidationResult = actorEvaluators[rule.actor]?.invoke(context) ?: ValidationResult.Allowed
+        if (actorResult is ValidationResult.Denied) return actorResult
         rule.conditions.forEach { conditionName: String ->
             val evaluator = evaluators[conditionName] ?: return ValidationResult.Denied(conditionName, "Missing evaluator for condition: $conditionName")
             val result: ValidationResult = evaluator(context)

@@ -32,6 +32,7 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     var profileName by mutableStateOf(prefs.getString("profile_name", "") ?: ""); private set
     var categories by mutableStateOf(prefs.getString("categories", null)?.split("|")?.filter { it.isNotBlank() } ?: defaultExpenseCategories); private set
     var groupInvitationsEnabled: Boolean by mutableStateOf(prefs.getBoolean("group_invitations_enabled", false)); private set
+    var showLeftGroups: Boolean by mutableStateOf(prefs.getBoolean("show_left_groups", true)); private set
     var themePreference: ThemePreference by mutableStateOf(ThemePreference.from(prefs.getString("theme_preference", "SYSTEM"))); private set
     var pendingBackup: ByteArray? = null
     var restorePreview by mutableStateOf<AppBackupSnapshot?>(null)
@@ -53,6 +54,7 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         themePreference = value
         prefs.edit().putString("theme_preference", value.name).apply()
     }
+    fun updateShowLeftGroups(value: Boolean) { showLeftGroups = value; prefs.edit().putBoolean("show_left_groups", value).apply() }
     fun updateProfileName(value: String) { profileName = value.trim().take(60); prefs.edit().putString("profile_name", profileName).apply() }
     fun updateCategories(value: List<String>) {
         categories = (value.map { it.trim() }.filter { it.isNotBlank() && it != "Other" } + "Other").distinct()
@@ -86,19 +88,66 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         }
     }
 
+    // Every group workflow goes through group_membership.yaml; the rules hold all permission checks.
     suspend fun leaveGroup(groupId: String): Unit {
-        runRule("self_exit", RuleContext(groupId = groupId, actorMemberId = peers.publicId()))
+        runRule("self_exit", groupContext(groupId))
     }
 
+    suspend fun transferOwnership(groupId: String, newOwnerId: String): Unit {
+        runRule("transfer_ownership", groupContext(groupId, targetMemberId = newOwnerId))
+    }
+
+    suspend fun closeGroup(groupId: String): Unit {
+        runRule("close_group", groupContext(groupId))
+    }
+
+    /** Why the group cannot be closed right now, or null when closing is allowed. */
+    suspend fun closeGroupBlocker(groupId: String): String? =
+        (membership.canExecuteRule("close_group", groupContext(groupId)) as? ValidationResult.Denied)?.reason
+
     suspend fun removeMember(groupId: String, memberId: String): Unit {
-        runRule("admin_removal", RuleContext(groupId = groupId, actorMemberId = peers.publicId(), targetMemberId = memberId, isActorOwner = true))
+        runRule("admin_removal", groupContext(groupId, targetMemberId = memberId))
+    }
+
+    /** Returns the delivery status message for the invitation. */
+    suspend fun inviteMember(groupId: String, memberId: String): String? {
+        val result: ExecutionResult.Success = runRule("invite_member", groupContext(groupId, targetMemberId = memberId))
+        return (result.actionOutcomes["mls_add_member"] as? ActionResult.Success)?.message
     }
 
     /** True when the friend's public ID is known and they have a valid, published invite key. */
-    suspend fun canInvite(groupId: String, memberId: String): Boolean {
-        val context = RuleContext(groupId = groupId, actorMemberId = peers.publicId(), targetMemberId = memberId)
-        return membership.canExecuteRule("invitation_action_enablement", context) is ValidationResult.Allowed
+    suspend fun canInvite(groupId: String, memberId: String): Boolean =
+        membership.canExecuteRule("invite_member", groupContext(groupId, targetMemberId = memberId)) is ValidationResult.Allowed
+
+    /** Returns the new group's ID. */
+    suspend fun createGroup(name: String, currencyCode: String): String {
+        val context: RuleContext = RuleContext(actorMemberId = peers.publicId(), note = name, attributes = mutableMapOf(GroupMembershipService.CURRENCY_CODE to currencyCode))
+        val result: ExecutionResult.Success = runRule("create_group", context)
+        return (result.actionOutcomes["create_mls_group"] as ActionResult.Success).message.orEmpty()
     }
+
+    suspend fun addSplit(groupId: String, draft: SharedExpenseDraft): Unit {
+        runRule("add_split", groupContext(groupId, attributes = mutableMapOf(GroupMembershipService.SPLIT_DRAFT to draft)))
+    }
+
+    suspend fun recordPayment(groupId: String, debtUnitId: String, amountMinor: Long): Unit {
+        runRule("record_payment", groupContext(groupId, attributes = mutableMapOf(GroupMembershipService.DEBT_UNIT_ID to debtUnitId, GroupMembershipService.AMOUNT_MINOR to amountMinor)))
+    }
+
+    /** False when the current user is no longer an active member, so the composer can be disabled. */
+    suspend fun canPostMessage(groupId: String): Boolean =
+        membership.canExecuteRule("post_message", groupContext(groupId, note = "x")) is ValidationResult.Allowed
+
+    suspend fun deleteDebt(groupId: String, debtUnitId: String): Unit {
+        runRule("delete_debt", groupContext(groupId, attributes = mutableMapOf(GroupMembershipService.DEBT_UNIT_ID to debtUnitId)))
+    }
+
+    private suspend fun groupContext(
+        groupId: String,
+        targetMemberId: String? = null,
+        note: String? = null,
+        attributes: MutableMap<String, Any?> = mutableMapOf(),
+    ): RuleContext = RuleContext(groupId = groupId, actorMemberId = peers.publicId(), targetMemberId = targetMemberId, note = note, attributes = attributes)
 
     private suspend fun runRule(ruleId: String, context: RuleContext): ExecutionResult.Success = when (val result = membership.executeRule(ruleId, context)) {
         is ExecutionResult.Success -> result
@@ -125,9 +174,12 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
             isBusy = { busy },
         )
     }
+    fun renameGroup(groupId: String, name: String, onDone: () -> Unit = {}) = perform("Group renamed", onDone) {
+        runRule("rename_group", groupContext(groupId, note = name))
+    }
     fun sendChatMessage(groupId: String, text: String) = viewModelScope.launch {
         try {
-            peers.sendChatMessage(groupId, text)
+            runRule("post_message", groupContext(groupId, note = text))
             backgroundSync()
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -136,12 +188,7 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         }
     }
     fun cancelSplit(groupId: String, eventId: String, onDone: () -> Unit = {}) = perform("Split cancelled", onDone) {
-        val record = database.sharedLedgerEvents().findById(eventId) ?: return@perform
-        if (!record.description.contains("(Cancelled)", ignoreCase = true)) {
-            val updatedDescription: String = if (record.description.isBlank()) "Shared expense (Cancelled)" else "${record.description.trim()} (Cancelled)"
-            database.sharedLedgerEvents().updateDescription(eventId, updatedDescription)
-        }
-        database.sharedLedgerEvents().deleteByActionType("debt_removed")
+        runRule("cancel_split", groupContext(groupId, attributes = mutableMapOf(GroupMembershipService.EVENT_ID to eventId)))
     }
     fun backgroundSync() = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
         try { peers.syncIfIdle() }
@@ -160,6 +207,7 @@ internal data class AppData(
     fun label(id: String): String = if (id == ownId) "You" else links.find { it.memberId == id }?.let { link -> friends.find { it.id == link.friendId }?.name }
         ?: members.find { it.memberId == id }?.displayName?.takeUnless { it.startsWith("Nostr") } ?: "${id.take(6)}…${id.takeLast(4)}"
     fun friendKey(id: String): String? = links.find { it.friendId == id }?.memberId
+    fun hasLeft(groupId: String): Boolean = members.any { it.groupId == groupId && it.memberId == ownId && !it.isActive }
     fun projection(group: SharedGroupEntity): SharedLedgerProjection = projectSharedLedger(group.id,
         events.filter { it.groupId == group.id }.mapNotNull { runCatching { SharedLedgerCodec.toDomainEvent(it) }.getOrNull() },
         group.currencyCode, members.find { it.groupId == group.id && it.role == "owner" }?.memberId)

@@ -65,13 +65,14 @@ rules:
             ?: File("rules/group_membership.yaml").takeIf { it.exists() }?.readText()
             ?: error("group_membership.yaml file not found")
         val rules: Map<String, Rule> = RuleEngine.parseYamlRules(yamlContent)
-        assertTrue(rules.containsKey("self_exit"))
-        assertTrue(rules.containsKey("admin_removal"))
-        assertTrue(rules.containsKey("departed_member"))
-        assertTrue(rules.containsKey("invitation_candidate_visibility"))
-        assertTrue(rules.containsKey("invitation_action_enablement"))
-        assertTrue(rules.containsKey("invitation_enabled"))
-        assertTrue(rules.containsKey("invitation_disabled"))
+        val expectedRuleIds: Set<String> = setOf(
+            "self_exit", "admin_removal", "transfer_ownership", "close_group", "rename_group",
+            "invite_member", "cancel_split", "delete_debt", "invitation_enabled", "invitation_disabled",
+            "create_group", "post_message", "add_split", "record_payment",
+        )
+        assertEquals(expectedRuleIds, rules.keys)
+        val expectedActors: Set<String> = setOf("active_member", "owner_only", "user")
+        assertTrue(rules.values.all { it.actor in expectedActors })
     }
 
     @Test
@@ -256,5 +257,85 @@ rules:
 """
         val engine = RuleEngine(conditions, actions)
         engine.loadYaml(invalidYaml, validateRegistries = true)
+    }
+
+    private val ownerOnlyYaml: String = """
+rules:
+  rename_group:
+    actor: owner_only
+    conditions:
+      - group_name_valid
+    actions:
+      - publish_group_rename
+"""
+
+    @Test
+    fun executeDeniesWhenActorEvaluatorDenies() = runBlocking {
+        val conditions = ConditionRegistry()
+        val actions = ActionRegistry()
+        val executedActions: MutableList<String> = mutableListOf()
+        conditions.registerActor("owner_only") { ValidationResult.Denied("owner_only", "Only the group owner can do this.") }
+        conditions.registerPredicate("group_name_valid", "Invalid name") { true }
+        actions.registerUnit("publish_group_rename") { executedActions.add("publish_group_rename") }
+        val engine = RuleEngine(conditions, actions, requireActors = true)
+        engine.loadYaml(ownerOnlyYaml, validateRegistries = true)
+        val inputContext = RuleContext(groupId = "group-1", actorMemberId = "member-1", note = "Trip")
+        val actualResult: ExecutionResult = engine.execute("rename_group", inputContext)
+        assertTrue(actualResult is ExecutionResult.ValidationFailed)
+        assertEquals("owner_only", (actualResult as ExecutionResult.ValidationFailed).violation.condition)
+        assertTrue(executedActions.isEmpty())
+    }
+
+    @Test
+    fun actorIsCheckedBeforeConditions() = runBlocking {
+        val conditions = ConditionRegistry()
+        val actions = ActionRegistry()
+        var isConditionEvaluated = false
+        conditions.registerActor("owner_only") { ValidationResult.Denied("owner_only", "Only the group owner can do this.") }
+        conditions.registerPredicate("group_name_valid", "Invalid name") { isConditionEvaluated = true; true }
+        actions.registerUnit("publish_group_rename") {}
+        val engine = RuleEngine(conditions, actions, requireActors = true)
+        engine.loadYaml(ownerOnlyYaml, validateRegistries = true)
+        val actualResult: ValidationResult = engine.canExecute("rename_group", RuleContext(groupId = "group-1", actorMemberId = "member-1"))
+        assertTrue(actualResult is ValidationResult.Denied)
+        assertTrue(!isConditionEvaluated)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun loadYamlRejectsUnknownActorWhenActorsRequired() {
+        val conditions = ConditionRegistry()
+        val actions = ActionRegistry()
+        conditions.registerPredicate("group_name_valid", "Invalid name") { true }
+        actions.registerUnit("publish_group_rename") {}
+        val engine = RuleEngine(conditions, actions, requireActors = true)
+        engine.loadYaml(ownerOnlyYaml, validateRegistries = true)
+    }
+
+    @Test
+    fun groupMembershipYamlUsesOnlyRegisteredActors() {
+        val yamlContent: String = File("app/rules/group_membership.yaml").takeIf { it.exists() }?.readText()
+            ?: File("rules/group_membership.yaml").takeIf { it.exists() }?.readText()
+            ?: error("group_membership.yaml file not found")
+        val conditions = ConditionRegistry()
+        val actions = ActionRegistry()
+        listOf("active_member", "owner_only", "user").forEach { actorName: String -> conditions.registerActor(actorName) { ValidationResult.Allowed } }
+        val engine = RuleEngine(conditions, actions, requireActors = true)
+        engine.loadYaml(yamlContent, validateRegistries = false)
+        assertEquals(14, engine.getAllRules().size)
+    }
+
+    @Test
+    fun ledgerRulesDeclareExpectedActorsConditionsAndActions() {
+        val yamlContent: String = File("app/rules/group_membership.yaml").takeIf { it.exists() }?.readText()
+            ?: File("rules/group_membership.yaml").takeIf { it.exists() }?.readText()
+            ?: error("group_membership.yaml file not found")
+        val actualRules: Map<String, Rule> = RuleEngine.parseYamlRules(yamlContent)
+        assertEquals("user", actualRules.getValue("create_group").actor)
+        assertEquals(listOf("create_mls_group"), actualRules.getValue("create_group").actions)
+        assertEquals("active_member", actualRules.getValue("post_message").actor)
+        assertEquals(listOf("message_text_valid"), actualRules.getValue("post_message").conditions)
+        assertEquals(listOf("split_participants_are_active_members"), actualRules.getValue("add_split").conditions)
+        assertEquals(listOf("actor_is_outstanding_debt_creditor", "payment_amount_within_balance"), actualRules.getValue("record_payment").conditions)
+        assertEquals(listOf("publish_settlement"), actualRules.getValue("record_payment").actions)
     }
 }

@@ -39,10 +39,13 @@ internal object SharedLedgerCodec {
                 .toString()
         }
 
+        is SharedLedgerAction.GroupRenamed -> "group_renamed" to JSONObject().put("name", action.name.take(MAX_GROUP_NAME_LENGTH)).toString()
+
         is SharedLedgerAction.ChatMessage -> "chat_message" to JSONObject().put("text", action.text.take(MAX_CHAT_LENGTH)).toString()
     }
 
     const val MAX_CHAT_LENGTH = 2000
+    const val MAX_GROUP_NAME_LENGTH = 80
 
     fun decodeAction(actionType: String, payloadJson: String): SharedLedgerAction {
         val payload = JSONObject(payloadJson)
@@ -79,6 +82,8 @@ internal object SharedLedgerCodec {
             }
 
             "chat_message" -> SharedLedgerAction.ChatMessage(payload.getString("text").take(MAX_CHAT_LENGTH))
+
+            "group_renamed" -> SharedLedgerAction.GroupRenamed(payload.getString("name").take(MAX_GROUP_NAME_LENGTH))
 
             else -> throw IllegalArgumentException("Unsupported shared ledger action: $actionType")
         }

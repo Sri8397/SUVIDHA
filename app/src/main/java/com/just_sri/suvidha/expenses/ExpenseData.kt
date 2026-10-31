@@ -226,6 +226,9 @@ interface SharedGroupDao {
     @Query("UPDATE shared_groups SET updatedAtMillis = :updatedAtMillis WHERE id = :id")
     suspend fun updateTimestamp(id: String, updatedAtMillis: Long)
 
+    @Query("UPDATE shared_groups SET name = :name WHERE id = :id")
+    suspend fun updateName(id: String, name: String)
+
     @Query("DELETE FROM shared_groups WHERE id = :id")
     suspend fun delete(id: String)
 
@@ -300,12 +303,6 @@ interface SharedLedgerEventDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun restoreAll(events: List<SharedLedgerEventRecord>)
-
-    @Query("UPDATE shared_ledger_events SET description = :description WHERE id = :id")
-    suspend fun updateDescription(id: String, description: String)
-
-    @Query("DELETE FROM shared_ledger_events WHERE actionType = :actionType")
-    suspend fun deleteByActionType(actionType: String)
 
     @Query("DELETE FROM shared_ledger_events WHERE id = :id")
     suspend fun delete(id: String)

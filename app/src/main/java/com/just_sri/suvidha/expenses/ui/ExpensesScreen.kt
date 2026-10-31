@@ -155,7 +155,9 @@ internal fun ExpensesScreen(
                         span = span,
                         mode = mode,
                         today = today,
-                        onSelectDate = selectDate
+                        onSelectDate = selectDate,
+                        isTodayButtonVisible = anchor != null && anchor != today,
+                        onSelectToday = { anchorText = null }
                     )
                 }
                 item {
@@ -497,7 +499,9 @@ private fun TotalHeroCard(
     span: PeriodSpan,
     mode: TrendMode,
     today: LocalDate,
-    onSelectDate: () -> Unit
+    onSelectDate: () -> Unit,
+    isTodayButtonVisible: Boolean,
+    onSelectToday: () -> Unit
 ): Unit {
     val isDark: Boolean = LocalSuvidhaColors.current.isDark
     val cardBg: Color = if (isDark) CardSurface else Color(0xFF1A211B)
@@ -571,6 +575,21 @@ private fun TotalHeroCard(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (isTodayButtonVisible) {
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .clip(CircleShape)
+                        .background(calendarBg, CircleShape)
+                        .then(calendarBorderModifier)
+                        .clickable(onClick = onSelectToday)
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Today", color = calendarTint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
             IconButton(
                 onClick = onSelectDate,
                 modifier = Modifier
@@ -585,6 +604,7 @@ private fun TotalHeroCard(
                     tint = calendarTint,
                     modifier = Modifier.size(18.dp)
                 )
+            }
             }
         }
     }
@@ -860,7 +880,9 @@ private fun TotalHeroCardPreview(): Unit {
             span = PeriodSpan(LocalDate.now(), LocalDate.now()),
             mode = TrendMode.Week,
             today = LocalDate.now(),
-            onSelectDate = {}
+            onSelectDate = {},
+            isTodayButtonVisible = false,
+            onSelectToday = {}
         )
     }
 }

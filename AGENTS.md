@@ -128,15 +128,32 @@ Generate code, refactorings, and fixes that strictly comply with the principles,
   - When a split is cancelled, it stays in the chat timeline with `SplitStatus.CANCELLED` styling (red badge, strikethrough title/amount, dimmed surface).
   - Do NOT emit an artificial "Outstanding debt removed" message bubble to chat when cancelling a split.
 - **Member Self-Exit**:
-  - Any member can leave the group with an explicit warning dialog: *"Leave group? You will be removed from this group. Any active splits created by you will be marked as CANCELLED."*
-  - On exit, all active splits authored by the member transition to `SplitStatus.CANCELLED`, active debts are cleared, and a timeline notice `"<Member> left the group"` is posted.
+  - Any member can leave the group with an explicit warning dialog: *"Leave group? You will be removed from this group. You must settle your balance first."*
+  - Leaving is blocked (`own_balance_settled`) while the member owes or is owed any open amount in the group, in either direction.
+  - The self-remove is only a request until the group admin commits it. `confirm_self_removal` re-reads the roster and fails the leave with "waiting for the group admin to confirm" while the member is still listed, so the app never reports "left" for a member who is still in the group.
 - **Admin Member Removal**:
   - Only the group owner can remove members.
   - **Zero-Balance Requirement**: Removal is strictly disallowed if the member has outstanding balances or active debts (borrowed or owed). Dues must be settled first.
   - On removal, an activity notice `"<Member> was removed by group admin"` is recorded in the group timeline.
+- **Owner Exit (Transfer or Close)**:
+  - An owner cannot leave while other members remain (`self_exit` denies with `owner_must_transfer_or_close`). The leave action shows a dialog offering **Transfer ownership** or **Close group**.
+  - **Transfer ownership** (`transfer_ownership`): the new owner must be another active member; they become the sole MLS admin and the previous owner becomes a regular member who may then leave.
+  - **Close group** (`close_group`): owner only, and strictly disallowed while any transaction has an outstanding amount (`no_open_transactions`). It removes every other member, then the owner, then syncs. Former members keep read-only history.
+- **Group Rename**: Only an owner/admin can rename. It is relayed to all members as an encrypted `GroupRenamed` ledger event (latest admin rename wins) and sends no notification.
 - **Post-Departure Restrictions**:
   - Inactive/former members cannot post messages or initiate splits.
   - Historical messages and settled transactions are preserved with appropriate former-member attribution.
+
+### Rule Engine Workflow (Required for Group Workflows)
+
+Every new group workflow (membership, ownership, closing, invitations, etc.) MUST be modelled with the rule engine, never as ad-hoc logic in a screen or ViewModel.
+
+1. **Define the rule** in [`app/rules/group_membership.yaml`](file:///Users/srikant/Documents/srikant/suvidha/frontend/app/rules/group_membership.yaml): `actor`, `conditions`, `confirm`, `actions`, and `message`. Update this file first; it is the source of truth.
+2. **Register the actor, conditions and actions**: the actor (`active_member`, `owner_only`, `user`) is enforced by the engine before any condition (`ConditionRegistry.registerActor`, and `RuleEngine(requireActors = true)` rejects rules whose actor is not registered). Register conditions (guards that return `ValidationResult.Allowed` or `Denied(code, reason)`) and **actions** (`register` / `registerUnit`) in `service/GroupMembershipService.kt`. Every name in the YAML must be registered; the engine validates this at startup (`validateRegistries = true`). Use `declarative(...)` only for steps already covered by another action.
+3. **Put protocol work in `PeerSplitService`** (MLS, ledger events, roster); actions only delegate to it. Do NOT repeat permission or validation checks there: the YAML actor and conditions are the single source of those checks. The ledger projection and MLS still reject invalid events from other devices.
+4. **Expose it through `AppViewModel`** with `runRule("<rule_id>", groupContext(...))` and call it from the UI via `model.perform(...)`. Screens must never call `model.peers` membership methods directly. Use `canExecuteRule` to enable/disable UI actions or to explain why something is blocked, instead of re-implementing the checks.
+5. **Current rules**: `self_exit`, `admin_removal`, `transfer_ownership`, `close_group`, `rename_group`, `invite_member`, `cancel_split`, `delete_debt`, `invitation_enabled`, `invitation_disabled`, `create_group`, `post_message`, `add_split`, `record_payment`. Ledger writes (messages, splits, payments) are rules too, so former members are denied by the `active_member` actor. Do not add placeholder rules or no-op actions: if a rule does not run, delete it.
+6. **Document the rule** in the Group Membership section above and add tests for each condition and action.
 
 ### Testing Standards
 

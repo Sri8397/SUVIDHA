@@ -79,7 +79,7 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
                                     val group = groups.find { it.id == id }
                                     val friend = friends.find { it.id == id }
                                     when {
-                                        route == "home" -> HomeScreen(data, model.profileName, navigate)
+                                        route == "home" -> HomeScreen(data, model.profileName, model.showLeftGroups, navigate)
                                         route == "expenses" -> ExpensesScreen(data, model, navigate, back)
                                         route == "friends" -> FriendsScreen(data, model, navigate, back)
                                         route == "groups" -> GroupsScreen(data, model, navigate, back)

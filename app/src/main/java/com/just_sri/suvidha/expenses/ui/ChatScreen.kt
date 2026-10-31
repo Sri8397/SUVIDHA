@@ -74,7 +74,9 @@ internal fun ChatScreen(
     }
     val listState: LazyListState = rememberLazyListState()
     val members = remember(data.members, group.id) { data.members.filter { it.groupId == group.id } }
-    val canSplit: Boolean = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
+    var isActiveMember: Boolean by remember(group.id) { mutableStateOf(true) }
+    LaunchedEffect(group.id, data.members) { isActiveMember = model.canPostMessage(group.id) }
+    val canSplit: Boolean = isActiveMember && members.count { it.isActive } > 1 && data.ownId != null && !model.busy
     LaunchedEffect(chatEvents.size) {
         if (chatEvents.isNotEmpty()) {
             listState.animateScrollToItem(chatEvents.lastIndex)
@@ -106,7 +108,7 @@ internal fun ChatScreen(
             },
             onAddSplit = { navigate("group-split/${group.id}") },
             canSplit = canSplit,
-            canSend = messageText.isNotBlank() && !model.busy
+            canSend = isActiveMember && messageText.isNotBlank() && !model.busy
         )
     }
 }

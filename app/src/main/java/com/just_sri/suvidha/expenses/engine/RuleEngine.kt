@@ -8,6 +8,8 @@ class RuleEngine(
     val conditions: ConditionRegistry,
     val actions: ActionRegistry,
     initialRules: Map<String, Rule> = emptyMap(),
+    /** When true, every rule's actor must have a registered evaluator, so permissions fail closed. */
+    private val requireActors: Boolean = false,
 ) {
     @Volatile
     private var rules: Map<String, Rule> = initialRules.toMap()
@@ -77,6 +79,9 @@ class RuleEngine(
         val parsedRules: Map<String, Rule> = parseYamlRules(yamlContent)
         if (validateRegistries) {
             parsedRules.values.forEach { rule: Rule ->
+                check(!requireActors || conditions.hasActor(rule.actor)) {
+                    "Unknown actor '${rule.actor}' declared in rule '${rule.id}'"
+                }
                 rule.conditions.forEach { conditionName: String ->
                     check(conditions.hasCondition(conditionName)) {
                         "Unknown condition '$conditionName' declared in rule '${rule.id}'"

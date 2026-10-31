@@ -50,7 +50,6 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
     } }
 
     suspend fun createGroup(name: String, currencyCode: String): String = operationMutex.withLock { withContext(Dispatchers.IO) {
-        require(name.trim().length in 1..80) { "Enter a group name with up to 80 characters." }
         val (identity, manager) = manager()
         val id = ByteArray(32).also(SecureRandom()::nextBytes).joinToString("") { "%02x".format(it) }
         manager.createGroup(id, MarmotGroupData(nostrGroupId = id, name = name.trim(),
@@ -61,11 +60,11 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
         id
     } }
 
+    // Permission checks for the membership operations below live in group_membership.yaml
+    // (GroupMembershipService); these methods only perform the MLS and ledger work.
+
     suspend fun invite(groupId: String, publicId: String): String = operationMutex.withLock { withContext(Dispatchers.IO) {
-        val (identity, manager) = manager()
-        check(manager.groupView(groupId)?.adminPubkeys?.contains(identity.publicKeyHex) == true) { "Only a group admin can add members." }
-        require(publicId.matches(Regex("[0-9a-f]{64}"))) { "Choose a friend with a valid public ID." }
-        require(manager.memberPubkeys(groupId).none { it.pubkey == publicId }) { "This friend is already a member." }
+        val (_, manager) = manager()
         val published = relay.fetchKeyPackageEvents(publicId).asSequence()
             .filter { it.pubKey.equals(publicId, true) }.mapNotNull { it as? KeyPackageEvent }
             .firstOrNull { it.hasValidEncoding() }
@@ -94,25 +93,38 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
     }
 
     suspend fun removeMember(groupId: String, publicId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
-        val (identity, manager) = manager()
-        check(manager.groupView(groupId)?.adminPubkeys?.contains(identity.publicKeyHex) == true) { "Only a group admin can remove members." }
-        require(publicId != identity.publicKeyHex) { "You cannot remove yourself." }
+        val (_, manager) = manager()
         val member = manager.memberPubkeys(groupId).firstOrNull { it.pubkey == publicId } ?: error("This member is no longer active.")
-        val balance = repository.replayGroup(groupId).balanceByMemberId[publicId] ?: 0L
-        require(balance == 0L) { "Settle this member's balance before removing them." }
         manager.removeMember(groupId, member.leafIndex, relay.relayUrls())
         PeerSplitSyncScheduler.request(appContext, afterChange = true)
         persistRoster(manager, groupId)
     } }
 
+    /** Replaces the admin set with the new owner; the previous owner becomes a regular member. */
+    suspend fun transferOwnership(groupId: String, newOwnerId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
+        val (_, manager) = manager()
+        manager.setGroupAdmins(groupId, listOf(newOwnerId), relay.relayUrls())
+        PeerSplitSyncScheduler.request(appContext, afterChange = true)
+        persistRoster(manager, groupId)
+    } }
+
+    /** Removes every other member, leaving the caller as the only one before it leaves too. */
+    suspend fun removeAllOtherMembers(groupId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
+        val (identity, manager) = manager()
+        generateSequence { manager.memberPubkeys(groupId).firstOrNull { it.pubkey != identity.publicKeyHex } }
+            .forEach { member -> manager.removeMember(groupId, member.leafIndex, relay.relayUrls()) }
+        PeerSplitSyncScheduler.request(appContext, afterChange = true)
+        persistRoster(manager, groupId)
+    } }
+
+    /** MLS forbids removing yourself with a Remove commit; leave() steps down as admin if needed and proposes SelfRemove. */
     suspend fun leaveGroup(groupId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
         val (identity, manager) = manager()
-        val member = manager.memberPubkeys(groupId).firstOrNull { it.pubkey == identity.publicKeyHex }
-        if (member != null) {
-            manager.removeMember(groupId, member.leafIndex, relay.relayUrls())
-            PeerSplitSyncScheduler.request(appContext, afterChange = true)
-            persistRoster(manager, groupId)
-        }
+        if (manager.memberPubkeys(groupId).none { it.pubkey == identity.publicKeyHex }) return@withContext
+        val departure = manager.leave(groupId, relay.relayUrls())
+        departure.selfRemove?.let { relay.publish(it.signedEvent, relay.relayUrls().toSet()) }
+        database.sharedGroupMembers().markInactive(groupId, identity.publicKeyHex)
+        PeerSplitSyncScheduler.request(appContext, afterChange = true)
     } }
 
     private suspend fun persistRoster(manager: MarmotManager, groupId: String) {
@@ -215,8 +227,6 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
     }
 
     suspend fun addExpense(groupId: String, draft: SharedExpenseDraft) = mutateLedger(groupId) { identity, projection, group ->
-        val active = database.sharedGroupMembers().getByGroup(groupId).filter { it.isActive }.mapTo(mutableSetOf()) { it.memberId }
-        require(draft.amountsMinorByMemberId.isNotEmpty() && active.containsAll(draft.amountsMinorByMemberId.keys)) { "Select active group members." }
         require(draft.amountsMinorByMemberId.values.all { it > 0 } && identity.publicKeyHex !in draft.amountsMinorByMemberId) { "Check the split amounts." }
         newEvent(groupId, identity, projection, SharedLedgerAction.ExpenseAdded(group.currencyCode,
             draft.amountsMinorByMemberId.toSortedMap().map { (id, amount) -> SharedDebtUnit(UUID.randomUUID().toString(), identity.publicKeyHex, id, amount) }),
@@ -224,21 +234,18 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
     }
 
     suspend fun settle(groupId: String, debtId: String, amount: Long) = mutateLedger(groupId) { identity, projection, _ ->
-        val debt = projection.debtById[debtId] ?: error("This payment is no longer available.")
-        require(debt.creditorMemberId == identity.publicKeyHex) { "Only the person who added the split can record a payment." }
-        require(amount in 1..debt.remainingAmountMinor) { "Enter an amount within the outstanding balance." }
         newEvent(groupId, identity, projection, SharedLedgerAction.SettlementRecorded(listOf(SharedSettlementAllocation(debtId, amount))), "Payment recorded")
     }
 
     suspend fun removeDebt(groupId: String, debtId: String) = mutateLedger(groupId) { identity, projection, _ ->
-        val debt = projection.debtById[debtId] ?: error("This debt is no longer available.")
-        require(debt.creditorMemberId == identity.publicKeyHex) { "Only the person who added the split can delete it." }
         newEvent(groupId, identity, projection, SharedLedgerAction.DebtRemoved(debtId), "Outstanding debt removed")
     }
 
+    suspend fun renameGroup(groupId: String, name: String) = mutateLedger(groupId) { identity, projection, _ ->
+        newEvent(groupId, identity, projection, SharedLedgerAction.GroupRenamed(name.trim()), "Group renamed")
+    }
+
     suspend fun sendChatMessage(groupId: String, text: String) = mutateLedger(groupId) { identity, projection, _ ->
-        require(text.isNotBlank()) { "Message cannot be blank." }
-        require(text.length <= SharedLedgerCodec.MAX_CHAT_LENGTH) { "Message is too long (max 2000 characters)." }
         newEvent(groupId, identity, projection, SharedLedgerAction.ChatMessage(text.trim()), text.trim().take(100))
     }
 

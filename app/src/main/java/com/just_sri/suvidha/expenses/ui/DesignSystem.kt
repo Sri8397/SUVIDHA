@@ -80,13 +80,14 @@ internal fun PageList(modifier: Modifier = Modifier, content: LazyListScope.() -
 }
 
 @Composable
-internal fun PageHeader(title: String, onBack: () -> Unit, action: (@Composable RowScope.() -> Unit)? = null) {
+internal fun PageHeader(title: String, onBack: () -> Unit, leading: (@Composable () -> Unit)? = null, action: (@Composable RowScope.() -> Unit)? = null) {
     Column {
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             IconButton(onBack, Modifier.size(40.dp).background(Ui.Mint, CircleShape)) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", Modifier.size(20.dp), tint = Green)
             }
+            leading?.invoke()
             Text(title, Modifier.weight(1f), color = Ink, fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             action?.invoke(this)

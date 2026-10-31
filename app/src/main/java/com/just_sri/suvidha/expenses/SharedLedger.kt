@@ -28,6 +28,9 @@ sealed interface SharedLedgerAction {
 
     /** Peer-to-peer chat message sent within the group. */
     data class ChatMessage(val text: String) : SharedLedgerAction
+
+    /** Renames the group for every member; the most recent rename by an admin wins. */
+    data class GroupRenamed(val name: String) : SharedLedgerAction
 }
 
 /** Local domain event. Authentication and encryption fields are intentionally added with their protocol. */
@@ -146,6 +149,8 @@ fun projectSharedLedger(
 
         when (val action = event.action) {
             is SharedLedgerAction.ExpenseAdded -> {
+                // Legacy: older builds cancelled a split by editing its stored description. New
+                // cancellations relay DebtRemoved events instead and never rewrite an event.
                 if (event.description.contains("(Cancelled)", ignoreCase = true)) {
                     accepted += id
                     ancestorIds[id] = ancestors
@@ -232,6 +237,12 @@ fun projectSharedLedger(
             is SharedLedgerAction.ChatMessage -> {
                 if (action.text.isBlank()) {
                     rejected[id] = "Chat message text cannot be blank."
+                    return@forEach
+                }
+            }
+            is SharedLedgerAction.GroupRenamed -> {
+                if (action.name.isBlank()) {
+                    rejected[id] = "Group name cannot be blank."
                     return@forEach
                 }
             }

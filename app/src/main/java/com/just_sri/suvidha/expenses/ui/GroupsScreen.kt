@@ -23,7 +23,12 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -60,7 +65,7 @@ import kotlinx.coroutines.delay
 internal fun GroupsScreen(data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
     var search: String by rememberSaveable { mutableStateOf("") }
     var byName: Boolean by rememberSaveable { mutableStateOf(false) }
-    val visible: List<SharedGroupEntity> = data.groups.filter { it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
+    val visible: List<SharedGroupEntity> = data.groups.filter { (model.showLeftGroups || !data.hasLeft(it.id)) && it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
     val ptrState = rememberPullToRefreshState()
     PageColumn {
         PageHeader("Groups", back) { TextButton({ navigate("new-group") }, enabled = !model.busy) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text("New group", fontSize = 12.sp) } }
@@ -126,11 +131,11 @@ internal fun NewGroupScreen(data: AppData, model: AppViewModel, navigate: (Strin
                 if (name.isBlank()) { error = "Enter a group name."; return@PrimaryButton }
                 var created: String? = null
                 model.perform(onDone = { created?.let { navigate("group/$it") } }) {
-                    val id = model.peers.createGroup(name, currencyCodeFor(symbol)); created = id
+                    val id = model.createGroup(name, currencyCodeFor(symbol)); created = id
                     val failures = mutableListOf<String>()
                     chosen.filterValues { it }.keys.forEach { friendId ->
                         val key = data.friendKey(friendId) ?: return@forEach
-                        try { model.peers.invite(id, key) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                        try { model.inviteMember(id, key) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
                         catch (_: Exception) { failures += data.friends.find { it.id == friendId }?.name.orEmpty() }
                     }
                     model.message = if (failures.isEmpty()) "Group created" else "Group created. Invitations need a retry for ${failures.joinToString()}. Open Members to invite again."
@@ -145,7 +150,6 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     var tab by rememberSaveable(group.id) { mutableStateOf("Group chat") }
     var amountTab by rememberSaveable(group.id) { mutableStateOf("Net amounts") }
     var menu by remember { mutableStateOf(false) }
-    var leaving by remember { mutableStateOf(false) }
     var payment by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var removeDebt by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var selectedMember by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
@@ -207,17 +211,17 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
         PageColumn {
             if (tab == "Amount") {
                 PageHeader("Amount", { tab = "Group chat" })
-            } else PageHeader(group.name, back) {
+            } else PageHeader(group.name, back, leading = {
+                IconButton({ navigate("members/${group.id}") }, Modifier.size(36.dp)) {
+                    Icon(Icons.Outlined.Groups, "Group settings", tint = Green, modifier = Modifier.size(22.dp))
+                }
+            }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton({ navigate("members/${group.id}") }, Modifier.size(36.dp)) {
-                        Icon(Icons.Outlined.Person, "Members", tint = Green, modifier = Modifier.size(20.dp))
-                    }
                     Box {
                         IconButton({ menu = true }, Modifier.size(36.dp)) { Icon(Icons.Outlined.MoreVert, "Group options") }
                         DropdownMenu(menu, { menu = false }) {
-                            DropdownMenuItem({ Text("Members") }, { menu = false; navigate("members/${group.id}") })
+                            DropdownMenuItem({ Text("Group settings") }, { menu = false; navigate("members/${group.id}") })
                             DropdownMenuItem({ Text("Sync now") }, { menu = false; model.sync() }, enabled = !model.busy)
-                            DropdownMenuItem({ Text("Leave group", color = Danger) }, { menu = false; leaving = true }, enabled = !model.busy)
                         }
                     }
                 }
@@ -318,7 +322,7 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
                 val value = SharedSplitMoney.parseMinor(amount, group.currencyCode)
                 if (value == null || value !in 1..debt.remainingAmountMinor) error = "Enter an amount up to ${minorMoney(debt.remainingAmountMinor, group.currencyCode)}."
                 else model.perform("Payment recorded", { payment = null }) {
-                    model.peers.settle(group.id, debt.debtUnitId, value)
+                    model.recordPayment(group.id, debt.debtUnitId, value)
                     model.notifications.notifySettlement(
                         counterpartName = group.name,
                         amountFormatted = minorMoney(value, group.currencyCode),
@@ -330,10 +334,7 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
             })
     }
     removeDebt?.let { debt -> ConfirmDialog("Delete outstanding debt?", "The remaining debt will be removed for all members. Earlier history stays available.", "Delete", { removeDebt = null },
-        { model.perform("Debt removed", { removeDebt = null }) { model.peers.removeDebt(group.id, debt.debtUnitId) } }, model.busy) }
-    if (leaving) ConfirmDialog("Leave group?",
-        "You will be removed from this group. Any active splits created by you will be marked as CANCELLED.", "Leave group", { leaving = false },
-        { model.perform("Left group", back) { model.leaveGroup(group.id) } }, model.busy)
+        { model.perform("Debt removed", { removeDebt = null }) { model.deleteDebt(group.id, debt.debtUnitId) } }, model.busy) }
 }
 
 /** Slim full-width strip under the group header showing the current user's net balance; tapping opens Amount. */
@@ -663,10 +664,16 @@ internal fun DeleteDebtButton(
     }
 }
 
+private enum class GroupAction { Rename, OwnerLeave, Transfer, Close, Leave }
+
 @Composable
 internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
     val members = data.members.filter { it.groupId == group.id && it.isActive }
     val owner = members.any { it.memberId == data.ownId && it.role == "owner" }
+    val otherMembers: List<SharedGroupMemberEntity> = members.filter { it.memberId != data.ownId }
+    var groupAction by remember { mutableStateOf<GroupAction?>(null) }
+    var newGroupName by remember(group.id) { mutableStateOf(group.name) }
+    var newOwnerId by remember { mutableStateOf<String?>(null) }
     var adding by remember { mutableStateOf(false) }
     var remove by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
     var linking by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
@@ -689,7 +696,7 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
         }
     }
     PageColumn {
-        PageHeader(if (adding) "Add members" else "Group members", { if (adding) adding = false else back() })
+        PageHeader(if (adding) "Add members" else "Group settings", { if (adding) adding = false else back() })
         PageList {
             item { Text(group.name, color = Muted, fontSize = 13.sp) }
             if (adding) {
@@ -712,10 +719,21 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
                         else -> "Add"
                     }
                     Panel { LedgerRow(friend.name, subtitle, trailing = { TextButton({
-                        key?.let { validKey -> model.perform(onDone = { adding = false }) { model.message = model.peers.invite(group.id, validKey) } }
+                        key?.let { validKey -> model.perform(onDone = { adding = false }) { model.message = model.inviteMember(group.id, validKey) } }
                     }, enabled = canInvite) { Text(buttonLabel) } }) }
                 }
             } else {
+                item { SectionHeading("Group", null) }
+                item { Panel {
+                    if (owner) LedgerRow("Rename group", "Change the name everyone sees", icon = Icons.Outlined.Edit,
+                        onClick = { newGroupName = group.name; groupAction = GroupAction.Rename }, divider = true)
+                    if (owner && otherMembers.isNotEmpty()) LedgerRow("Transfer ownership", "Hand the group to another member", icon = Icons.Outlined.SwapHoriz,
+                        onClick = { newOwnerId = null; groupAction = GroupAction.Transfer }, divider = true)
+                    if (owner) LedgerRow("Close group", "Remove everyone and close the group", icon = Icons.Outlined.Lock,
+                        onClick = { groupAction = GroupAction.Close }, divider = true)
+                    if (!data.hasLeft(group.id)) LedgerRow("Leave group", "You will be removed from this group", icon = Icons.AutoMirrored.Outlined.ExitToApp,
+                        onClick = { groupAction = if (owner && otherMembers.isNotEmpty()) GroupAction.OwnerLeave else GroupAction.Leave })
+                } }
                 item { SectionHeading("Members", "${members.size} people") }
                 item { Panel { members.forEachIndexed { i, member ->
                     LedgerRow(data.label(member.memberId), if (member.role == "owner") "Group admin" else "Member", divider = i < members.lastIndex,
@@ -742,6 +760,37 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
             }
         }
     }
+    if (groupAction == GroupAction.Rename) ConfirmDialog("Rename group", "All members will see the new name.", "Save", { groupAction = null }, {
+        if (newGroupName.isNotBlank()) model.renameGroup(group.id, newGroupName) { groupAction = null }
+    }, model.busy, content = { InputField(newGroupName, { newGroupName = it.take(80) }, "Group name") })
+    if (groupAction == GroupAction.OwnerLeave) ConfirmDialog("Transfer ownership or close the group",
+        "As the owner you can't leave while other members remain. Hand the group to another member, or close it for everyone.", "Transfer ownership", { groupAction = null },
+        { newOwnerId = null; groupAction = GroupAction.Transfer }, model.busy,
+        content = { TextButton({ groupAction = GroupAction.Close }) { Text("Close group", color = Danger) } })
+    if (groupAction == GroupAction.Transfer) ConfirmDialog("Transfer ownership", "The new owner can rename the group and remove members. You will become a regular member.", "Transfer", { groupAction = null },
+        { newOwnerId?.let { id -> model.perform("Ownership transferred", { groupAction = null }) { model.transferOwnership(group.id, id) } } },
+        model.busy, content = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                otherMembers.forEach { member ->
+                    Row(Modifier.fillMaxWidth().clickable { newOwnerId = member.memberId }, verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(newOwnerId == member.memberId, { newOwnerId = member.memberId })
+                        Text(data.label(member.memberId))
+                    }
+                }
+            }
+        })
+    if (groupAction == GroupAction.Close) {
+        var closeBlocker: String? by remember { mutableStateOf(null) }
+        LaunchedEffect(group.id, data.events) { closeBlocker = model.closeGroupBlocker(group.id) }
+        ConfirmDialog("Close group?",
+            closeBlocker ?: "All members will be removed and the group will close. Earlier history stays readable for former members.",
+            "Close group", { groupAction = null },
+            { if (closeBlocker == null) model.perform("Group closed", { groupAction = null; back() }) { model.closeGroup(group.id) } },
+            model.busy)
+    }
+    if (groupAction == GroupAction.Leave) ConfirmDialog("Leave group?",
+        "You will be removed from this group. You must settle your balance first.", "Leave group", { groupAction = null },
+        { groupAction = null; model.perform("Left group", back) { model.leaveGroup(group.id) } }, model.busy)
     remove?.let { member -> ConfirmDialog("Remove member?", "${data.label(member.memberId)} will be removed from ${group.name}. Their balance must be settled first.", "Remove", { remove = null },
         { model.perform("Member removed", { remove = null }) { model.removeMember(group.id, member.memberId) } }, model.busy) }
     linking?.let { member ->

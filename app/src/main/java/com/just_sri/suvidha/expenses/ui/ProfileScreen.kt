@@ -314,6 +314,26 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
             item { SectionHeading("Advanced") }
             item { Panel {
                 LedgerRow(
+                    title = "Show left groups",
+                    subtitle = if (model.showLeftGroups) "Shown in Groups and Home" else "Hidden from Groups and Home",
+                    leading = { IconTile(painterResource(R.drawable.ic_friends), Color(0xFFE5F2EA), Color(0xFF1E5E3A)) },
+                    trailing = {
+                        Switch(
+                            checked = model.showLeftGroups,
+                            onCheckedChange = { model.updateShowLeftGroups(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF004625),
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFD1DBD3),
+                                uncheckedBorderColor = Color.Transparent,
+                                checkedBorderColor = Color.Transparent
+                            )
+                        )
+                    },
+                    divider = true
+                )
+                LedgerRow(
                     title = "Relay servers",
                     subtitle = if (model.relaysCustomized) "Custom · ${model.relays.size} relays" else "Default · ${model.relays.size} relays",
                     onClick = { navigate("relays") },

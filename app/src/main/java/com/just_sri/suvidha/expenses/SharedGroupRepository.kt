@@ -166,7 +166,18 @@ internal class SharedGroupRepository(private val database: ExpenseDatabase) {
 
         events.insert(record)
         groups.updateTimestamp(group.id, maxOf(group.updatedAtMillis, event.occurredAtMillis))
+        if (event.action is SharedLedgerAction.GroupRenamed) applyLatestRename(event.groupId, projection.acceptedEventIds)
         return projection
+    }
+
+    /** Admin renames are replayed in causal-time order so every device settles on the same name. */
+    private suspend fun applyLatestRename(groupId: String, acceptedEventIds: Set<String>) {
+        val admins = members.getByGroup(groupId).filter { it.role == "owner" }.mapTo(mutableSetOf()) { it.memberId }
+        val latest = events.getByGroup(groupId)
+            .filter { it.actionType == "group_renamed" && it.id in acceptedEventIds && it.actorMemberId in admins }
+            .maxWithOrNull(compareBy<SharedLedgerEventRecord>({ it.createdAtMillis }, { it.id })) ?: return
+        val name = (SharedLedgerCodec.decodeAction(latest.actionType, latest.payloadJson) as SharedLedgerAction.GroupRenamed).name.trim()
+        if (name.isNotBlank()) groups.updateName(groupId, name)
     }
 
     suspend fun persistEncryptedEvent(eventId: String, eventJson: String) = database.withTransaction {

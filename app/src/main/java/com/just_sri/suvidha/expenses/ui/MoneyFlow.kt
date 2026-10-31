@@ -140,7 +140,7 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                             }) {
                                 when {
                                     group != null -> {
-                                        model.peers.addExpense(group.id, SharedExpenseDraft(note, owed))
+                                        model.addSplit(group.id, SharedExpenseDraft(note, owed))
                                         model.notifications.notifyGroupExpenseAdded(
                                             groupName = group.name,
                                             payerName = "You",

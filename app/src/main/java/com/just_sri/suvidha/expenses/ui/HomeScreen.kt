@@ -20,7 +20,7 @@ import com.just_sri.suvidha.expenses.*
 import com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors
 
 @Composable
-internal fun HomeScreen(data: AppData, name: String, navigate: (String) -> Unit) {
+internal fun HomeScreen(data: AppData, name: String, showLeftGroups: Boolean, navigate: (String) -> Unit) {
     PageColumn {
         Column {
             Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 20.dp),
@@ -56,8 +56,8 @@ internal fun HomeScreen(data: AppData, name: String, navigate: (String) -> Unit)
             }
             item { SectionHeading("Recent friends & groups") }
             item {
-                val recent = (data.groups.map { Recent(it.name, "Group · ${data.members.count { m -> m.groupId == it.id && m.isActive }} members", "group/${it.id}", it.updatedAtMillis, true) } +
-                    data.friends.map { friend -> Recent(friend.name, "Friend · View transactions", "friend/${friend.id}",
+                val recent = (data.groups.filter { showLeftGroups || !data.hasLeft(it.id) }.map { Recent(it.name, "Group · ${data.members.count { m -> m.groupId == it.id && m.isActive }} members", "group/${it.id}", it.updatedAtMillis, true) } +
+                    data.friends.map { friend -> Recent(friend.name, "Friend", "friend/${friend.id}",
                         maxOf(friend.updatedAt, data.splits.filter { it.friendId == friend.id }.maxOfOrNull { it.date } ?: 0,
                             data.groupTransactions[friend.id].orEmpty().maxOfOrNull { it.occurredAtMillis } ?: 0), false) }).sortedByDescending { it.date }.take(8)
                 if (recent.isEmpty()) EmptyState("A place for your everyday money", "Add a friend or create a group to keep your shared expenses together.") {

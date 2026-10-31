@@ -4,14 +4,17 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
@@ -24,6 +27,8 @@ internal fun BackupScreen(model: AppViewModel, back: () -> Unit) {
     var mode by remember { mutableStateOf<String?>(null) }
     var password by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
+    var isPassphraseVisible by remember { mutableStateOf(false) }
+    val passphraseTransformation: VisualTransformation = if (isPassphraseVisible) VisualTransformation.None else PasswordVisualTransformation()
     var source by remember { mutableStateOf<Uri?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
@@ -87,8 +92,12 @@ internal fun BackupScreen(model: AppViewModel, back: () -> Unit) {
                     }
                 }
             }, model.busy, error, content = {
-                InputField(password, { password = it; error = null }, "Passphrase", keyboard = KeyboardOptions(keyboardType = KeyboardType.Password), transformation = PasswordVisualTransformation())
-                if (operation == "export") InputField(confirm, { confirm = it; error = null }, "Confirm passphrase", keyboard = KeyboardOptions(keyboardType = KeyboardType.Password), transformation = PasswordVisualTransformation())
+                InputField(password, { password = it; error = null }, "Passphrase", keyboard = KeyboardOptions(keyboardType = KeyboardType.Password), transformation = passphraseTransformation)
+                if (operation == "export") InputField(confirm, { confirm = it; error = null }, "Confirm passphrase", keyboard = KeyboardOptions(keyboardType = KeyboardType.Password), transformation = passphraseTransformation)
+                Row(Modifier.fillMaxWidth().clickable { isPassphraseVisible = !isPassphraseVisible }, verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(isPassphraseVisible, { isPassphraseVisible = it })
+                    Text("Show passphrase", color = Ink, fontSize = 14.sp)
+                }
             })
     }
     model.restorePreview?.let { snapshot ->
