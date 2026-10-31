@@ -15,11 +15,13 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     val groups = SharedGroupRepository(database)
     val peers = PeerSplitService(app, database)
     val backups = BackupService(app, database, peers)
+    val notifications = NotificationService(app)
     private val prefs = app.getSharedPreferences("expense_settings", Context.MODE_PRIVATE)
     var currency by mutableStateOf(prefs.getString("currency", "₹") ?: "₹"); private set
     var timezone by mutableStateOf(prefs.getString("timezone_id", "AUTO") ?: "AUTO"); private set
     var profileName by mutableStateOf(prefs.getString("profile_name", "") ?: ""); private set
     var categories by mutableStateOf(prefs.getString("categories", null)?.split("|")?.filter { it.isNotBlank() } ?: defaultExpenseCategories); private set
+    var groupInvitationsEnabled: Boolean by mutableStateOf(prefs.getBoolean("group_invitations_enabled", false)); private set
     var pendingBackup: ByteArray? = null
     var restorePreview by mutableStateOf<AppBackupSnapshot?>(null)
     override fun onCleared() { pendingBackup?.fill(0); pendingBackup = null; restorePreview = null; super.onCleared() }
@@ -39,6 +41,25 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     fun updateCategories(value: List<String>) {
         categories = (value.map { it.trim() }.filter { it.isNotBlank() && it != "Other" } + "Other").distinct()
         prefs.edit().putString("categories", categories.joinToString("|")).apply()
+    }
+    fun toggleGroupInvitations(enabled: Boolean): Unit {
+        if (enabled) {
+            groupInvitationsEnabled = true
+            prefs.edit().putBoolean("group_invitations_enabled", true).apply()
+            perform {
+                try {
+                    message = peers.publishInviteKey()
+                } catch (failure: Exception) {
+                    groupInvitationsEnabled = false
+                    prefs.edit().putBoolean("group_invitations_enabled", false).apply()
+                    throw failure
+                }
+            }
+        } else {
+            groupInvitationsEnabled = false
+            prefs.edit().putBoolean("group_invitations_enabled", false).apply()
+            message = "Group invitations disabled"
+        }
     }
 
     /** App-scoped actions keep running when a user opens another screen. */
@@ -68,6 +89,14 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
             message = failure.message ?: "Could not send message"
         }
     }
+    fun cancelSplit(groupId: String, eventId: String, onDone: () -> Unit = {}) = perform("Split cancelled", onDone) {
+        val record = database.sharedLedgerEvents().findById(eventId) ?: return@perform
+        if (!record.description.contains("(Cancelled)", ignoreCase = true)) {
+            val updatedDescription: String = if (record.description.isBlank()) "Shared expense (Cancelled)" else "${record.description.trim()} (Cancelled)"
+            database.sharedLedgerEvents().updateDescription(eventId, updatedDescription)
+        }
+        database.sharedLedgerEvents().deleteByActionType("debt_removed")
+    }
     fun backgroundSync() = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
         try { peers.syncIfIdle() }
         catch (cancelled: CancellationException) { throw cancelled }
@@ -89,8 +118,7 @@ internal data class AppData(
         events.filter { it.groupId == group.id }.mapNotNull { runCatching { SharedLedgerCodec.toDomainEvent(it) }.getOrNull() },
         group.currencyCode, members.find { it.groupId == group.id && it.role == "owner" }?.memberId)
     fun balance(friendId: String, currencyCode: String, personalCurrencyCode: String): Double =
-        (if (currencyCode == personalCurrencyCode) splits.filter { it.friendId == friendId && !it.isSettled }.sumOf { it.amount } else 0.0) +
-            groupTransactions[friendId].orEmpty().filter { !it.isSettled && it.currencyCode == currencyCode }.sumOf { it.remainingAmount }
+        groupTransactions[friendId].orEmpty().filter { !it.isSettled && it.currencyCode == currencyCode }.sumOf { it.remainingAmount }
 }
 
 internal fun minorMoney(value: Long, code: String): String = "${currencySymbol(code)} ${SharedSplitMoney.format(value, code)}"

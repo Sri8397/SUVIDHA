@@ -102,14 +102,10 @@ internal class ExpenseRepository(private val database: ExpenseDatabase) {
         }
 
     fun observeFriendsWithBalances(actorMemberId: String? = null): Flow<List<Friend>> =
-        combine(friendDao.observeAll(), splitDao.observeAll(), observeFriendGroupTransactions(actorMemberId)) { friends, splits, groupTxns ->
-            val unsettledByFriend = splits.asSequence()
-                .filterNot(SplitTransaction::isSettled)
-                .groupBy(SplitTransaction::friendId)
+        combine(friendDao.observeAll(), observeFriendGroupTransactions(actorMemberId)) { friends, groupTxns ->
             friends.map { friend ->
-                val personalUnsettled = unsettledByFriend[friend.id]?.sumOf(SplitTransaction::amount) ?: 0.0
                 val groupUnsettled = groupTxns[friend.id]?.filterNot(FriendGroupTransaction::isSettled)?.sumOf(FriendGroupTransaction::remainingAmount) ?: 0.0
-                friend.withAmount(personalUnsettled + groupUnsettled)
+                friend.withAmount(groupUnsettled)
             }
         }
 

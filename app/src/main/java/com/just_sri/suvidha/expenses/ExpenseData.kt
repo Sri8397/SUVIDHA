@@ -301,6 +301,12 @@ interface SharedLedgerEventDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun restoreAll(events: List<SharedLedgerEventRecord>)
 
+    @Query("UPDATE shared_ledger_events SET description = :description WHERE id = :id")
+    suspend fun updateDescription(id: String, description: String)
+
+    @Query("DELETE FROM shared_ledger_events WHERE actionType = :actionType")
+    suspend fun deleteByActionType(actionType: String)
+
     @Query("DELETE FROM shared_ledger_events WHERE id = :id")
     suspend fun delete(id: String)
 

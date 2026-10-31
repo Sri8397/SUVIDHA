@@ -1,11 +1,15 @@
 package com.just_sri.suvidha.expenses
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,13 +27,22 @@ import kotlinx.coroutines.sync.withLock
 
 class MainActivity : ComponentActivity() {
     private var destination by mutableStateOf("home")
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Permission result handled */ }
+
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); destination = routeFor(intent) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         destination = routeFor(intent)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT))
-        SyncNotificationHelper.ensureChannel(this)
+        NotificationService.ensureChannels(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         setContent {
             var database by remember { mutableStateOf<ExpenseDatabase?>(null) }
             var failed by remember { mutableStateOf(false) }
@@ -71,5 +84,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun routeFor(intent: Intent?): String = when (intent?.getStringExtra("navigate_to")) { "shared_groups" -> "groups"; "backup" -> "backup"; else -> "home" }
+    private fun routeFor(intent: Intent?): String = when (intent?.getStringExtra("navigate_to")) {
+        "shared_groups", "groups" -> "groups"
+        "backup" -> "backup"
+        "expenses" -> "expenses"
+        "friends" -> "friends"
+        else -> "home"
+    }
 }

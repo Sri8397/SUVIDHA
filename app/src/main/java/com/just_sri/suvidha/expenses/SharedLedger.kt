@@ -146,6 +146,11 @@ fun projectSharedLedger(
 
         when (val action = event.action) {
             is SharedLedgerAction.ExpenseAdded -> {
+                if (event.description.contains("(Cancelled)", ignoreCase = true)) {
+                    accepted += id
+                    ancestorIds[id] = ancestors
+                    return@forEach
+                }
                 val duplicateDebtIds = action.debts.groupBy(SharedDebtUnit::id).filterValues { it.size > 1 }.keys
                 val invalidDebt = action.debts.firstOrNull { debt ->
                     debt.id.isBlank() || debt.creditorMemberId.isBlank() || debt.debtorMemberId.isBlank() ||

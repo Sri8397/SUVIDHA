@@ -1,0 +1,73 @@
+version: "1.0"
+rule_category: "group_membership"
+target: "shared_groups"
+description: "Rules governing member departure (self-exit) and administrative member removal in Suvidha shared groups."
+
+rules:
+  - id: "member_self_exit"
+    name: "Member Self-Exit (Leaving the Group)"
+    description: "Allows an active group member to voluntarily leave the shared group."
+    preconditions:
+      - condition: "member_is_active"
+        description: "The member must currently be an active participant in the group."
+      - condition: "not_sole_owner"
+        description: "If the member is the group owner, they cannot leave while other active members exist without transferring ownership or closing the group."
+    confirmation_dialog:
+      title: "Leave group?"
+      message: "You will be removed from this group. Any active splits created by you will be marked as CANCELLED."
+      confirm_action:
+        label: "Leave group"
+        style: "destructive"
+      dismiss_action:
+        label: "Cancel"
+        style: "neutral"
+    causal_effects:
+      - action: "cancel_authored_splits"
+        description: "All active split expenses authored by the departing member in this group transition to SplitStatus.CANCELLED."
+        ledger_effect: "Active debt calculations and balances associated with these splits are removed from the shared ledger."
+      - action: "deactivate_member"
+        description: "The member's active status transitions to inactive (isActive: false)."
+      - action: "record_timeline_event"
+        description: "A system notice is recorded in the group timeline: '<Member Name> left the group'."
+
+  - id: "owner_member_removal"
+    name: "Owner-Initiated Member Removal (Admin Removal)"
+    description: "Enables the group owner to remove a member only when all dues are fully settled."
+    preconditions:
+      - condition: "caller_is_owner"
+        description: "Only the group owner/admin has permission to initiate member removal."
+      - condition: "zero_balance_required"
+        description: "The target member must have a net balance of exactly 0."
+        spec:
+          net_balance_minor: 0
+      - condition: "no_outstanding_loans"
+        description: "The target member must not owe any money to any group member (debtorMemberId == memberId && remainingAmountMinor > 0 must be empty)."
+      - condition: "no_active_mortgages"
+        description: "No group member can owe any money to the target member (creditorMemberId == memberId && remainingAmountMinor > 0 must be empty)."
+    validation_error:
+      message: "Cannot remove member: All outstanding balances and debts involving <Member Name> must be settled first."
+    confirmation_dialog:
+      title: "Remove member?"
+      message: "<Member Name> will be removed from <Group Name>. Their balance has been settled."
+      confirm_action:
+        label: "Remove"
+        style: "destructive"
+      dismiss_action:
+        label: "Cancel"
+        style: "neutral"
+    causal_effects:
+      - action: "deactivate_member"
+        description: "The target member's active status transitions to inactive (isActive: false)."
+      - action: "record_timeline_event"
+        description: "A system notice is recorded in the group timeline: '<Member Name> was removed by group admin'."
+
+  - id: "post_departure_restrictions"
+    name: "Post-Departure Chat & Ledger Restrictions"
+    rules:
+      - restriction: "read_only_access"
+        description: "Inactive or departed members cannot send chat messages or add new splits to the group."
+      - restriction: "preserve_historical_records"
+        description: "Historical messages and settled ledger transactions involving the departed member are preserved with the label 'Former member'."
+      - restriction: "causal_ledger_sync"
+        description: "The departure event is persisted as a causal ledger event so all peers replicate the updated roster and conversation timeline."
+

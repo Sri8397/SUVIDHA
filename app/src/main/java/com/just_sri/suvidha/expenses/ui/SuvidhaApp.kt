@@ -111,6 +111,28 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
                                         }
                                         route.startsWith("friend/") && friend != null -> FriendScreen(friend, data, model, navigate, back)
                                         route.startsWith("direct-split/") && friend != null -> MoneyFlow(data, model, back, friend = friend)
+                                        route.startsWith("expense/") -> {
+                                            val expenseId: String = route.removePrefix("expense/")
+                                            val expense: Expense? = expenses.find { it.id == expenseId }
+                                            if (expense != null) {
+                                                ExpenseDetailScreen(
+                                                    expense = expense,
+                                                    data = data,
+                                                    model = model,
+                                                    back = back,
+                                                    onDelete = {
+                                                        model.perform("Record deleted", { back() }) {
+                                                            model.repository.deleteExpense(expense.id)
+                                                        }
+                                                    }
+                                                )
+                                            } else {
+                                                PageColumn {
+                                                    PageHeader("Expense details", back)
+                                                    PageList { item { EmptyState("Expense not found", "This expense may have been removed or does not exist.") } }
+                                                }
+                                            }
+                                        }
                                         else -> PageColumn { PageHeader("Suvidha", back); PageList { item { EmptyState("No longer available", "This item may have been removed or restored from a different backup.") } } }
                                     }
                                 }
@@ -127,11 +149,11 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
 private fun MainNavigation(selected: String, onSelect: (String) -> Unit) {
     Column {
         HorizontalDivider(color = BorderLight)
-        Row(Modifier.fillMaxWidth().background(Canvas).padding(horizontal = 8.dp, vertical = 10.dp)) {
+        Row(Modifier.fillMaxWidth().background(Canvas).padding(horizontal = 8.dp, vertical = 8.dp)) {
             listOf("home" to "Home", "expenses" to "Expenses", "friends" to "Friends", "groups" to "Groups", "profile" to "Profile").forEach { (route, title) ->
-                Column(Modifier.weight(1f).clickable { onSelect(route) }.padding(vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Box(Modifier.size(48.dp, 28.dp).background(if (selected == route) Ui.Mint else Color.Transparent, CircleShape), contentAlignment = Alignment.Center) {
+                Column(Modifier.weight(1f).clickable { onSelect(route) }.padding(vertical = 2.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Box(Modifier.size(52.dp, 30.dp).background(if (selected == route) Ui.Mint else Color.Transparent, CircleShape), contentAlignment = Alignment.Center) {
                         AppIcon(route, if (selected == route) Green else Muted)
                     }
                     Text(title, color = if (selected == route) Green else Muted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
@@ -144,9 +166,9 @@ private fun MainNavigation(selected: String, onSelect: (String) -> Unit) {
 @Composable
 internal fun AppIcon(name: String, tint: Color = Green) {
     when (name) {
-        "home" -> Icon(Icons.Outlined.Home, null, Modifier.size(22.dp), tint)
-        "friends" -> Icon(painterResource(R.drawable.ic_friends), null, Modifier.size(22.dp), tint)
-        "profile" -> Icon(Icons.Outlined.Person, null, Modifier.size(22.dp), tint)
-        else -> Icon(painterResource(if (name == "expenses") R.drawable.ic_analytics else R.drawable.ic_community), null, Modifier.size(22.dp), tint)
+        "home" -> Icon(Icons.Outlined.Home, null, Modifier.size(24.dp), tint)
+        "friends" -> Icon(painterResource(R.drawable.ic_friends), null, Modifier.size(24.dp), tint)
+        "profile" -> Icon(Icons.Outlined.Person, null, Modifier.size(24.dp), tint)
+        else -> Icon(painterResource(if (name == "expenses") R.drawable.ic_analytics else R.drawable.ic_community), null, Modifier.size(24.dp), tint)
     }
 }

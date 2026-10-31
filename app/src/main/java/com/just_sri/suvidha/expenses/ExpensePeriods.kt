@@ -78,9 +78,30 @@ internal fun buildTrendPeriods(mode: TrendMode, today: LocalDate, selectedStart:
 }
 
 internal fun trendPointLabel(mode: TrendMode, span: PeriodSpan, index: Int): String = when (mode) {
-    TrendMode.Day -> span.start.dayOfWeek.name.take(3).lowercase(Locale.getDefault()).replaceFirstChar { it.uppercase(Locale.getDefault()) }
-    TrendMode.Week -> "W${index + 1}"
+    TrendMode.Day -> span.start.dayOfMonth.toString()
+    TrendMode.Week -> "${span.start.dayOfMonth}–${span.endInclusive.dayOfMonth}"
     TrendMode.Month -> span.start.month.name.take(3).lowercase(Locale.getDefault()).replaceFirstChar { it.uppercase(Locale.getDefault()) }
+}
+
+internal fun trendRangeText(mode: TrendMode, periods: List<PeriodSpan>): String {
+    if (periods.isEmpty()) return ""
+    val first: LocalDate = periods.first().start
+    val last: LocalDate = periods.last().endInclusive
+    return when (mode) {
+        TrendMode.Day, TrendMode.Week -> {
+            val monthFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM", Locale.getDefault())
+            if (first.month == last.month) {
+                "${first.dayOfMonth}–${last.dayOfMonth} ${monthFmt.format(last)}"
+            } else {
+                val dayMonthFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+                "${dayMonthFmt.format(first)}–${dayMonthFmt.format(last)}"
+            }
+        }
+        TrendMode.Month -> {
+            val monthFmt: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM", Locale.getDefault())
+            "${monthFmt.format(first)}–${monthFmt.format(last)}"
+        }
+    }
 }
 
 internal fun periodLabel(mode: TrendMode, span: PeriodSpan, compact: Boolean = false): String = when (mode) {
@@ -116,17 +137,12 @@ internal fun currentPeriodAnchor(mode: TrendMode, today: LocalDate): LocalDate? 
 }
 
 internal fun heroEyebrow(isSpend: Boolean, mode: TrendMode, span: PeriodSpan, today: LocalDate, hasSelection: Boolean): String {
-    val verb = if (isSpend) "SPENT" else "EARNED"
+    val verb: String = if (isSpend) "SPENT" else "EARNED"
     if (!hasSelection) return "$verb TODAY"
     return when (mode) {
-        TrendMode.Day ->
-            if (span.start == today) "$verb TODAY" else "$verb ON ${periodLabel(mode, span).uppercase(Locale.getDefault())}"
-        TrendMode.Week ->
-            if (span.start == trendPeriodSpan(TrendMode.Week, today).start) "$verb THIS WEEK"
-            else "$verb · ${periodLabel(mode, span).uppercase(Locale.getDefault())}"
-        TrendMode.Month ->
-            if (span.start == trendPeriodSpan(TrendMode.Month, today).start) "$verb THIS MONTH"
-            else "$verb IN ${periodLabel(mode, span).uppercase(Locale.getDefault())}"
+        TrendMode.Day -> if (span.start == today) "$verb TODAY" else "$verb · ${periodLabel(mode, span, compact = true).uppercase(Locale.getDefault())}"
+        TrendMode.Week -> if (span.start == trendPeriodSpan(TrendMode.Week, today).start) "$verb THIS WEEK" else "$verb · ${periodLabel(mode, span, compact = true).uppercase(Locale.getDefault())}"
+        TrendMode.Month -> if (span.start == trendPeriodSpan(TrendMode.Month, today).start) "$verb THIS MONTH" else "$verb · ${periodLabel(mode, span, compact = true).uppercase(Locale.getDefault())}"
     }
 }
 

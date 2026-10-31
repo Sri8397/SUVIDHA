@@ -2,6 +2,7 @@ package com.just_sri.suvidha.expenses.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -48,7 +50,10 @@ internal fun SuvidhaTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = lightColorScheme(primary = Green, onPrimary = Color.White,
         primaryContainer = Ui.Mint, onPrimaryContainer = Green, background = Canvas,
         onBackground = Ink, surface = CardSurface, onSurface = Ink,
-        surfaceVariant = Ui.Neutral, onSurfaceVariant = Muted, outlineVariant = BorderLight,
+        surfaceVariant = Ui.Neutral, onSurfaceVariant = Muted,
+        surfaceContainer = CardSurface, surfaceContainerLow = CardSurface,
+        surfaceContainerHigh = CardSurface, surfaceContainerHighest = CardSurface,
+        outlineVariant = BorderLight,
         outline = Muted, error = Danger), typography = Typography(
             bodyLarge = TextStyle(fontFamily = Inter, fontSize = 15.sp, lineHeight = 22.sp),
             bodyMedium = TextStyle(fontFamily = Inter, fontSize = 14.sp, lineHeight = 20.sp),
@@ -93,34 +98,136 @@ internal fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnSco
 
 @Composable
 internal fun SectionHeading(title: String, detail: String? = null, action: (@Composable () -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, Modifier.weight(1f), color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        if (detail != null) Text(detail, color = Muted, fontSize = 12.sp)
-        action?.invoke()
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(title, color = Ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            if (detail != null) {
+                val detailText: String = if (detail.all { it.isDigit() }) "· $detail" else detail
+                Text(detailText, color = Muted, fontSize = 13.sp)
+            }
+        }
+        if (action != null) {
+            Spacer(Modifier.weight(1f))
+            action()
+        }
     }
 }
 
 @Composable
-internal fun Avatar(name: String, icon: ImageVector? = null, primary: Boolean = false, modifier: Modifier = Modifier) {
+internal fun Avatar(
+    name: String,
+    icon: ImageVector? = null,
+    primary: Boolean = false,
+    modifier: Modifier = Modifier,
+    showBadge: Boolean = false
+): Unit {
     Box(modifier.size(40.dp).background(if (primary) Green else Ui.Mint, if (icon == null) CircleShape else RoundedCornerShape(13.dp)),
         contentAlignment = Alignment.Center) {
         if (icon != null) Icon(icon, null, Modifier.size(21.dp), tint = if (primary) Color.White else Green)
         else Text(initials(name), color = if (primary) Color.White else Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        if (showBadge) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = 2.dp, y = 2.dp)
+                    .size(20.dp)
+                    .background(Color(0xFF004625), CircleShape)
+                    .border(2.dp, Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Verified,
+                    contentDescription = "Profile badge",
+                    tint = Color.White,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+        }
     }
 }
 
 internal fun initials(name: String): String = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") { it.take(1).uppercase() }.ifBlank { "S" }
 
+@Composable
+internal fun PreferenceRow(
+    title: String,
+    subtitle: String? = null,
+    icon: (@Composable () -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    divider: Boolean = false
+): Unit {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = 16.dp, vertical = 15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (icon != null) icon()
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text(
+                    text = title,
+                    color = Ink,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 21.sp
+                )
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        text = subtitle,
+                        color = Muted,
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+            if (trailingContent != null) trailingContent()
+        }
+        if (divider) HorizontalDivider(color = BorderLight)
+    }
+}
+
 /** One row layout for friends, groups, preferences and transaction history. */
 @Composable
-internal fun LedgerRow(title: String, subtitle: String? = null, amount: String? = null,
-    amountLabel: String? = null, amountColor: Color = Ink, icon: ImageVector? = null,
-    onClick: (() -> Unit)? = null, trailing: (@Composable () -> Unit)? = null, divider: Boolean = false) {
+internal fun LedgerRow(
+    title: String,
+    subtitle: String? = null,
+    amount: String? = null,
+    amountLabel: String? = null,
+    amountColor: Color = Ink,
+    icon: ImageVector? = null,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    divider: Boolean = false,
+    leading: (@Composable () -> Unit)? = null
+): Unit {
     Column {
-        Row(Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 15.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Avatar(title, icon)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .padding(horizontal = 16.dp, vertical = 15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (leading != null) {
+                leading()
+            } else {
+                Avatar(title, icon)
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     Text(title, Modifier.weight(1f), color = Ink, fontSize = 14.sp, lineHeight = 21.sp,
@@ -132,8 +239,11 @@ internal fun LedgerRow(title: String, subtitle: String? = null, amount: String? 
                 if (!subtitle.isNullOrBlank()) Text(subtitle, color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
                 if (amountLabel != null) Text(amountLabel, color = amountColor, fontSize = 12.sp)
             }
-            if (trailing != null) trailing()
-            else if (onClick != null && amount == null) Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Muted, modifier = Modifier.size(18.dp))
+            if (trailing != null) {
+                trailing()
+            } else if (onClick != null && amount == null) {
+                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Muted, modifier = Modifier.size(18.dp))
+            }
         }
         if (divider) HorizontalDivider(color = BorderLight)
     }

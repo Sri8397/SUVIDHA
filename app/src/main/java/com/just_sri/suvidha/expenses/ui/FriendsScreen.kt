@@ -4,13 +4,22 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -27,38 +36,56 @@ import com.just_sri.suvidha.expenses.*
 import com.just_sri.suvidha.expenses.R
 import kotlin.math.abs
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FriendsScreen(data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
-    var search by rememberSaveable { mutableStateOf("") }
-    var sortName by rememberSaveable { mutableStateOf(false) }
-    var code by rememberSaveable(model.currency) { mutableStateOf(currencyCodeFor(model.currency)) }
-    val codes = (listOf(currencyCodeFor(model.currency)) + data.groups.map { it.currencyCode }).distinct()
-    val balances = data.friends.associate { it.id to data.balance(it.id, code, currencyCodeFor(model.currency)) }
-    val visible = data.friends.filter { it.name.contains(search.trim(), true) }.let { list -> if (sortName) list.sortedBy { it.name.lowercase() } else list.sortedByDescending { abs(balances[it.id] ?: 0.0) } }
+    var search: String by rememberSaveable { mutableStateOf("") }
+    var sortName: Boolean by rememberSaveable { mutableStateOf(false) }
+    var code: String by rememberSaveable(model.currency) { mutableStateOf(currencyCodeFor(model.currency)) }
+    val codes: List<String> = (listOf(currencyCodeFor(model.currency)) + data.groups.map { it.currencyCode }).distinct()
+    val balances: Map<String, Double> = data.friends.associate { it.id to data.balance(it.id, code, currencyCodeFor(model.currency)) }
+    val visible: List<Friend> = data.friends.filter { it.name.contains(search.trim(), true) }.let { list -> if (sortName) list.sortedBy { it.name.lowercase() } else list.sortedByDescending { abs(balances[it.id] ?: 0.0) } }
+    val ptrState = rememberPullToRefreshState()
     PageColumn {
         PageHeader("Friends", back) { TextButton({ navigate("new-friend") }) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text("Add friend", fontSize = 12.sp) } }
-        PageList {
-            if (codes.size > 1) item { FilterChips(codes, code, { code = it }) }
-            item {
-                Panel {
-                    Row(Modifier.padding(18.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        BalanceFigure("You're owed", "${currencySymbol(code)} ${money(balances.values.filter { it > 0 }.sum())}", Modifier.weight(1f), Green)
-                        VerticalDivider(Modifier.height(48.dp), color = BorderLight)
-                        BalanceFigure("You owe", "${currencySymbol(code)} ${money(abs(balances.values.filter { it < 0 }.sum()))}", Modifier.weight(1f), Danger)
+        PullToRefreshBox(
+            isRefreshing = model.busy,
+            onRefresh = model::sync,
+            modifier = Modifier.fillMaxSize(),
+            state = ptrState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = ptrState,
+                    isRefreshing = model.busy,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = CardSurface,
+                    color = Green
+                )
+            }
+        ) {
+            PageList {
+                if (codes.size > 1) item { FilterChips(codes, code, { code = it }) }
+                item {
+                    Panel {
+                        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            BalanceFigure("You're owed", "${currencySymbol(code)} ${money(balances.values.filter { it > 0 }.sum())}", Modifier.weight(1f), Green)
+                            VerticalDivider(Modifier.height(48.dp), color = BorderLight)
+                            BalanceFigure("You owe", "${currencySymbol(code)} ${money(abs(balances.values.filter { it < 0 }.sum()))}", Modifier.weight(1f), Danger)
+                        }
                     }
                 }
-            }
-            item { SearchField(search, { search = it }, "Search friends") }
-            item { SectionHeading("Your friends", "${visible.size}") { TextButton({ sortName = !sortName }) { Text(if (sortName) "Name A–Z ▾" else "Highest balance ▾", fontSize = 11.sp) } } }
-            if (visible.isEmpty()) item { EmptyState(if (data.friends.isEmpty()) "No friends yet" else "No friends found", if (data.friends.isEmpty()) "Save a friend’s name and public ID to start sharing expenses." else "Try a different name.") }
-            item {
-                if (visible.isNotEmpty()) Panel {
-                    visible.forEachIndexed { i, friend ->
-                        val balance = balances[friend.id] ?: 0.0
-                        LedgerRow(friend.name, if (balance == 0.0) "All settled" else "View transactions", "${currencySymbol(code)} ${money(abs(balance))}",
-                            amountLabel = if (balance > 0) "Owes you" else if (balance < 0) "You owe" else null,
-                            amountColor = if (balance < 0) Danger else if (balance > 0) Green else Muted,
-                            onClick = { navigate("friend/${friend.id}") }, divider = i < visible.lastIndex)
+                item { SearchField(search, { search = it }, "Search friends") }
+                item { SectionHeading("Your friends", "${visible.size}") { TextButton({ sortName = !sortName }) { Text(if (sortName) "Name A–Z ▾" else "Highest balance ▾", fontSize = 11.sp) } } }
+                if (visible.isEmpty()) item { EmptyState(if (data.friends.isEmpty()) "No friends yet" else "No friends found", if (data.friends.isEmpty()) "Save a friend’s name and public ID to start sharing expenses." else "Try a different name.") }
+                item {
+                    if (visible.isNotEmpty()) Panel {
+                        visible.forEachIndexed { i, friend ->
+                            val balance = balances[friend.id] ?: 0.0
+                            LedgerRow(friend.name, if (balance == 0.0) "All settled" else "View transactions", "${currencySymbol(code)} ${money(abs(balance))}",
+                                amountLabel = if (balance > 0) "Owes you" else if (balance < 0) "You owe" else null,
+                                amountColor = if (balance < 0) Danger else if (balance > 0) Green else Muted,
+                                onClick = { navigate("friend/${friend.id}") }, divider = i < visible.lastIndex)
+                        }
                     }
                 }
             }
@@ -68,9 +95,16 @@ internal fun FriendsScreen(data: AppData, model: AppViewModel, navigate: (String
 
 @Composable
 internal fun BalanceFigure(label: String, amount: String, modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color = Ink) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, color = Muted, fontSize = 12.sp)
-        Text(amount, color = color, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text(
+            amount,
+            color = color,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false,
+        )
     }
 }
 
@@ -166,24 +200,48 @@ internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
     }
 }
 
-private data class FriendEntry(val key: String, val title: String, val subtitle: String, val amount: String,
-    val positive: Boolean, val settled: Boolean, val date: Long, val personal: SplitTransaction? = null, val group: FriendGroupTransaction? = null)
+private data class FriendEntry(val key: String, val title: String, val groupName: String, val dateText: String, val amount: String,
+    val positive: Boolean, val settled: Boolean, val date: Long, val group: FriendGroupTransaction)
 
 @Composable
 internal fun FriendScreen(friend: Friend, data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
-    var groupFilter by rememberSaveable { mutableStateOf("All") }
-    var selected by remember { mutableStateOf<FriendEntry?>(null) }
+    val groupEntries = remember(data.groupTransactions, friend.id) { data.groupTransactions[friend.id].orEmpty() }
+    val groups = remember(groupEntries) { groupEntries.map { it.groupId to it.groupName }.distinct() }
+    var selectedGroupIds by rememberSaveable(groups) { mutableStateOf(groups.map { it.first }.toSet()) }
+    var filterMenuOpen by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var remove by remember { mutableStateOf(false) }
     var edit by remember { mutableStateOf(false) }
     var name by rememberSaveable(friend.id) { mutableStateOf(friend.name) }
     val context = LocalContext.current
-    val groupEntries = data.groupTransactions[friend.id].orEmpty()
-    val groups = groupEntries.map { it.groupId to it.groupName }.distinct()
-    val entries = (data.splits.filter { it.friendId == friend.id }.map { split -> FriendEntry("p:${split.id}", split.note.ifBlank { "Split expense" }, "Personal · ${displayDate(split.date, model)}",
-        "${model.currency} ${money(abs(split.amount))}", split.amount > 0, split.isSettled, split.date, personal = split) } +
-        groupEntries.map { txn -> FriendEntry("g:${txn.debtUnitId}", txn.description, "${txn.groupName} · ${displayDate(txn.occurredAtMillis, model)}", "${currencySymbol(txn.currencyCode)} ${money(abs(txn.amount))}", txn.amount > 0, txn.isSettled, txn.occurredAtMillis, group = txn) })
-        .filter { groupFilter == "All" || groupFilter == "Personal" && it.personal != null || it.group?.groupId == groupFilter }.sortedByDescending { it.date }
+
+    val entries = remember(groupEntries, selectedGroupIds) {
+        groupEntries.filter { selectedGroupIds.contains(it.groupId) }.map { txn ->
+            val isPositive = txn.amount > 0
+            val sign = if (isPositive) "+" else "−"
+            val formatted = "$sign${currencySymbol(txn.currencyCode)} ${money(abs(txn.amount))}"
+            FriendEntry(
+                key = "g:${txn.debtUnitId}",
+                title = txn.description,
+                groupName = txn.groupName,
+                dateText = displayDate(txn.occurredAtMillis, model),
+                amount = formatted,
+                positive = isPositive,
+                settled = txn.isSettled,
+                date = txn.occurredAtMillis,
+                group = txn
+            )
+        }.sortedByDescending { it.date }
+    }
+
+    val isAllSelected = groups.isNotEmpty() && selectedGroupIds.size == groups.size
+    val filterLabel = when {
+        isAllSelected -> "All groups"
+        selectedGroupIds.isEmpty() -> "No groups"
+        selectedGroupIds.size == 1 -> groups.find { selectedGroupIds.contains(it.first) }?.second ?: "1 group"
+        else -> "${selectedGroupIds.size} groups"
+    }
+
     PageColumn {
         PageHeader(friend.name, back) {
             Box {
@@ -200,45 +258,184 @@ internal fun FriendScreen(friend: Friend, data: AppData, model: AppViewModel, na
         PageList {
             item {
                 Panel {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        val codes = (listOf(currencyCodeFor(model.currency)) + groupEntries.map { it.currencyCode }).distinct()
+                    val filteredTxns = groupEntries.filter { selectedGroupIds.contains(it.groupId) }
+                    val codes = filteredTxns.map { it.currencyCode }.distinct().ifEmpty { listOf(currencyCodeFor(model.currency)) }
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         codes.forEach { code ->
-                            val balance = data.balance(friend.id, code, currencyCodeFor(model.currency))
-                            BalanceFigure(if (balance > 0) "${friend.name} owes you" else if (balance < 0) "You owe ${friend.name}" else "All settled · $code",
-                                "${currencySymbol(code)} ${money(abs(balance))}", color = if (balance < 0) Danger else Green)
+                            val net = filteredTxns.filter { !it.isSettled && it.currencyCode == code }.sumOf { it.remainingAmount }
+                            val summary = when {
+                                selectedGroupIds.isEmpty() -> "Select groups to see a balance"
+                                net > 0 -> "${friend.name} owes you"
+                                net < 0 -> "You owe ${friend.name}"
+                                else -> "All settled"
+                            }
+                            val scopeText = when {
+                                isAllSelected -> ""
+                                selectedGroupIds.isNotEmpty() -> "Selected groups"
+                                else -> "No groups selected"
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f, fill = false)) {
+                                    Text(summary, color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+                                    Text(
+                                        "${currencySymbol(code)} ${money(abs(net))}",
+                                        color = if (net < 0) Danger else if (net == 0.0) Muted else Green,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = (-0.5).sp
+                                    )
+                                }
+                                if (scopeText.isNotEmpty()) {
+                                    Text(scopeText, color = Muted, fontSize = 11.sp, lineHeight = 17.sp)
+                                }
+                            }
                         }
-                        PrimaryButton("Add split expense", { navigate("direct-split/${friend.id}") })
                     }
                 }
             }
+
             item {
-                val labels = listOf("All", "Personal") + groups.map { it.second }
-                val selectedLabel = groups.find { it.first == groupFilter }?.second ?: groupFilter
-                FilterChips(labels, selectedLabel, { value -> groupFilter = groups.find { it.second == value }?.first ?: value })
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Transactions", color = Ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        Text("· ${entries.size}", color = Muted, fontSize = 12.sp)
+                    }
+                    if (groups.isNotEmpty()) {
+                        Box {
+                            Surface(
+                                onClick = { filterMenuOpen = true },
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, BorderLight),
+                                color = CardSurface
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(Icons.Outlined.FilterList, contentDescription = "Filter", tint = Muted, modifier = Modifier.size(15.dp))
+                                    Text(filterLabel, color = Ink, fontSize = 12.sp, maxLines = 1)
+                                    Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null, tint = Muted, modifier = Modifier.size(16.dp))
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = filterMenuOpen,
+                                onDismissRequest = { filterMenuOpen = false },
+                                modifier = Modifier.widthIn(min = 220.dp, max = 290.dp).background(CardSurface)
+                            ) {
+                                Text(
+                                    "Show transactions from",
+                                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Ink
+                                )
+                                HorizontalDivider(color = BorderLight)
+                                DropdownMenuItem(
+                                    text = { Text("All groups", fontWeight = FontWeight.SemiBold) },
+                                    leadingIcon = {
+                                        Checkbox(
+                                            checked = isAllSelected,
+                                            onCheckedChange = { checked ->
+                                                selectedGroupIds = if (checked) groups.map { it.first }.toSet() else emptySet()
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedGroupIds = if (isAllSelected) emptySet() else groups.map { it.first }.toSet()
+                                    }
+                                )
+                                HorizontalDivider(color = BorderLight)
+                                groups.forEach { (groupId, groupTitle) ->
+                                    val isChecked = selectedGroupIds.contains(groupId)
+                                    DropdownMenuItem(
+                                        text = { Text(groupTitle, fontSize = 13.sp) },
+                                        leadingIcon = {
+                                            Checkbox(
+                                                checked = isChecked,
+                                                onCheckedChange = { checked ->
+                                                    selectedGroupIds = if (checked) selectedGroupIds + groupId else selectedGroupIds - groupId
+                                                }
+                                            )
+                                        },
+                                        onClick = {
+                                            selectedGroupIds = if (isChecked) selectedGroupIds - groupId else selectedGroupIds + groupId
+                                        }
+                                    )
+                                }
+                                HorizontalDivider(color = BorderLight)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("${selectedGroupIds.size} of ${groups.size} selected", fontSize = 12.sp, color = Muted)
+                                    TextButton(onClick = { filterMenuOpen = false }) {
+                                        Text("Done", color = Green, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            item { SectionHeading("Transactions", "${entries.size}") }
-            if (entries.isEmpty()) item { EmptyState("No transactions here yet", "Add a split to start keeping track.") }
-            itemsIndexed(entries, key = { _, entry -> entry.key }) { _, entry ->
-                Panel { LedgerRow(entry.title, entry.subtitle, entry.amount,
-                    if (entry.settled) "Settled" else if (entry.positive) "Owes you" else "You owe",
-                    if (entry.settled) Muted else if (entry.positive) Green else Danger, onClick = { selected = entry }) }
+
+            if (entries.isEmpty()) {
+                item {
+                    val emptyTitle = if (selectedGroupIds.isEmpty()) "No groups selected" else "No transactions yet"
+                    val emptyDesc = if (selectedGroupIds.isEmpty()) "Choose one or more groups using the filter above." else "There are no transactions in the selected groups."
+                    EmptyState(emptyTitle, emptyDesc)
+                }
+            } else {
+                item {
+                    Panel {
+                        Column {
+                            entries.forEachIndexed { index, entry ->
+                                if (index > 0) HorizontalDivider(color = BorderLight)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { navigate("group/${entry.group.groupId}") }
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(entry.title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.sp)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(entry.groupName, color = Muted, fontSize = 11.sp, lineHeight = 18.sp)
+                                            Text("·", color = Muted, fontSize = 11.sp)
+                                            Text(entry.dateText, color = Muted, fontSize = 11.sp, lineHeight = 18.sp)
+                                        }
+                                    }
+                                    Text(
+                                        entry.amount,
+                                        color = if (entry.settled) Muted else if (entry.positive) Green else Danger,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        lineHeight = 21.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-    selected?.let { entry ->
-        val txn = entry.personal
-        AlertDialog(onDismissRequest = { if (!model.busy) selected = null }, title = { Text(entry.title) },
-            text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { DetailLine("Amount", entry.amount); DetailLine("Details", entry.subtitle); Text(if (entry.settled) "Settled" else if (entry.positive) "Owes you" else "You owe") } },
-            confirmButton = {
-                if (txn != null && !txn.isSettled) TextButton({ model.perform("Payment recorded", { selected = null }) { model.repository.settleSplitTransaction(txn, friend.name, data.friends) } }, enabled = !model.busy) { Text("Mark settled") }
-                else if (entry.group != null) TextButton({ selected = null; navigate("group/${entry.group.groupId}") }) { Text("Open group") }
-                else TextButton({ selected = null }) { Text("Done") }
-            }, dismissButton = {
-                if (txn != null) TextButton({ model.perform("Split removed", { selected = null }) { model.repository.deleteSplitTransaction(txn, data.friends) } }, enabled = !model.busy) { Text("Delete", color = Danger) }
-                else TextButton({ selected = null }) { Text("Close") }
-            })
-    }
-    if (remove) ConfirmDialog("Remove friend?", "${friend.name} and their local splits will be removed. Group history stays available.", "Remove", { remove = false },
+    if (remove) ConfirmDialog("Remove friend?", "${friend.name} will be removed. Group history stays available.", "Remove", { remove = false },
         { model.perform("Friend removed", back) { model.repository.deleteFriend(friend.id) } }, model.busy)
     if (edit) ConfirmDialog("Edit friend", "Choose the name you want to see in your ledger.", "Save", { edit = false }, {
         if (name.isNotBlank()) model.perform("Name updated", { edit = false }) { model.repository.saveFriend(friend.copy(name = name.trim(), updatedAt = System.currentTimeMillis())) }

@@ -2,6 +2,7 @@ package com.just_sri.suvidha.expenses.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,10 +16,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -45,22 +50,39 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun GroupsScreen(data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
-    var search by rememberSaveable { mutableStateOf("") }
-    var byName by rememberSaveable { mutableStateOf(false) }
-    val visible = data.groups.filter { it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
+    var search: String by rememberSaveable { mutableStateOf("") }
+    var byName: Boolean by rememberSaveable { mutableStateOf(false) }
+    val visible: List<SharedGroupEntity> = data.groups.filter { it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
+    val ptrState = rememberPullToRefreshState()
     PageColumn {
         PageHeader("Groups", back) { TextButton({ navigate("new-group") }, enabled = !model.busy) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text("New group", fontSize = 12.sp) } }
-        PageList {
-            item { SearchField(search, { search = it }, "Search groups") }
-            item { SectionHeading("Your groups", "${visible.size}") { TextButton({ byName = !byName }) { Text(if (byName) "Name A–Z ▾" else "Recently added ▾", fontSize = 11.sp) } } }
-            item { TextButton(model::sync, enabled = !model.busy) { Text(if (model.busy) "Working…" else "Sync groups & invitations", fontSize = 12.sp) } }
-            if (visible.isEmpty()) item { EmptyState(if (data.groups.isEmpty()) "Share expenses together" else "No groups found", if (data.groups.isEmpty()) "Create a group or sync an invitation from a friend." else "Try a different name.") }
-            item {
-                if (visible.isNotEmpty()) Panel { visible.forEachIndexed { i, group -> LedgerRow(group.name,
-                    "${data.members.count { it.groupId == group.id && it.isActive }} members · ${group.currencyCode}", icon = Icons.Outlined.DateRange,
-                    onClick = { navigate("group/${group.id}") }, divider = i < visible.lastIndex) } }
+        PullToRefreshBox(
+            isRefreshing = model.busy,
+            onRefresh = model::sync,
+            modifier = Modifier.fillMaxSize(),
+            state = ptrState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = ptrState,
+                    isRefreshing = model.busy,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = CardSurface,
+                    color = Green
+                )
+            }
+        ) {
+            PageList {
+                item { SearchField(search, { search = it }, "Search groups") }
+                item { SectionHeading("Your groups", "${visible.size}") { TextButton({ byName = !byName }) { Text(if (byName) "Name A–Z ▾" else "Recently added ▾", fontSize = 11.sp) } } }
+                if (visible.isEmpty()) item { EmptyState(if (data.groups.isEmpty()) "Share expenses together" else "No groups found", if (data.groups.isEmpty()) "Create a group or sync an invitation from a friend." else "Try a different name.") }
+                item {
+                    if (visible.isNotEmpty()) Panel { visible.forEachIndexed { i, group -> LedgerRow(group.name,
+                        "${data.members.count { it.groupId == group.id && it.isActive }} members · ${group.currencyCode}", icon = Icons.Outlined.DateRange,
+                        onClick = { navigate("group/${group.id}") }, divider = i < visible.lastIndex) } }
+                }
             }
         }
     }
@@ -119,21 +141,11 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     var menu by remember { mutableStateOf(false) }
     var payment by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var removeDebt by remember { mutableStateOf<SharedDebtBalance?>(null) }
-    var messageText by rememberSaveable(group.id) { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     val projection = remember(group, data.events, data.members) { data.projection(group) }
     val members = data.members.filter { it.groupId == group.id && (it.isActive || projection.balanceByMemberId.getOrDefault(it.memberId, 0) != 0L) }
-    val chatEvents = remember(data.events, group.id) { data.events.filter { it.groupId == group.id }.sortedBy { it.createdAtMillis } }
     val debts = projection.debtById.values.filter { it.remainingAmountMinor > 0 }
-    val listState = rememberLazyListState()
-
-    // Smooth scroll to bottom when new messages arrive
-    LaunchedEffect(chatEvents.size) {
-        if (chatEvents.isNotEmpty()) {
-            listState.animateScrollToItem(chatEvents.lastIndex)
-        }
-    }
 
     // Await each pass and stop polling when the screen leaves the foreground.
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -224,325 +236,13 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
                 }
             }
         } else {
-            Column(Modifier.weight(1f).fillMaxWidth()) {
-                if (chatEvents.isEmpty()) {
-                    Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth().padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Text(
-                                "Your group starts here",
-                                color = Green,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Send a message or tap + to split an expense with your group.",
-                                color = Muted,
-                                fontSize = 13.sp,
-                                lineHeight = 21.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        itemsIndexed(chatEvents, key = { _, record -> record.id }) { index, record ->
-                            val currentDay = Instant.ofEpochMilli(record.createdAtMillis).atZone(model.zone).toLocalDate()
-                            val prevDay = if (index > 0) Instant.ofEpochMilli(chatEvents[index - 1].createdAtMillis).atZone(model.zone).toLocalDate() else null
-                            if (prevDay == null || prevDay != currentDay) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = Ui.Neutral
-                                    ) {
-                                        Text(
-                                            formatDayPill(record.createdAtMillis, model.zone),
-                                            color = Muted,
-                                            fontSize = 11.sp,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            val event = runCatching { SharedLedgerCodec.toDomainEvent(record) }.getOrNull()
-                            val hasLaterPeerEvent = chatEvents.drop(index + 1).any { it.actorMemberId != data.ownId }
-                            when (record.actionType) {
-                                "chat_message" -> {
-                                    val chatText = (event?.action as? SharedLedgerAction.ChatMessage)?.text ?: record.description
-                                    val isOutgoing = record.actorMemberId == data.ownId
-                                    val senderName = data.label(record.actorMemberId)
-                                    val timeStr = formatChatTime(record.createdAtMillis, model.zone)
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start
-                                    ) {
-                                        if (!isOutgoing) {
-                                            Text(
-                                                text = senderName,
-                                                color = Green,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                                            )
-                                        }
-                                        Surface(
-                                            modifier = Modifier.widthIn(max = 285.dp),
-                                            shape = if (isOutgoing) RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp) else RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp),
-                                            color = if (isOutgoing) Color(0xFFE3F1E8) else CardSurface,
-                                            border = BorderStroke(1.dp, if (isOutgoing) Color(0xFFD4E7D8) else BorderLight)
-                                        ) {
-                                            Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                                                Text(
-                                                    text = chatText,
-                                                    color = Ink,
-                                                    fontSize = 14.sp,
-                                                    lineHeight = 20.sp
-                                                )
-                                                Spacer(Modifier.height(3.dp))
-                                                Row(
-                                                    modifier = Modifier.align(Alignment.End),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                ) {
-                                                    Text(
-                                                        text = timeStr,
-                                                        color = Muted,
-                                                        fontSize = 10.sp
-                                                    )
-                                                    DeliveryStatusIcon(record.syncState, isOutgoing, hasLaterPeerEvent)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                "expense_added" -> {
-                                    val expenseAction = event?.action as? SharedLedgerAction.ExpenseAdded
-                                    val sharedTotal = expenseAction?.debts?.sumOf { it.amountMinor } ?: 0L
-                                    val isOutgoing = record.actorMemberId == data.ownId
-                                    val payerName = data.label(record.actorMemberId)
-                                    val timeStr = formatChatTime(record.createdAtMillis, model.zone)
-                                    val splitIndex = chatEvents.filter { it.actionType == "expense_added" }.indexOf(record) + 1
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start
-                                    ) {
-                                        if (!isOutgoing) {
-                                            Text(
-                                                text = payerName,
-                                                color = Green,
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-                                            )
-                                        }
-                                        Surface(
-                                            modifier = Modifier
-                                                .widthIn(max = 285.dp)
-                                                .clickable { navigate("split-detail/${group.id}/${record.id}") },
-                                            shape = if (isOutgoing) RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp) else RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp),
-                                            color = if (isOutgoing) Color(0xFFE3F1E8) else CardSurface,
-                                            border = BorderStroke(1.dp, if (isOutgoing) Color(0xFFD4E7D8) else BorderLight)
-                                        ) {
-                                            Column(Modifier.padding(horizontal = 13.dp, vertical = 9.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
-                                                    ) {
-                                                        Box(
-                                                            Modifier.size(20.dp).background(if (isOutgoing) Color.White.copy(alpha = 0.85f) else Ui.Mint, RoundedCornerShape(6.dp)),
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            Icon(
-                                                                Icons.Outlined.DateRange,
-                                                                null,
-                                                                tint = Green,
-                                                                modifier = Modifier.size(13.dp)
-                                                            )
-                                                        }
-                                                        Text(
-                                                            "Entry #${"%03d".format(splitIndex)}",
-                                                            color = Ink,
-                                                            fontSize = 12.sp,
-                                                            fontWeight = FontWeight.SemiBold
-                                                        )
-                                                    }
-                                                    Text(
-                                                        minorMoney(sharedTotal, group.currencyCode),
-                                                        color = Green,
-                                                        fontSize = 15.sp,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                }
-
-                                                Column {
-                                                    Text(
-                                                        record.description.ifBlank { "Shared expense" },
-                                                        color = Ink,
-                                                        fontSize = 13.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        lineHeight = 18.sp,
-                                                        maxLines = 2,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                    Text(
-                                                        "Paid by $payerName",
-                                                        color = Muted,
-                                                        fontSize = 11.sp
-                                                    )
-                                                }
-
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                    ) {
-                                                        Text(timeStr, color = Muted, fontSize = 10.sp)
-                                                        DeliveryStatusIcon(record.syncState, isOutgoing, hasLaterPeerEvent)
-                                                    }
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                                    ) {
-                                                        Text("Details", color = Green, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                                                        Icon(
-                                                            Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                                            null,
-                                                            tint = Green,
-                                                            modifier = Modifier.size(14.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                else -> {
-                                    val settled = (event?.action as? SharedLedgerAction.SettlementRecorded)?.allocations?.sumOf { it.amountMinor } ?: 0L
-                                    val isOutgoing = record.actorMemberId == data.ownId
-                                    val actorName = data.label(record.actorMemberId)
-                                    val timeStr = formatChatTime(record.createdAtMillis, model.zone)
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start
-                                    ) {
-                                        Surface(
-                                            modifier = Modifier.widthIn(max = 285.dp),
-                                            shape = if (isOutgoing) RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp) else RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp),
-                                            color = if (isOutgoing) Color(0xFFE3F1E8) else CardSurface,
-                                            border = BorderStroke(1.dp, if (isOutgoing) Color(0xFFD4E7D8) else BorderLight)
-                                        ) {
-                                            Column(Modifier.padding(horizontal = 12.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                                Row(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Text(record.description.ifBlank { "Payment recorded" }, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                                    if (settled > 0) {
-                                                        Text(minorMoney(settled, group.currencyCode), color = Green, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                                    }
-                                                }
-                                                Text("By $actorName", color = Muted, fontSize = 11.sp)
-                                                Row(
-                                                    modifier = Modifier.align(Alignment.End),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                                ) {
-                                                    Text(timeStr, color = Muted, fontSize = 10.sp)
-                                                    DeliveryStatusIcon(record.syncState, isOutgoing, hasLaterPeerEvent)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Bottom Chat Composer
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Canvas,
-                    border = BorderStroke(1.dp, BorderLight)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        IconButton(
-                            onClick = { navigate("group-split/${group.id}") },
-                            modifier = Modifier.size(42.dp).background(Ui.Mint, CircleShape),
-                            enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
-                        ) {
-                            Icon(Icons.Outlined.Add, "Add split", tint = Green, modifier = Modifier.size(22.dp))
-                        }
-
-                        OutlinedTextField(
-                            value = messageText,
-                            onValueChange = { if (it.length <= 2000) messageText = it },
-                            modifier = Modifier.weight(1f).heightIn(min = 44.dp, max = 120.dp),
-                            placeholder = { Text("Message", color = Muted, fontSize = 14.sp) },
-                            shape = RoundedCornerShape(20.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedBorderColor = BorderLight,
-                                focusedBorderColor = Green,
-                                unfocusedContainerColor = CardSurface,
-                                focusedContainerColor = CardSurface
-                            ),
-                            singleLine = false,
-                            minLines = 1,
-                            maxLines = 4,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                            textStyle = TextStyle(color = Ink, fontSize = 14.sp, fontFamily = Inter, lineHeight = 20.sp)
-                        )
-
-                        val canSend = messageText.isNotBlank()
-                        IconButton(
-                            onClick = {
-                                val text = messageText.trim()
-                                if (text.isNotBlank()) {
-                                    messageText = ""
-                                    model.sendChatMessage(group.id, text)
-                                }
-                            },
-                            modifier = Modifier.size(42.dp).background(if (canSend) Green else Ui.Neutral, CircleShape),
-                            enabled = canSend
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_send),
-                                contentDescription = "Send message",
-                                tint = if (canSend) Color.White else Muted,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            ChatScreen(
+                group = group,
+                data = data,
+                model = model,
+                navigate = navigate,
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            )
         }
     }
 
@@ -555,7 +255,14 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
             } }, confirmButton = { TextButton({
                 val value = SharedSplitMoney.parseMinor(amount, group.currencyCode)
                 if (value == null || value !in 1..debt.remainingAmountMinor) error = "Enter an amount up to ${minorMoney(debt.remainingAmountMinor, group.currencyCode)}."
-                else model.perform("Payment recorded", { payment = null }) { model.peers.settle(group.id, debt.debtUnitId, value) }
+                else model.perform("Payment recorded", { payment = null }) {
+                    model.peers.settle(group.id, debt.debtUnitId, value)
+                    model.notifications.notifySettlement(
+                        counterpartName = group.name,
+                        amountFormatted = minorMoney(value, group.currencyCode),
+                        isGroup = true
+                    )
+                }
             }, enabled = !model.busy) { Text("Record payment") } }, dismissButton = {
                 Column { TextButton({ payment = null }, enabled = !model.busy) { Text("Cancel") }; TextButton({ payment = null; removeDebt = debt }, enabled = !model.busy) { Text("Delete debt", color = Danger) } }
             })
@@ -592,7 +299,23 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
                 item { Panel { members.forEachIndexed { i, member ->
                     LedgerRow(data.label(member.memberId), if (member.role == "owner") "Group admin" else "Member", divider = i < members.lastIndex,
                         onClick = if (member.memberId != data.ownId) {{ linking = member; newName = data.label(member.memberId).takeUnless { it.contains('…') }.orEmpty() }} else null,
-                        trailing = if (owner && member.memberId != data.ownId) {{ TextButton({ remove = member }, enabled = !model.busy) { Text("Remove", color = Danger, fontSize = 12.sp) } }} else null)
+                        trailing = if (owner && member.memberId != data.ownId) {{
+                            IconButton(
+                                onClick = { remove = member },
+                                enabled = !model.busy,
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(color = Color(0xFFFFF5F5), shape = CircleShape)
+                                    .border(1.dp, Color(0xFFFED7D7), CircleShape)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Close,
+                                    contentDescription = "Remove ${data.label(member.memberId)}",
+                                    tint = Color(0xFFC53030),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }} else null)
                 } } }
                 if (owner) item { PrimaryButton("+ Add members", { adding = true }, enabled = !model.busy) }
             }
@@ -615,60 +338,6 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
             val current = data.links.find { it.memberId == member.memberId }?.let { link -> data.friends.find { it.id == link.friendId } }
             if (current != null) model.repository.saveFriend(current.copy(name = newName.trim())) else model.groups.createFriendForMember(group.id, member.memberId, newName)
         } }, enabled = newName.isNotBlank() && !model.busy) { Text("Save name") } }, dismissButton = { TextButton({ linking = null }, enabled = !model.busy) { Text("Cancel") } })
-    }
-}
-
-private fun formatDayPill(timestamp: Long, zone: ZoneId): String {
-    val date = Instant.ofEpochMilli(timestamp).atZone(zone).toLocalDate()
-    val today = LocalDate.now(zone)
-    return when {
-        date == today -> "Today"
-        date == today.minusDays(1) -> "Yesterday"
-        date.year == today.year -> DateTimeFormatter.ofPattern("d MMM", Locale.getDefault()).withZone(zone).format(Instant.ofEpochMilli(timestamp))
-        else -> DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()).withZone(zone).format(Instant.ofEpochMilli(timestamp))
-    }
-}
-
-private fun formatChatTime(timestamp: Long, zone: ZoneId): String {
-    return DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault()).withZone(zone).format(Instant.ofEpochMilli(timestamp))
-}
-
-@Composable
-internal fun DeliveryStatusIcon(syncState: String, isOutgoing: Boolean, hasLaterPeerEvent: Boolean) {
-    if (!isOutgoing) return
-    when {
-        syncState == "failed" -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_status_failed),
-                contentDescription = "Failed",
-                tint = Danger,
-                modifier = Modifier.size(13.dp)
-            )
-        }
-        syncState in listOf("local", "pending") -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_clock),
-                contentDescription = "Pending / Sending",
-                tint = Muted,
-                modifier = Modifier.size(13.dp)
-            )
-        }
-        syncState == "received" || hasLaterPeerEvent -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_tick_double),
-                contentDescription = "Delivered",
-                tint = Green,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        else -> {
-            Icon(
-                painter = painterResource(R.drawable.ic_tick_single),
-                contentDescription = "Sent",
-                tint = Muted,
-                modifier = Modifier.size(14.dp)
-            )
-        }
     }
 }
 

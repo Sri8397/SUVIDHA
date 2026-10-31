@@ -115,7 +115,41 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
         }
         val report = relay.sync(manager, identity.signer,
             knownEventIds = repository.storedTransportEvents().mapTo(mutableSetOf()) { Event.fromJson(it).id },
-            onLedgerEvent = { event, json -> repository.appendRemoteEvent(event, json) },
+            onLedgerEvent = { event, json ->
+                repository.appendRemoteEvent(event, json)
+                if (event.actorMemberId != identity.publicKeyHex) {
+                    when (val action = event.action) {
+                        is SharedLedgerAction.ExpenseAdded -> {
+                            val group = repository.findGroup(event.groupId)
+                            val groupName = group?.name ?: "Shared group"
+                            val currency = group?.currencyCode ?: action.currencyCode
+                            val totalMinor = action.debts.sumOf { it.amountMinor }
+                            val amountStr = "${currencySymbol(currency)} ${SharedSplitMoney.format(totalMinor, currency)}"
+                            NotificationService.notifyGroupExpenseAdded(
+                                context = appContext,
+                                groupName = groupName,
+                                payerName = "A member",
+                                amountFormatted = amountStr,
+                                note = event.description
+                            )
+                        }
+                        is SharedLedgerAction.SettlementRecorded -> {
+                            val group = repository.findGroup(event.groupId)
+                            val groupName = group?.name ?: "Shared group"
+                            val currency = group?.currencyCode ?: "INR"
+                            val totalMinor = action.allocations.sumOf { it.amountMinor }
+                            val amountStr = "${currencySymbol(currency)} ${SharedSplitMoney.format(totalMinor, currency)}"
+                            NotificationService.notifySettlement(
+                                context = appContext,
+                                counterpartName = groupName,
+                                amountFormatted = amountStr,
+                                isGroup = true
+                            )
+                        }
+                        else -> {}
+                    }
+                }
+            },
             onWelcomeJoined = { id -> persistJoinedGroup(manager, id, identity.publicKeyHex) },
             onMembersChanged = { id, members, admins -> repository.syncMemberRoster(id, members, admins) })
         val pendingUploads = repository.pendingWelcomes().isNotEmpty() || database.sharedGroups().getAll().any {

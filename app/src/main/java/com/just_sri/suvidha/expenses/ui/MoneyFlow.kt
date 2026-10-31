@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.ui.res.painterResource
 import com.just_sri.suvidha.expenses.R
 import androidx.compose.material3.*
@@ -63,7 +64,12 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                     item {
                         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                             Text("Amount", color = Muted, fontSize = 13.sp)
-                            TextButton({ details = false }, enabled = !model.busy) { Text("$symbol ${amount.ifBlank { "0" }}  ✎", color = Ink, fontSize = 36.sp, fontWeight = FontWeight.Bold) }
+                            TextButton({ details = false }, enabled = !model.busy) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text("$symbol ${amount.ifBlank { "0" }}", color = Ink, fontSize = 36.sp, fontWeight = FontWeight.Bold)
+                                    Icon(Icons.Outlined.Edit, contentDescription = "Edit amount", tint = Muted, modifier = Modifier.size(20.dp))
+                                }
+                            }
                         }
                     }
                     item { InputField(note, { note = it.take(200) }, "What’s this for?", label = "Description") }
@@ -123,13 +129,35 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                                 when {
                                     group != null -> {
                                         model.peers.addExpense(group.id, SharedExpenseDraft(note, owed))
+                                        model.notifications.notifyGroupExpenseAdded(
+                                            groupName = group.name,
+                                            payerName = "You",
+                                            amountFormatted = "$symbol $amount",
+                                            note = note.trim()
+                                        )
                                         model.backgroundSync()
                                     }
                                     friend != null -> {
                                         val value = SharedSplitMoney.format(owed.getValue(friend.id), code)
-                                        model.repository.saveSplitTransactions(listOf(SplitDraft(friend.id, if (payer == "You") value else "-$value", note)), mapOf(friend.id to friend), data.friends)
+                                        val isLent = payer == "You"
+                                        model.repository.saveSplitTransactions(listOf(SplitDraft(friend.id, if (isLent) value else "-$value", note)), mapOf(friend.id to friend), data.friends)
+                                        model.notifications.notifySplitAdded(
+                                            friendName = friend.name,
+                                            amount = value.toDoubleOrNull() ?: 0.0,
+                                            currency = code,
+                                            note = note.trim(),
+                                            isLent = isLent
+                                        )
                                     }
-                                    else -> model.repository.addExpense(ExpenseDraft(category, amount, note.trim()))
+                                    else -> {
+                                        model.repository.addExpense(ExpenseDraft(category, amount, note.trim()))
+                                        model.notifications.notifyExpenseAdded(
+                                            category = category,
+                                            amount = amount.toDoubleOrNull() ?: 0.0,
+                                            currency = code,
+                                            note = note.trim()
+                                        )
+                                    }
                                 }
                             }
                         }

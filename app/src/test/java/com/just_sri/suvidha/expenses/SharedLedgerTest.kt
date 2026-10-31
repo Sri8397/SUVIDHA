@@ -14,6 +14,14 @@ class SharedLedgerTest {
         assertEquals(setOf("child", "grandchild"), projection.pendingEventIds)
         assertTrue(projection.rejectedEvents.isEmpty())
     }
+    @Test
+    fun cancelledExpenseDoesNotCreateDebtsOrAlterBalances() {
+        val cancelledExpense = expenseEvent.copy(eventId = "cancelled-split", description = "Dinner at Shack (Cancelled)")
+        val projection = projectSharedLedger("group-1", listOf(cancelledExpense), "INR")
+        assertEquals(setOf("cancelled-split"), projection.acceptedEventIds)
+        assertTrue(projection.debtById.isEmpty())
+        assertEquals(0L, projection.balanceByMemberId.getOrDefault("alice", 0L))
+    }
     private val expenseEvent = SharedLedgerEvent(
         eventId = "expense-event",
         groupId = "group-1",
