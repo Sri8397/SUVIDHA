@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.BrightnessMedium
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Info
@@ -35,8 +36,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.just_sri.suvidha.expenses.BuildConfig
 import com.just_sri.suvidha.expenses.R
 import com.just_sri.suvidha.expenses.*
+import com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors
+import com.just_sri.suvidha.expenses.ui.theme.ThemePreference
 import java.time.Instant
 import java.time.ZoneId
 
@@ -62,15 +66,16 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                             .padding(top = 22.dp, start = 14.dp, end = 14.dp, bottom = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        val isDark = LocalSuvidhaColors.current.isDark
                         Box(
                             modifier = Modifier
                                 .size(78.dp)
-                                .background(Color(0xFFD0EBD6), CircleShape),
+                                .background(if (isDark) Color(0xFF1C2E24) else Color(0xFFD0EBD6), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = initials(model.profileName),
-                                color = Color(0xFF1E5E3A),
+                                color = Green,
                                 fontSize = 27.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 letterSpacing = (-0.9).sp
@@ -80,14 +85,14 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                                     .align(Alignment.BottomEnd)
                                     .offset(x = 2.dp, y = 1.dp)
                                     .size(28.dp)
-                                    .background(Color(0xFF004625), CircleShape)
-                                    .border(2.dp, Color.White, CircleShape),
+                                    .background(if (isDark) Green else Color(0xFF004625), CircleShape)
+                                    .border(2.dp, CardSurface, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Verified,
                                     contentDescription = "Profile badge",
-                                    tint = Color.White,
+                                    tint = if (isDark) Color(0xFF0F1011) else Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -95,7 +100,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                         Spacer(Modifier.height(14.dp))
                         Text(
                             text = model.profileName.ifBlank { "Your profile" },
-                            color = Color(0xFF1A211B),
+                            color = Ink,
                             fontSize = 19.sp,
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 26.sp,
@@ -105,7 +110,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFEFF3EC), RoundedCornerShape(13.dp))
+                                .background(Ui.Neutral, RoundedCornerShape(13.dp))
                                 .border(1.dp, BorderLight, RoundedCornerShape(13.dp))
                                 .padding(start = 10.dp, top = 6.dp, end = 8.dp, bottom = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -118,7 +123,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                             ) {
                                 Text(
                                     text = "ID",
-                                    color = Color(0xFF647368),
+                                    color = Muted,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.3.sp
@@ -126,7 +131,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                                 SelectionContainer {
                                     Text(
                                         text = model.publicId ?: "Preparing your identity…",
-                                        color = Color(0xFF1A211B),
+                                        color = Ink,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
@@ -159,11 +164,11 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                                             imageVector = Icons.Outlined.ContentCopy,
                                             contentDescription = null,
                                             modifier = Modifier.size(13.dp),
-                                            tint = Color(0xFF00512D)
+                                            tint = Green
                                         )
                                         Text(
                                             text = "Copy",
-                                            color = Color(0xFF1A211B),
+                                            color = Ink,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -185,11 +190,11 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                                             imageVector = Icons.Outlined.Share,
                                             contentDescription = null,
                                             modifier = Modifier.size(13.dp),
-                                            tint = Color(0xFF00512D)
+                                            tint = Green
                                         )
                                         Text(
                                             text = "Share",
-                                            color = Color(0xFF1A211B),
+                                            color = Ink,
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -206,21 +211,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                     LedgerRow(
                         title = "Name",
                         subtitle = "Tap to edit your display name",
-                        leading = {
-                            Box(
-                                modifier = Modifier
-                                    .size(width = 34.dp, height = 36.dp)
-                                    .background(Color(0xFFE5F2EA), RoundedCornerShape(11.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(19.dp),
-                                    tint = Color(0xFF1E5E3A)
-                                )
-                            }
-                        },
+                        leading = { IconTile(Icons.Outlined.Person, Color(0xFFE5F2EA), Color(0xFF1E5E3A)) },
                         trailing = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(model.profileName.ifBlank { "Add name" }, color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Medium)
@@ -236,6 +227,34 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
             }
             item { SectionHeading("Your preferences") }
             item { Panel {
+                val isDark = LocalSuvidhaColors.current.isDark
+                val lavenderBg = if (isDark) Color(0xFF26242E) else Color(0xFFF0EEF5)
+                val lavenderTint = if (isDark) Color(0xFFB3AED6) else Color(0xFF85809A)
+                LedgerRow(
+                    title = "Theme",
+                    subtitle = when (model.themePreference) {
+                        ThemePreference.SYSTEM -> "Follow device appearance"
+                        ThemePreference.LIGHT -> "Always use light theme"
+                        ThemePreference.DARK -> "Always use dark theme"
+                    },
+                    leading = { IconTile(Icons.Outlined.BrightnessMedium, lavenderBg, lavenderTint) },
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = when (model.themePreference) {
+                                    ThemePreference.SYSTEM -> "System"
+                                    ThemePreference.LIGHT -> "Light"
+                                    ThemePreference.DARK -> "Dark"
+                                },
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
+                    onClick = { navigate("theme") },
+                    divider = true
+                )
                 LedgerRow(
                     title = "Currency",
                     subtitle = supportedCurrencies.find { it.first == model.currency }?.second ?: model.currency,
@@ -274,22 +293,8 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                 )
                 LedgerRow(
                     title = "Enable group invitation",
-                    subtitle = if (model.groupInvitationsEnabled) "Active · Friends can invite you" else "Allow friends to invite you via your public ID",
-                    leading = {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color(0xFFE5F2EA), RoundedCornerShape(13.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_friends),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = Color(0xFF1E5E3A)
-                            )
-                        }
-                    },
+                    subtitle = if (model.groupInvitationsEnabled) "Active · Friends can invite you" else "Inactive",
+                    leading = { IconTile(painterResource(R.drawable.ic_friends), Color(0xFFE5F2EA), Color(0xFF1E5E3A)) },
                     trailing = {
                         Switch(
                             checked = model.groupInvitationsEnabled,
@@ -306,45 +311,17 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
                     }
                 )
             } }
+            item { SectionHeading("Advanced") }
+            item { Panel {
+                LedgerRow(
+                    title = "Relay servers",
+                    subtitle = if (model.relaysCustomized) "Custom · ${model.relays.size} relays" else "Default · ${model.relays.size} relays",
+                    onClick = { navigate("relays") },
+                )
+            } }
             item { SectionHeading("About") }
             item {
-                Panel {
-                    LedgerRow(
-                        title = "Version number",
-                        onClick = { model.message = "Suvidha v1.0.4 (18) · Up to date" },
-                        leading = {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp, 36.dp)
-                                    .background(Color(0xFFEAF0E8), RoundedCornerShape(11.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Outlined.Info, null, Modifier.size(19.dp), tint = Color(0xFF628467))
-                            }
-                        },
-                        trailing = {
-                            Text("18", color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
-                        },
-                        divider = true
-                    )
-                    LedgerRow(
-                        title = "Release version",
-                        onClick = { model.message = "Suvidha v1.0.4 (18) · Up to date" },
-                        leading = {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp, 36.dp)
-                                    .background(Color(0xFFE5F2EA), RoundedCornerShape(11.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(19.dp), tint = Color(0xFF1E5E3A))
-                            }
-                        },
-                        trailing = {
-                            Text("1.0.4", color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
-                        }
-                    )
-                }
+                AboutPanel(onVersionClick = { model.message = it })
             }
             item { SectionHeading("Data & privacy", "Always local") }
             item { Panel {
@@ -410,6 +387,36 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
             onCopy = {
                 (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Suvidha public ID", model.publicId))
                 model.message = "Public ID copied"
+            }
+        )
+    }
+}
+
+internal fun formatVersionNotice(releaseVersion: String, versionCode: String): String {
+    return "Suvidha v$releaseVersion ($versionCode) · Up to date"
+}
+
+@Composable
+private fun AboutPanel(onVersionClick: (String) -> Unit) {
+    val versionCode: String = BuildConfig.VERSION_CODE.toString()
+    val releaseVersion: String = BuildConfig.VERSION_NAME
+    val versionNotice: String = formatVersionNotice(releaseVersion, versionCode)
+    Panel {
+        LedgerRow(
+            title = "Version number",
+            onClick = { onVersionClick(versionNotice) },
+            leading = { IconTile(Icons.Outlined.Info, Color(0xFFEAF0E8), Color(0xFF628467)) },
+            trailing = {
+                Text(versionCode, color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
+            },
+            divider = true
+        )
+        LedgerRow(
+            title = "Release version",
+            onClick = { onVersionClick(versionNotice) },
+            leading = { IconTile(Icons.Outlined.CheckCircle, Color(0xFFE5F2EA), Color(0xFF1E5E3A)) },
+            trailing = {
+                Text(releaseVersion, color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Normal)
             }
         )
     }
@@ -483,4 +490,9 @@ internal fun CategoriesScreen(model: AppViewModel, back: () -> Unit) {
     removing?.let { old -> ConfirmDialog("Remove category?", "Remove $old from your choices? Past records keep their category.", "Remove", { removing = null }, {
         model.updateCategories(model.categories.filterNot { it == old }); removing = null
     }) }
+}
+
+@Composable
+internal fun ThemeScreen(model: AppViewModel, back: () -> Unit) {
+    ThemeSelectionScreen(model, back)
 }

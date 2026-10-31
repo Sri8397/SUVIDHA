@@ -122,7 +122,7 @@ Generate code, refactorings, and fixes that strictly comply with the principles,
 
 ### Group Membership & Removal Rules
 
-- **Rule Location**: Official machine-readable rules are defined in [`app/rules/group_membership_rules.yaml`](file:///Users/srikant/Documents/srikant/suvidha/frontend/app/rules/group_membership_rules.yaml).
+- **Rule Location**: Official machine-readable rules are defined in [`app/rules/group_membership.yaml`](file:///Users/srikant/Documents/srikant/suvidha/frontend/app/rules/group_membership.yaml).
 - **Split Cancellation & Debt Clearing**:
   - Only the member who created/authored a split can cancel it.
   - When a split is cancelled, it stays in the chat timeline with `SplitStatus.CANCELLED` styling (red badge, strikethrough title/amount, dimmed surface).

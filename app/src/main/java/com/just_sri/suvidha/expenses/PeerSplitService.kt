@@ -6,6 +6,7 @@ import com.vitorpamplona.marmot.client.MarmotPublisher
 import com.vitorpamplona.marmot.mip01Groups.MarmotGroupData
 import com.vitorpamplona.quartz.marmot.mip00KeyPackages.KeyPackageEvent
 import com.vitorpamplona.quartz.nip01Core.core.Event
+import com.vitorpamplona.quartz.nip01Core.relay.normalizer.NormalizedRelayUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -16,12 +17,15 @@ import java.util.UUID
 /** Serializes MLS mutations independently of screen lifetimes and navigation. */
 internal class PeerSplitService(context: Context, private val database: ExpenseDatabase) {
     private val appContext = context.applicationContext
-    private val repository = SharedGroupRepository(database)
+    internal val repository = SharedGroupRepository(database)
     private val identityStore = NostrIdentityStore(context)
     private val mlsStore = EncryptedMlsGroupStateStore(context)
     private val keyPackages = EncryptedKeyPackageBundleStore(context)
-    private val relay = PeerSplitRelaySync()
+    private val relaySettings = RelaySettings(context)
+    internal val relay = PeerSplitRelaySync(relays = { relaySettings.urls().map { NormalizedRelayUrl(it) } })
     val operationMutex get() = protocolMutex
+
+    internal suspend fun managerSession(): Pair<NostrIdentity, MarmotManager> = manager()
 
     private suspend fun manager(): Pair<NostrIdentity, MarmotManager> {
         val identity = identityStore.getOrCreate()
@@ -77,6 +81,18 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
         if (sent) "Invitation sent. Your friend will join when their app syncs." else "Invitation saved. Delivery will retry automatically."
     } }
 
+    suspend fun checkInvitationAvailable(publicId: String): Boolean = withContext(Dispatchers.IO) {
+        if (!publicId.matches(Regex("[0-9a-f]{64}"))) return@withContext false
+        try {
+            relay.fetchKeyPackageEvents(publicId).asSequence()
+                .filter { it.pubKey.equals(publicId, true) }
+                .mapNotNull { it as? KeyPackageEvent }
+                .any { it.hasValidEncoding() }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     suspend fun removeMember(groupId: String, publicId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
         val (identity, manager) = manager()
         check(manager.groupView(groupId)?.adminPubkeys?.contains(identity.publicKeyHex) == true) { "Only a group admin can remove members." }
@@ -89,10 +105,25 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
         persistRoster(manager, groupId)
     } }
 
+    suspend fun leaveGroup(groupId: String) = operationMutex.withLock { withContext(Dispatchers.IO) {
+        val (identity, manager) = manager()
+        val member = manager.memberPubkeys(groupId).firstOrNull { it.pubkey == identity.publicKeyHex }
+        if (member != null) {
+            manager.removeMember(groupId, member.leafIndex, relay.relayUrls())
+            PeerSplitSyncScheduler.request(appContext, afterChange = true)
+            persistRoster(manager, groupId)
+        }
+    } }
+
     private suspend fun persistRoster(manager: MarmotManager, groupId: String) {
         repository.syncMemberRoster(groupId, manager.memberPubkeys(groupId).mapTo(linkedSetOf()) { it.pubkey },
             manager.groupView(groupId)?.adminPubkeys?.toSet().orEmpty())
     }
+
+    suspend fun reconcileRoster(groupId: String): Unit = operationMutex.withLock { withContext(Dispatchers.IO) {
+        val (_, manager) = manager()
+        persistRoster(manager, groupId)
+    } }
 
     suspend fun sync(): PeerSplitSyncResult = operationMutex.withLock { syncLocked() }
 
@@ -146,6 +177,16 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
                                 isGroup = true
                             )
                         }
+                        is SharedLedgerAction.ChatMessage -> {
+                            val group = repository.findGroup(event.groupId)
+                            NotificationService.notifyGroupChatMessage(
+                                context = appContext,
+                                groupId = event.groupId,
+                                groupName = group?.name ?: "Shared group",
+                                senderName = memberName(event.groupId, event.actorMemberId),
+                                text = action.text
+                            )
+                        }
                         else -> {}
                     }
                 }
@@ -158,7 +199,14 @@ internal class PeerSplitService(context: Context, private val database: ExpenseD
         PeerSplitSyncResult(report, pendingUploads)
     }
 
-    private suspend fun persistJoinedGroup(manager: MarmotManager, id: String, ownId: String) {
+    /** Same naming as the UI: linked friend name, then a real roster name, else a neutral fallback. */
+    private suspend fun memberName(groupId: String, memberId: String): String {
+        val friendId: String? = database.sharedMemberFriendLinks().getAll().find { it.memberId == memberId }?.friendId
+        val friendName: String? = friendId?.let { id -> database.friends().getAll().find { it.id == id }?.name }
+        return friendName ?: database.sharedGroupMembers().find(groupId, memberId)?.displayName?.takeUnless { it.startsWith("Nostr") } ?: "A member"
+    }
+
+    internal suspend fun persistJoinedGroup(manager: MarmotManager, id: String, ownId: String) {
         val view = manager.groupView(id) ?: error("Group details are unavailable.")
         val currency = Regex("(?:^|;)\\s*suvidha\\.currency=([A-Z]{3})(?:;|$)").find(view.description.orEmpty())?.groupValues?.get(1)
             ?: repository.findGroup(id)?.currencyCode ?: error("This invitation is missing its currency.")

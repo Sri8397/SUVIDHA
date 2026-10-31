@@ -6,6 +6,12 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.just_sri.suvidha.expenses.*
+import com.just_sri.suvidha.expenses.engine.ActionResult
+import com.just_sri.suvidha.expenses.engine.ExecutionResult
+import com.just_sri.suvidha.expenses.engine.RuleContext
+import com.just_sri.suvidha.expenses.engine.ValidationResult
+import com.just_sri.suvidha.expenses.service.GroupMembershipService
+import com.just_sri.suvidha.expenses.ui.theme.ThemePreference
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -16,12 +22,17 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     val peers = PeerSplitService(app, database)
     val backups = BackupService(app, database, peers)
     val notifications = NotificationService(app)
+    private val membership by lazy { GroupMembershipService(app, database, groups, peers, peers.relay) }
     private val prefs = app.getSharedPreferences("expense_settings", Context.MODE_PRIVATE)
+    private val relaySettings = RelaySettings(app)
+    var relays: List<String> by mutableStateOf(relaySettings.urls()); private set
+    var relaysCustomized: Boolean by mutableStateOf(relaySettings.isCustom()); private set
     var currency by mutableStateOf(prefs.getString("currency", "₹") ?: "₹"); private set
     var timezone by mutableStateOf(prefs.getString("timezone_id", "AUTO") ?: "AUTO"); private set
     var profileName by mutableStateOf(prefs.getString("profile_name", "") ?: ""); private set
     var categories by mutableStateOf(prefs.getString("categories", null)?.split("|")?.filter { it.isNotBlank() } ?: defaultExpenseCategories); private set
     var groupInvitationsEnabled: Boolean by mutableStateOf(prefs.getBoolean("group_invitations_enabled", false)); private set
+    var themePreference: ThemePreference by mutableStateOf(ThemePreference.from(prefs.getString("theme_preference", "SYSTEM"))); private set
     var pendingBackup: ByteArray? = null
     var restorePreview by mutableStateOf<AppBackupSnapshot?>(null)
     override fun onCleared() { pendingBackup?.fill(0); pendingBackup = null; restorePreview = null; super.onCleared() }
@@ -29,6 +40,7 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     var busy by mutableStateOf(false); private set
     var message by mutableStateOf<String?>(null)
     val zone: ZoneId get() = if (timezone == "AUTO") ZoneId.systemDefault() else runCatching { ZoneId.of(timezone) }.getOrDefault(ZoneId.systemDefault())
+    private val refreshService = com.just_sri.suvidha.expenses.service.RefreshService(app, database, peers)
 
     init {
         refreshIdentity()
@@ -37,18 +49,29 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
     fun refreshIdentity() { viewModelScope.launch { try { publicId = peers.publicId() } catch (e: Exception) { message = e.message ?: "Could not open your identity." } } }
     fun updateCurrency(value: String) { currency = value; prefs.edit().putString("currency", value).apply() }
     fun updateTimezone(value: String) { timezone = value; prefs.edit().putString("timezone_id", value).apply() }
+    fun updateThemePreference(value: ThemePreference) {
+        themePreference = value
+        prefs.edit().putString("theme_preference", value.name).apply()
+    }
     fun updateProfileName(value: String) { profileName = value.trim().take(60); prefs.edit().putString("profile_name", profileName).apply() }
     fun updateCategories(value: List<String>) {
         categories = (value.map { it.trim() }.filter { it.isNotBlank() && it != "Other" } + "Other").distinct()
         prefs.edit().putString("categories", categories.joinToString("|")).apply()
     }
+    /** Returns an error message, or null on success. */
+    fun addRelay(input: String): String? = relaySettings.add(input).also { refreshRelays() }
+    fun removeRelay(url: String): String? = relaySettings.remove(url).also { refreshRelays() }
+    fun resetRelays() { relaySettings.reset(); refreshRelays() }
+    suspend fun probeRelay(url: String): Long? = peers.relay.probe(url)
+    private fun refreshRelays() { relays = relaySettings.urls(); relaysCustomized = relaySettings.isCustom() }
     fun toggleGroupInvitations(enabled: Boolean): Unit {
         if (enabled) {
             groupInvitationsEnabled = true
             prefs.edit().putBoolean("group_invitations_enabled", true).apply()
             perform {
                 try {
-                    message = peers.publishInviteKey()
+                    val result: ExecutionResult.Success = runRule("invitation_enabled", RuleContext(actorMemberId = peers.publicId()))
+                    message = (result.actionOutcomes["generate_fresh_mls_keypackage"] as? ActionResult.Success)?.message
                 } catch (failure: Exception) {
                     groupInvitationsEnabled = false
                     prefs.edit().putBoolean("group_invitations_enabled", false).apply()
@@ -58,8 +81,29 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         } else {
             groupInvitationsEnabled = false
             prefs.edit().putBoolean("group_invitations_enabled", false).apply()
+            perform { runRule("invitation_disabled", RuleContext(actorMemberId = peers.publicId())) }
             message = "Group invitations disabled"
         }
+    }
+
+    suspend fun leaveGroup(groupId: String): Unit {
+        runRule("self_exit", RuleContext(groupId = groupId, actorMemberId = peers.publicId()))
+    }
+
+    suspend fun removeMember(groupId: String, memberId: String): Unit {
+        runRule("admin_removal", RuleContext(groupId = groupId, actorMemberId = peers.publicId(), targetMemberId = memberId, isActorOwner = true))
+    }
+
+    /** True when the friend's public ID is known and they have a valid, published invite key. */
+    suspend fun canInvite(groupId: String, memberId: String): Boolean {
+        val context = RuleContext(groupId = groupId, actorMemberId = peers.publicId(), targetMemberId = memberId)
+        return membership.canExecuteRule("invitation_action_enablement", context) is ValidationResult.Allowed
+    }
+
+    private suspend fun runRule(ruleId: String, context: RuleContext): ExecutionResult.Success = when (val result = membership.executeRule(ruleId, context)) {
+        is ExecutionResult.Success -> result
+        is ExecutionResult.ValidationFailed -> throw IllegalStateException(result.violation.reason)
+        is ExecutionResult.ActionFailed -> throw IllegalStateException(result.reason)
     }
 
     /** App-scoped actions keep running when a user opens another screen. */
@@ -74,10 +118,12 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         }
     }
     fun onResume() { viewModelScope.launch { PeerSplitSyncScheduler.request(getApplication()) } }
-    fun sync() = perform {
-        val result = peers.sync()
-        message = result.message
-        if (result.needsRetry) PeerSplitSyncScheduler.request(getApplication())
+    fun sync() = viewModelScope.launch {
+        refreshService.manualPullRefresh(
+            setBusy = { busy = it },
+            setMessage = { message = it },
+            isBusy = { busy },
+        )
     }
     fun sendChatMessage(groupId: String, text: String) = viewModelScope.launch {
         try {

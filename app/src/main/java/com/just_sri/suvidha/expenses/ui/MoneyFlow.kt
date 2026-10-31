@@ -41,6 +41,11 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
     val selected = participants.filter { deselected[it.first] != true }
     val ownId = data.ownId ?: "self"
     val total = SharedSplitMoney.parseMinor(amount, code) ?: 0L
+    val previewShares: Map<String, Long> = runCatching {
+        val ids = selected.map { it.first } + if (includeSelf) listOf(ownId) else emptyList()
+        if (splitMode == "Exact") ids.associateWith { SharedSplitMoney.parseMinor(inputs[it].orEmpty(), code) ?: 0L }
+        else SharedSplitMoney.allocate(total, ids.associateWith { if (splitMode == "By shares") (inputs[it]?.takeIf(String::isNotBlank)?.toIntOrNull() ?: if (inputs[it].isNullOrBlank()) 1 else 0) else 1 })
+    }.getOrDefault(emptyMap())
     var error by remember { mutableStateOf<String?>(null) }
     val title = if (isSplit) "Split expense" else "Add expense"
     val goBack = { if (details && !model.busy) details = false else if (!model.busy) back() }
@@ -87,9 +92,16 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                         if (friend != null) item { Segments(listOf("You", friend.name), payer, { payer = it }) }
                         item { Segments(listOf("Equally", "Exact", "By shares"), splitMode, { splitMode = it; error = null }) }
                         item {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(includeSelf, { includeSelf = it })
-                                Text("Include your share", color = Ink, fontSize = 14.sp)
+                            Panel {
+                                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Checkbox(includeSelf, { includeSelf = it })
+                                    Text("You", Modifier.weight(1f), color = Ink, fontSize = 14.sp)
+                                    if (includeSelf && splitMode != "Equally") InputField(inputs[ownId].orEmpty(),
+                                        { inputs[ownId] = it.take(if (splitMode == "By shares") 6 else 12); error = null },
+                                        if (splitMode == "Exact") symbol else "1 share", modifier = Modifier.width(110.dp),
+                                        keyboard = KeyboardOptions(keyboardType = if (splitMode == "By shares") KeyboardType.Number else KeyboardType.Decimal))
+                                    if (includeSelf) Text(minorMoney(previewShares[ownId] ?: 0L, code), color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                }
                             }
                         }
                         items(participants, key = { it.first }) { (id, name) ->
@@ -97,19 +109,19 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Checkbox(deselected[id] != true, { deselected[id] = !it; error = null })
                                     Text(name, Modifier.weight(1f), color = Ink, fontSize = 14.sp)
-                                    if (splitMode != "Equally" && deselected[id] != true) InputField(inputs[id].orEmpty(), { inputs[id] = it.take(12); error = null },
-                                        if (splitMode == "Exact") symbol else "1 share", modifier = Modifier.width(110.dp), keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                                    if (splitMode != "Equally" && deselected[id] != true) InputField(inputs[id].orEmpty(), { inputs[id] = it.take(if (splitMode == "By shares") 6 else 12); error = null },
+                                        if (splitMode == "Exact") symbol else "1 share", modifier = Modifier.width(110.dp),
+                                        keyboard = KeyboardOptions(keyboardType = if (splitMode == "By shares") KeyboardType.Number else KeyboardType.Decimal))
+                                    if (deselected[id] != true) Text(minorMoney(previewShares[id] ?: 0L, code), color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                 }
                             }
                         }
-                        if (includeSelf && splitMode == "Exact") item { InputField(inputs[ownId].orEmpty(), { inputs[ownId] = it.take(12); error = null }, symbol, "Your exact share", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal)) }
-                        if (includeSelf && splitMode == "By shares") item { InputField(inputs[ownId].orEmpty(), { inputs[ownId] = it.take(6); error = null }, "1", "Your shares", keyboard = KeyboardOptions(keyboardType = KeyboardType.Number)) }
                         if (participants.isEmpty()) item { EmptyState("Add a member first", "Invite a friend to this group before adding a split.") }
                     }
                     item { ErrorText(error) }
                 }
                 Surface(color = CardSurface, shadowElevation = 4.dp) {
-                    Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
                         fun save(another: Boolean) {
                             error = null
                             val allocation = if (!isSplit) emptyMap() else runCatching {
@@ -162,7 +174,8 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                             }
                         }
                         PrimaryButton(if (model.busy) "Saving…" else "Save & exit · $symbol $amount", { save(false) }, enabled = !model.busy)
-                        TextButton({ save(true) }, Modifier.fillMaxWidth(), enabled = !model.busy) { Text("Save & add another", fontSize = 13.sp) }
+                        TextButton({ save(true) }, Modifier.fillMaxWidth().height(36.dp), enabled = !model.busy,
+                            contentPadding = PaddingValues(vertical = 0.dp)) { Text("Save & add another", fontSize = 13.sp) }
                     }
                 }
             }

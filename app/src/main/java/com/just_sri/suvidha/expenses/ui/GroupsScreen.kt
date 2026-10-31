@@ -145,6 +145,7 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     var tab by rememberSaveable(group.id) { mutableStateOf("Group chat") }
     var amountTab by rememberSaveable(group.id) { mutableStateOf("Net amounts") }
     var menu by remember { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
     var payment by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var removeDebt by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var selectedMember by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
@@ -154,6 +155,7 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     val projection = remember(group, data.events, data.members) { data.projection(group) }
     val members = data.members.filter { it.groupId == group.id && (it.isActive || projection.balanceByMemberId.getOrDefault(it.memberId, 0) != 0L) }
     val debts = projection.debtById.values.filter { it.remainingAmountMinor > 0 }
+    val ownNetMinor: Long = data.ownId?.let { projection.balanceByMemberId[it] } ?: 0L
     // Await each pass and stop polling when the screen leaves the foreground.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(group.id, lifecycleOwner) {
@@ -201,8 +203,11 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
             }
         )
     } else {
+        if (tab == "Amount") BackHandler { tab = "Group chat" }
         PageColumn {
-            PageHeader(group.name, back) {
+            if (tab == "Amount") {
+                PageHeader("Amount", { tab = "Group chat" })
+            } else PageHeader(group.name, back) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton({ navigate("members/${group.id}") }, Modifier.size(36.dp)) {
                         Icon(Icons.Outlined.Person, "Members", tint = Green, modifier = Modifier.size(20.dp))
@@ -212,12 +217,13 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
                         DropdownMenu(menu, { menu = false }) {
                             DropdownMenuItem({ Text("Members") }, { menu = false; navigate("members/${group.id}") })
                             DropdownMenuItem({ Text("Sync now") }, { menu = false; model.sync() }, enabled = !model.busy)
+                            DropdownMenuItem({ Text("Leave group", color = Danger) }, { menu = false; leaving = true }, enabled = !model.busy)
                         }
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-                Segments(listOf("Group chat", "Amount"), tab, { tab = it })
+            if (tab != "Amount") {
+                GroupBalanceStrip(netAmountMinor = ownNetMinor, currencyCode = group.currencyCode, onClick = { tab = "Amount" })
             }
             if (projection.pendingEventIds.isNotEmpty()) {
                 Text(
@@ -259,13 +265,6 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
                                 }
                             }
                         }
-                        item {
-                            PrimaryButton(
-                                "+ Add split expense",
-                                { navigate("group-split/${group.id}") },
-                                enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
-                            )
-                        }
                         if (members.count { it.isActive } <= 1) {
                             item { SecondaryButton("Add group members", { navigate("members/${group.id}") }) }
                         }
@@ -292,13 +291,6 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
                                     }
                                 }
                             }
-                        }
-                        item {
-                            PrimaryButton(
-                                "+ Add split expense",
-                                { navigate("group-split/${group.id}") },
-                                enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
-                            )
                         }
                         if (members.count { it.isActive } <= 1) {
                             item { SecondaryButton("Add group members", { navigate("members/${group.id}") }) }
@@ -339,6 +331,44 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     }
     removeDebt?.let { debt -> ConfirmDialog("Delete outstanding debt?", "The remaining debt will be removed for all members. Earlier history stays available.", "Delete", { removeDebt = null },
         { model.perform("Debt removed", { removeDebt = null }) { model.peers.removeDebt(group.id, debt.debtUnitId) } }, model.busy) }
+    if (leaving) ConfirmDialog("Leave group?",
+        "You will be removed from this group. Any active splits created by you will be marked as CANCELLED.", "Leave group", { leaving = false },
+        { model.perform("Left group", back) { model.leaveGroup(group.id) } }, model.busy)
+}
+
+/** Slim full-width strip under the group header showing the current user's net balance; tapping opens Amount. */
+@Composable
+internal fun GroupBalanceStrip(netAmountMinor: Long, currencyCode: String, onClick: () -> Unit, modifier: Modifier = Modifier): Unit {
+    Surface(onClick = onClick, modifier = modifier.fillMaxWidth().height(44.dp), color = CardSurface) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GroupBalanceLabel(netAmountMinor, currencyCode, Modifier.weight(1f, fill = false))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("View balances", color = Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, Modifier.size(16.dp), tint = Muted)
+                }
+            }
+            HorizontalDivider(color = BorderLight)
+        }
+    }
+}
+
+@Composable
+private fun GroupBalanceLabel(netAmountMinor: Long, currencyCode: String, modifier: Modifier = Modifier): Unit {
+    if (netAmountMinor == 0L) {
+        Text("All settled up", modifier, color = Muted, fontSize = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        return
+    }
+    val isOwed: Boolean = netAmountMinor > 0
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(if (isOwed) "You're owed " else "You owe ", color = Muted, fontSize = 13.sp, maxLines = 1)
+        Text(minorMoney(abs(netAmountMinor), currencyCode), color = if (isOwed) Green else Danger, fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
 }
 
 @Composable
@@ -490,14 +520,15 @@ internal fun DebtDetailScreen(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
+                    val roleColor: Color = if (isDebtor) Danger else if (isCreditor) Green else Muted
                     Box(
                         modifier = Modifier
-                            .background(Ui.Mint, RoundedCornerShape(999.dp))
+                            .background(roleColor.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = if (isCreditor) "RECEIVABLE PAYMENT" else if (isDebtor) "PAYABLE DEBT" else "OUTSTANDING PAYMENT",
-                            color = Green,
+                            color = roleColor,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 0.5.sp
@@ -507,15 +538,15 @@ internal fun DebtDetailScreen(
                     Text(
                         text = "${data.label(debt.debtorMemberId)} → ${data.label(debt.creditorMemberId)}",
                         color = Ink,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 32.sp
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        lineHeight = 30.sp
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = minorMoney(debt.remainingAmountMinor, group.currencyCode),
-                        color = if (isDebtor) Danger else if (isCreditor) Green else Ink,
-                        fontSize = 38.sp,
+                        color = roleColor,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         style = TextStyle(fontFeatureSettings = "tnum")
                     )
@@ -569,7 +600,7 @@ internal fun DebtDetailScreen(
                     )
                     LedgerDetailRow(
                         label = "Debt ID",
-                        value = debt.debtUnitId,
+                        value = debt.debtUnitId.take(8),
                         icon = Icons.Outlined.Tag,
                         isMono = true,
                         showDivider = false
@@ -591,9 +622,9 @@ internal fun DebtDetailScreen(
                 item {
                     Panel {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Settlement instructions", fontWeight = FontWeight.SemiBold, color = Ink, fontSize = 14.sp)
+                            Text("How to settle", fontWeight = FontWeight.SemiBold, color = Ink, fontSize = 14.sp)
                             Text(
-                                "Pay ${data.label(debt.creditorMemberId)} directly via UPI or cash, and ask them to record the payment in Suvidha.",
+                                "Pay ${data.label(debt.creditorMemberId)} via UPI or cash. They record it in Suvidha.",
                                 color = Muted,
                                 fontSize = 13.sp,
                                 lineHeight = 18.sp
@@ -641,7 +672,22 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
     var linking by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
     var newName by rememberSaveable { mutableStateOf("") }
     var search by rememberSaveable { mutableStateOf("") }
+    var availability: Map<String, Boolean> by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
+    var checking: Set<String> by remember { mutableStateOf<Set<String>>(emptySet()) }
     val candidates = data.friends.filter { friend -> data.friendKey(friend.id)?.let { key -> members.none { it.memberId == key } } == true && friend.name.contains(search.trim(), true) }
+    LaunchedEffect(adding, candidates) {
+        if (adding) {
+            candidates.forEach { friend ->
+                val key: String? = data.friendKey(friend.id)
+                if (key != null && key !in availability) {
+                    checking = checking + key
+                    val isAvailable: Boolean = model.canInvite(group.id, key)
+                    availability = availability + (key to isAvailable)
+                    checking = checking - key
+                }
+            }
+        }
+    }
     PageColumn {
         PageHeader(if (adding) "Add members" else "Group members", { if (adding) adding = false else back() })
         PageList {
@@ -651,9 +697,23 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
                 item { TextButton({ navigate("new-friend") }) { Text("+ Add a new friend") } }
                 if (candidates.isEmpty()) item { EmptyState("No available friends", "Add a friend with a public ID to invite them to this group.") }
                 itemsIndexed(candidates, key = { _, friend -> friend.id }) { _, friend ->
-                    Panel { LedgerRow(friend.name, "Invite to ${group.name}", trailing = { TextButton({
-                        data.friendKey(friend.id)?.let { key -> model.perform(onDone = { adding = false }) { model.message = model.peers.invite(group.id, key) } }
-                    }, enabled = !model.busy) { Text("Add") } }) }
+                    val key: String? = data.friendKey(friend.id)
+                    val isChecking: Boolean = key != null && key in checking
+                    val isAvailable: Boolean = key != null && availability[key] == true
+                    val subtitle: String = when {
+                        isChecking -> "Checking invite key…"
+                        availability[key] == false -> "Invitations unavailable"
+                        else -> "Invite to ${group.name}"
+                    }
+                    val canInvite: Boolean = !model.busy && isAvailable && !isChecking
+                    val buttonLabel: String = when {
+                        isChecking -> "Checking"
+                        availability[key] == false -> "Unavailable"
+                        else -> "Add"
+                    }
+                    Panel { LedgerRow(friend.name, subtitle, trailing = { TextButton({
+                        key?.let { validKey -> model.perform(onDone = { adding = false }) { model.message = model.peers.invite(group.id, validKey) } }
+                    }, enabled = canInvite) { Text(buttonLabel) } }) }
                 }
             } else {
                 item { SectionHeading("Members", "${members.size} people") }
@@ -683,7 +743,7 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
         }
     }
     remove?.let { member -> ConfirmDialog("Remove member?", "${data.label(member.memberId)} will be removed from ${group.name}. Their balance must be settled first.", "Remove", { remove = null },
-        { model.perform("Member removed", { remove = null }) { model.peers.removeMember(group.id, member.memberId) } }, model.busy) }
+        { model.perform("Member removed", { remove = null }) { model.removeMember(group.id, member.memberId) } }, model.busy) }
     linking?.let { member ->
         AlertDialog(onDismissRequest = { if (!model.busy) linking = null }, title = { Text("Name this member") }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

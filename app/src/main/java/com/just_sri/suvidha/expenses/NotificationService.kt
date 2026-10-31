@@ -49,6 +49,8 @@ class NotificationService(private val context: Context) {
     companion object {
         const val TRANSACTION_CHANNEL_ID = "suvidha_transactions_channel"
         private const val TRANSACTION_CHANNEL_NAME = "Transactions"
+        const val MESSAGE_CHANNEL_ID = "suvidha_messages_channel"
+        private const val MESSAGE_CHANNEL_NAME = "Group messages"
 
         private val notificationIdCounter = AtomicInteger(2000)
 
@@ -68,6 +70,15 @@ class NotificationService(private val context: Context) {
                     enableVibration(true)
                 }
                 notificationManager.createNotificationChannel(transactionChannel)
+                val messageChannel = NotificationChannel(
+                    MESSAGE_CHANNEL_ID,
+                    MESSAGE_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Chat messages from members of your shared groups"
+                    enableVibration(true)
+                }
+                notificationManager.createNotificationChannel(messageChannel)
             }
         }
 
@@ -167,12 +178,34 @@ class NotificationService(private val context: Context) {
             )
         }
 
+        /** One notification per group, replaced by the latest message so a busy chat does not flood the shade. */
+        fun notifyGroupChatMessage(
+            context: Context,
+            groupId: String,
+            groupName: String,
+            senderName: String,
+            text: String,
+        ): Boolean {
+            return showTransactionNotification(
+                context = context,
+                title = groupName,
+                message = "$senderName: $text",
+                destination = "groups",
+                notificationId = chatNotificationId(groupId),
+                channelId = MESSAGE_CHANNEL_ID
+            )
+        }
+
+        /** Stable per group and kept clear of the incrementing transaction ids. */
+        fun chatNotificationId(groupId: String): Int = 1_000_000 + (groupId.hashCode() and 0x3FFFFFFF)
+
         fun showTransactionNotification(
             context: Context,
             title: String,
             message: String,
             destination: String = "home",
             notificationId: Int = nextNotificationId(),
+            channelId: String = TRANSACTION_CHANNEL_ID,
         ): Boolean {
             ensureChannels(context)
 
@@ -191,7 +224,7 @@ class NotificationService(private val context: Context) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val notification = NotificationCompat.Builder(context, TRANSACTION_CHANNEL_ID)
+            val notification = NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_transaction_notification)
                 .setContentTitle(title)
                 .setContentText(message)

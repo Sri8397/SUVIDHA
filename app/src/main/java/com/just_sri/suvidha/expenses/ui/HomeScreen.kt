@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
+import com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors
 
 @Composable
 internal fun HomeScreen(data: AppData, name: String, navigate: (String) -> Unit) {
@@ -24,7 +25,8 @@ internal fun HomeScreen(data: AppData, name: String, navigate: (String) -> Unit)
         Column {
             Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("suvidha.", fontFamily = Wordmark, color = Color(0xFF49634F), fontSize = 25.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
+                val isDark = LocalSuvidhaColors.current.isDark
+                Text("suvidha.", fontFamily = Wordmark, color = if (isDark) Ink else Color(0xFF49634F), fontSize = 25.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
                 IconButton({ navigate("profile") }, Modifier.size(40.dp)) { Avatar(name, primary = true) }
             }
             HorizontalDivider(color = BorderLight)
@@ -44,7 +46,7 @@ internal fun HomeScreen(data: AppData, name: String, navigate: (String) -> Unit)
                         Column(Modifier.weight(1f).clickable { navigate(route) }.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(Modifier.size(52.dp).background(if (i == 0) Green else Ui.Mint, RoundedCornerShape(17.dp)), contentAlignment = Alignment.Center) {
-                                if (i == 0) Icon(Icons.Outlined.Add, null, tint = Color.White)
+                                if (i == 0) Icon(Icons.Outlined.Add, null, tint = OnGreen)
                                 else AppIcon(route, tint = Green)
                             }
                             Text(title, color = Ink, fontSize = 11.sp, fontWeight = FontWeight.Medium, maxLines = 1)

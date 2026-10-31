@@ -3,6 +3,7 @@ package com.just_sri.suvidha.expenses.ui
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas as ChartCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -69,7 +70,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors
 import com.just_sri.suvidha.expenses.BorderLight
+import com.just_sri.suvidha.expenses.CardSurface
+import com.just_sri.suvidha.expenses.Danger
 import com.just_sri.suvidha.expenses.Expense
 import com.just_sri.suvidha.expenses.Green
 import com.just_sri.suvidha.expenses.Ink
@@ -495,10 +499,21 @@ private fun TotalHeroCard(
     today: LocalDate,
     onSelectDate: () -> Unit
 ): Unit {
+    val isDark: Boolean = LocalSuvidhaColors.current.isDark
+    val cardBg: Color = if (isDark) CardSurface else Color(0xFF1A211B)
+    val cardBorderModifier: Modifier = if (isDark) Modifier.border(1.dp, BorderLight, RoundedCornerShape(24.dp)) else Modifier
+    val eyebrowColor: Color = if (isDark) Muted else Color(0xFFC6D5CA)
+    val amountColor: Color = if (isDark) Ink else Color.White
+    val countColor: Color = if (isDark) Muted else Color(0xFFC6D5CA)
+    val calendarBg: Color = if (isDark) Color(0xFF222428) else Color.White.copy(alpha = 0.08f)
+    val calendarBorderModifier: Modifier = if (isDark) Modifier.border(1.dp, BorderLight, CircleShape) else Modifier
+    val calendarTint: Color = if (isDark) Ink else Color(0xFFDCE8DF)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Ink, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
+            .background(cardBg, RoundedCornerShape(24.dp))
+            .then(cardBorderModifier)
             .padding(horizontal = 22.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -515,7 +530,7 @@ private fun TotalHeroCard(
             Text(
                 text = eyebrowText,
                 modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
-                color = Color(0xFFC6D5CA),
+                color = eyebrowColor,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.5.sp,
@@ -530,7 +545,7 @@ private fun TotalHeroCard(
         val formattedAmount: String = "$currency${money(total)}"
         Text(
             text = formattedAmount,
-            color = Color.White,
+            color = amountColor,
             fontSize = if (formattedAmount.length > 14) 26.sp else 36.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = (-1.2).sp,
@@ -552,7 +567,7 @@ private fun TotalHeroCard(
             }
             Text(
                 text = countText,
-                color = Color(0xFFC6D5CA),
+                color = countColor,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal
             )
@@ -560,12 +575,14 @@ private fun TotalHeroCard(
                 onClick = onSelectDate,
                 modifier = Modifier
                     .size(36.dp)
-                    .background(Color.White.copy(alpha = 0.08f), CircleShape)
+                    .clip(CircleShape)
+                    .background(calendarBg, CircleShape)
+                    .then(calendarBorderModifier)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.CalendarToday,
                     contentDescription = "Select date",
-                    tint = Color(0xFFDCE8DF),
+                    tint = calendarTint,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -578,27 +595,34 @@ private fun ModeSegmentedToggle(
     selected: String,
     onSelect: (String) -> Unit
 ): Unit {
+    val isDark: Boolean = LocalSuvidhaColors.current.isDark
+    val containerBg: Color = if (isDark) Color(0xFF212326) else Color.White.copy(alpha = 0.12f)
+    val containerBorder: Modifier = if (isDark) Modifier.border(1.dp, BorderLight, CircleShape) else Modifier
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.12f))
+            .background(containerBg)
+            .then(containerBorder)
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         listOf("Spend", "Earn").forEach { option: String ->
             val isSelected: Boolean = selected == option
+            val activeBg: Color = if (isDark) Color(0xFF2C2F33) else Ui.Neutral
+            val activeTextColor: Color = if (isDark) Ink else Green
+            val inactiveTextColor: Color = if (isDark) Muted else Color(0xFFD9E5DC)
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(if (isSelected) Ui.Neutral else Color.Transparent)
+                    .background(if (isSelected) activeBg else Color.Transparent)
                     .clickable { onSelect(option) }
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = option,
-                    color = if (isSelected) Green else Color(0xFFD9E5DC),
+                    color = if (isSelected) activeTextColor else inactiveTextColor,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     maxLines = 1,
@@ -675,10 +699,13 @@ private fun PeriodSegmentedToggle(
     selected: String,
     onSelect: (String) -> Unit
 ): Unit {
+    val isDark: Boolean = LocalSuvidhaColors.current.isDark
+    val borderLightColor: Color = BorderLight
     Row(
         modifier = Modifier
             .clip(CircleShape)
-            .background(Ui.Neutral)
+            .background(if (isDark) Color(0xFF212326) else Ui.Neutral)
+            .then(if (isDark) Modifier.border(1.dp, borderLightColor, CircleShape) else Modifier)
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -686,17 +713,18 @@ private fun PeriodSegmentedToggle(
         TrendMode.entries.forEach { mode: TrendMode ->
             val option: String = mode.name
             val isSelected: Boolean = selected == option
+            val activeBg = if (isDark) Color(0xFF2C2F33) else Green
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(if (isSelected) Green else Color.Transparent)
+                    .background(if (isSelected) activeBg else Color.Transparent)
                     .clickable { onSelect(option) }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = option,
-                    color = if (isSelected) Color.White else Muted,
+                    color = if (isSelected) (if (isDark) Ink else Color.White) else Muted,
                     fontSize = 12.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     maxLines = 1,
@@ -719,6 +747,10 @@ private fun ExpenseChart(
         expenses.filter { expenseDay(it.date, model.zone) in period }.sumOf { it.amount }
     }
     val maximum: Double = (values.maxOrNull() ?: 0.0).coerceAtLeast(100.0)
+    val borderLightColor: Color = BorderLight
+    val greenColor: Color = Green
+    val cardSurfaceColor: Color = LocalSuvidhaColors.current.cardSurface
+    val isDark: Boolean = LocalSuvidhaColors.current.isDark
     Column {
         ChartCanvas(
             modifier = Modifier
@@ -738,7 +770,7 @@ private fun ExpenseChart(
             val colWidth: Float = size.width / values.size.coerceAtLeast(1).toFloat()
             listOf(top, mid, base).forEach { y: Float ->
                 drawLine(
-                    color = BorderLight,
+                    color = borderLightColor,
                     start = Offset(0f, y),
                     end = Offset(size.width, y),
                     strokeWidth = 1.dp.toPx()
@@ -759,7 +791,7 @@ private fun ExpenseChart(
                 drawPath(
                     path = areaPath,
                     brush = Brush.verticalGradient(
-                        colors = listOf(Green.copy(alpha = 0.15f), Green.copy(alpha = 0.0f)),
+                        colors = listOf(greenColor.copy(alpha = if (isDark) 0.35f else 0.15f), greenColor.copy(alpha = 0.0f)),
                         startY = top,
                         endY = base
                     )
@@ -771,7 +803,7 @@ private fun ExpenseChart(
                 }
                 drawPath(
                     path = linePath,
-                    color = Green,
+                    color = greenColor,
                     style = Stroke(
                         width = 2.5.dp.toPx(),
                         cap = StrokeCap.Round,
@@ -779,12 +811,11 @@ private fun ExpenseChart(
                     )
                 )
                 points.forEach { pt: Offset ->
-                    drawCircle(color = Green, radius = 3.5.dp.toPx(), center = pt)
+                    drawCircle(color = greenColor, radius = 3.5.dp.toPx(), center = pt)
                     drawCircle(
-                        color = Color.White,
-                        radius = 3.5.dp.toPx(),
-                        center = pt,
-                        style = Stroke(width = 1.5.dp.toPx())
+                        color = cardSurfaceColor,
+                        radius = 2.dp.toPx(),
+                        center = pt
                     )
                 }
             }

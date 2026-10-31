@@ -42,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -159,8 +161,9 @@ private fun ChatMessageList(
                 ChatDayDivider(record.createdAtMillis, model.zone)
             }
             val hasLaterPeerEvent: Boolean = chatEvents.drop(index + 1).any { it.actorMemberId != data.ownId }
+            val startsRun: Boolean = prevDay != currentDay || chatEvents[index - 1].actorMemberId != record.actorMemberId
             when (record.actionType) {
-                "chat_message" -> ChatMessageBubble(record, data, model.zone, hasLaterPeerEvent)
+                "chat_message" -> ChatMessageBubble(record, data, model.zone, hasLaterPeerEvent, startsRun)
                 "expense_added" -> {
                     val splitIndex: Int = chatEvents.filter { it.actionType == "expense_added" }.indexOf(record) + 1
                     val status: SplitStatus = resolveSplitStatus(record, data.events)
@@ -172,12 +175,20 @@ private fun ChatMessageList(
                         zone = model.zone,
                         hasLaterPeerEvent = hasLaterPeerEvent,
                         splitIndex = splitIndex,
+                        startsRun = startsRun,
                         onClick = { navigate("split-detail/${group.id}/${record.id}") }
                     )
                 }
             }
         }
     }
+}
+
+/** Only the first bubble of a sender's run gets the pointed corner; follow-ups are fully rounded. */
+internal fun chatBubbleShape(isOutgoing: Boolean, startsRun: Boolean): RoundedCornerShape = when {
+    !startsRun -> RoundedCornerShape(18.dp)
+    isOutgoing -> RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp)
+    else -> RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp)
 }
 
 @Composable
@@ -205,7 +216,8 @@ private fun ChatMessageBubble(
     record: SharedLedgerEventRecord,
     data: AppData,
     zone: ZoneId,
-    hasLaterPeerEvent: Boolean
+    hasLaterPeerEvent: Boolean,
+    startsRun: Boolean
 ) {
     val event = runCatching { SharedLedgerCodec.toDomainEvent(record) }.getOrNull()
     val chatText: String = (event?.action as? SharedLedgerAction.ChatMessage)?.text ?: record.description
@@ -216,7 +228,7 @@ private fun ChatMessageBubble(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start
     ) {
-        if (!isOutgoing) {
+        if (!isOutgoing && startsRun) {
             Text(
                 text = senderName,
                 color = Green,
@@ -225,11 +237,14 @@ private fun ChatMessageBubble(
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
         }
+        val isDark = com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors.current.isDark
+        val outgoingBg = if (isDark) Color(0xFF1C2E24) else Color(0xFFE3F1E8)
+        val outgoingBorder = if (isDark) Color(0xFF244131) else Color(0xFFD4E7D8)
         Surface(
             modifier = Modifier.widthIn(max = 285.dp),
-            shape = if (isOutgoing) RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp) else RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp),
-            color = if (isOutgoing) Color(0xFFE3F1E8) else CardSurface,
-            border = BorderStroke(1.dp, if (isOutgoing) Color(0xFFD4E7D8) else BorderLight)
+            shape = chatBubbleShape(isOutgoing, startsRun),
+            color = if (isOutgoing) outgoingBg else CardSurface,
+            border = BorderStroke(1.dp, if (isOutgoing) outgoingBorder else BorderLight)
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Text(
@@ -265,6 +280,8 @@ private fun ChatComposer(
     canSplit: Boolean,
     canSend: Boolean
 ) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Canvas,
@@ -301,14 +318,18 @@ private fun ChatComposer(
                 textStyle = TextStyle(color = Ink, fontSize = 14.sp, fontFamily = Inter, lineHeight = 20.sp)
             )
             IconButton(
-                onClick = onSendMessage,
+                onClick = {
+                    onSendMessage()
+                    keyboard?.hide()
+                    focusManager.clearFocus()
+                },
                 modifier = Modifier.size(42.dp).background(if (canSend) Green else Ui.Neutral, CircleShape),
                 enabled = canSend
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_send),
                     contentDescription = "Send message",
-                    tint = if (canSend) Color.White else Muted,
+                    tint = if (canSend) OnGreen else Muted,
                     modifier = Modifier.size(18.dp)
                 )
             }

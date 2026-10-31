@@ -170,13 +170,14 @@ private fun SplitHeroCard(
                     fontWeight = FontWeight.Medium
                 )
                 if (isCancelled) {
+                    val isDark = com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors.current.isDark
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFFFCE8E6)
+                        color = if (isDark) Color(0xFF321A1A) else Color(0xFFFCE8E6)
                     ) {
                         Text(
                             text = "CANCELLED",
-                            color = Color(0xFFBA1A1A),
+                            color = if (isDark) Danger else Color(0xFFBA1A1A),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -218,9 +219,10 @@ private fun SplitHeroCard(
                 Text(text = formattedDate, color = Muted, fontSize = 13.sp)
             }
             Spacer(Modifier.height(12.dp))
+            val isDark = com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors.current.isDark
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = if (isCancelled) Color(0xFFF5F6F5) else Ui.Mint,
+                color = if (isCancelled) (if (isDark) Color(0xFF1E2023) else Color(0xFFF5F6F5)) else Ui.Mint,
                 shape = RoundedCornerShape(9.dp)
             ) {
                 Row(

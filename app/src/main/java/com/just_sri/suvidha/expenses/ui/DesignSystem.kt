@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import com.just_sri.suvidha.expenses.R
@@ -35,30 +37,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
 
+import com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors
+import com.just_sri.suvidha.expenses.ui.theme.ThemePreference
+
 internal val Inter = FontFamily(Font(R.font.inter_400, FontWeight.Normal), Font(R.font.inter_500, FontWeight.Medium), Font(R.font.inter_600, FontWeight.SemiBold), Font(R.font.inter_700, FontWeight.Bold))
 internal val Wordmark = FontFamily(Font(R.font.manrope_bold, FontWeight.Bold))
 
 internal object Ui {
-    val Mint = Color(0xFFE5F2EA)
-    val Neutral = Color(0xFFEFF3EC)
+    val Mint: Color @Composable @ReadOnlyComposable get() = LocalSuvidhaColors.current.mint
+    val Neutral: Color @Composable @ReadOnlyComposable get() = LocalSuvidhaColors.current.surfaceMuted
     val Radius = RoundedCornerShape(20.dp)
     val FieldRadius = RoundedCornerShape(16.dp)
 }
 
 @Composable
-internal fun SuvidhaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = lightColorScheme(primary = Green, onPrimary = Color.White,
-        primaryContainer = Ui.Mint, onPrimaryContainer = Green, background = Canvas,
-        onBackground = Ink, surface = CardSurface, onSurface = Ink,
-        surfaceVariant = Ui.Neutral, onSurfaceVariant = Muted,
-        surfaceContainer = CardSurface, surfaceContainerLow = CardSurface,
-        surfaceContainerHigh = CardSurface, surfaceContainerHighest = CardSurface,
-        outlineVariant = BorderLight,
-        outline = Muted, error = Danger), typography = Typography(
-            bodyLarge = TextStyle(fontFamily = Inter, fontSize = 15.sp, lineHeight = 22.sp),
-            bodyMedium = TextStyle(fontFamily = Inter, fontSize = 14.sp, lineHeight = 20.sp),
-            labelLarge = TextStyle(fontFamily = Inter, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)),
-        content = content)
+internal fun SuvidhaTheme(
+    themePref: ThemePreference = ThemePreference.SYSTEM,
+    darkTheme: Boolean = when (themePref) {
+        ThemePreference.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+        ThemePreference.LIGHT -> false
+        ThemePreference.DARK -> true
+    },
+    content: @Composable () -> Unit
+) {
+    com.just_sri.suvidha.expenses.ui.theme.SuvidhaTheme(
+        themePref = themePref,
+        darkTheme = darkTheme,
+        content = content
+    )
 }
 
 /** Centered on tablets, edge-to-edge on phones. Insets belong to the app shell. */
@@ -127,10 +133,10 @@ internal fun Avatar(
     modifier: Modifier = Modifier,
     showBadge: Boolean = false
 ): Unit {
-    Box(modifier.size(40.dp).background(if (primary) Green else Ui.Mint, if (icon == null) CircleShape else RoundedCornerShape(13.dp)),
+    Box(modifier.size(RowIconTileSize).background(if (primary) Green else Ui.Mint, if (icon == null) CircleShape else RowIconTileShape),
         contentAlignment = Alignment.Center) {
-        if (icon != null) Icon(icon, null, Modifier.size(21.dp), tint = if (primary) Color.White else Green)
-        else Text(initials(name), color = if (primary) Color.White else Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        if (icon != null) Icon(icon, null, Modifier.size(RowIconGlyphSize), tint = if (primary) OnGreen else Green)
+        else Text(initials(name), color = if (primary) OnGreen else Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         if (showBadge) {
             Box(
                 modifier = Modifier
@@ -149,6 +155,22 @@ internal fun Avatar(
                 )
             }
         }
+    }
+}
+
+private val RowIconTileSize = 40.dp
+private val RowIconGlyphSize = 21.dp
+private val RowIconTileShape = RoundedCornerShape(13.dp)
+
+/** Leading icon tile for list rows; same footprint as [Avatar] so every row's text lines up. */
+@Composable
+internal fun IconTile(icon: ImageVector, background: Color = Ui.Mint, tint: Color = Green, modifier: Modifier = Modifier): Unit =
+    IconTile(rememberVectorPainter(icon), background, tint, modifier)
+
+@Composable
+internal fun IconTile(icon: Painter, background: Color = Ui.Mint, tint: Color = Green, modifier: Modifier = Modifier): Unit {
+    Box(modifier.size(RowIconTileSize).background(background, RowIconTileShape), contentAlignment = Alignment.Center) {
+        Icon(icon, null, Modifier.size(RowIconGlyphSize), tint = tint)
     }
 }
 
@@ -207,13 +229,14 @@ internal fun LedgerRow(
     subtitle: String? = null,
     amount: String? = null,
     amountLabel: String? = null,
-    amountColor: Color = Ink,
+    amountColor: Color = Color.Unspecified,
     icon: ImageVector? = null,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     divider: Boolean = false,
     leading: (@Composable () -> Unit)? = null
 ): Unit {
+    val finalAmountColor = if (amountColor != Color.Unspecified) amountColor else Ink
     Column {
         Row(
             modifier = Modifier
@@ -232,12 +255,12 @@ internal fun LedgerRow(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     Text(title, Modifier.weight(1f), color = Ink, fontSize = 14.sp, lineHeight = 21.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    if (amount != null && amount.length <= 17) Text(amount, color = amountColor, fontSize = 14.sp,
+                    if (amount != null && amount.length <= 17) Text(amount, color = finalAmountColor, fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1)
                 }
-                if (amount != null && amount.length > 17) Text(amount, color = amountColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                if (amount != null && amount.length > 17) Text(amount, color = finalAmountColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 if (!subtitle.isNullOrBlank()) Text(subtitle, color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
-                if (amountLabel != null) Text(amountLabel, color = amountColor, fontSize = 12.sp)
+                if (amountLabel != null) Text(amountLabel, color = finalAmountColor, fontSize = 12.sp)
             }
             if (trailing != null) {
                 trailing()
@@ -307,7 +330,7 @@ internal fun Segments(options: List<String>, selected: String, onSelect: (String
             Surface(onClick = { onSelect(option) }, color = if (selected == option) Green else Color.Transparent,
                 shape = CircleShape, modifier = Modifier.weight(1f)) {
                 Box(Modifier.heightIn(min = 38.dp).padding(horizontal = 10.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
-                    Text(option, color = if (selected == option) Color.White else Muted, fontSize = 12.sp,
+                    Text(option, color = if (selected == option) OnGreen else Muted, fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -321,7 +344,7 @@ internal fun FilterChips(options: List<String>, selected: String, onSelect: (Str
         options.forEach { value ->
             Surface(onClick = { onSelect(value) }, shape = CircleShape, color = if (value == selected) Green else CardSurface,
                 border = BorderStroke(1.dp, if (value == selected) Green else BorderLight)) {
-                Text(value, Modifier.padding(14.dp, 10.dp), color = if (value == selected) Color.White else Muted, fontSize = 12.sp)
+                Text(value, Modifier.padding(14.dp, 10.dp), color = if (value == selected) OnGreen else Muted, fontSize = 12.sp)
             }
         }
     }

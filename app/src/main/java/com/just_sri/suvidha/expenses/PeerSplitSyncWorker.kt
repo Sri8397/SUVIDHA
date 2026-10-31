@@ -15,7 +15,7 @@ class PeerSplitSyncWorker internal constructor(
     private val synchronize: suspend () -> PeerSplitSyncResult,
 ) : CoroutineWorker(context, params) {
     constructor(context: Context, params: WorkerParameters) : this(
-        context, params, { PeerSplitService.syncInBackground(context.applicationContext) },
+        context, params, { com.just_sri.suvidha.expenses.service.RefreshService.syncInBackground(context.applicationContext) },
     )
 
     override suspend fun doWork(): Result = try {

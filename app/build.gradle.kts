@@ -15,19 +15,23 @@ ksp {
 android {
     namespace = "com.just_sri.suvidha.expenses"
     compileSdk = 37
+    sourceSets.getByName("main").assets.srcDir("$projectDir/rules")
     sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 
     defaultConfig {
         applicationId = "com.just_sri.suvidhaapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 18
+        versionCode = 22
         versionName = "1.0.4"
         manifestPlaceholders["appLabel"] = "Suvidha Expenses"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { debugSymbolLevel = "FULL" }
     }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -87,7 +91,7 @@ android {
 kotlin { jvmToolchain(17) }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2025.02.00"))
+    implementation(platform("androidx.compose:compose-bom:2025.08.00"))
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.fragment:fragment-ktx:1.8.6")
     implementation("androidx.activity:activity-compose:1.10.1")
@@ -109,9 +113,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.02.00"))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.9.0")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.0")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2025.08.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.room:room-testing:2.7.0")

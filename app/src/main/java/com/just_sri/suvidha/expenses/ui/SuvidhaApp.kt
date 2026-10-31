@@ -64,7 +64,7 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
         if (message != null) { snackbar.showSnackbar(message); if (model.message == message) model.message = null }
     }
     CompositionLocalProvider(LocalCurrency provides model.currency, LocalZoneId provides model.zone) {
-        SuvidhaTheme {
+        SuvidhaTheme(themePref = model.themePreference) {
             Surface(Modifier.fillMaxSize(), color = Canvas) {
                 Box(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), contentAlignment = Alignment.TopCenter) {
                     Scaffold(Modifier.widthIn(max = 560.dp).fillMaxSize(), containerColor = Canvas,
@@ -87,9 +87,11 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
                                         route == "new-friend" -> AddFriendScreen(model, back)
                                         route == "new-group" -> NewGroupScreen(data, model, navigate, back)
                                         route == "add-expense" -> MoneyFlow(data, model, back)
+                                        route == "theme" -> ThemeSelectionScreen(model, back)
                                         route == "currency" -> CurrencyScreen(model, back)
                                         route == "timezone" -> TimezoneScreen(model, back)
                                         route == "categories" -> CategoriesScreen(model, back)
+                                        route == "relays" -> RelaysScreen(model, back)
                                         route == "backup" -> BackupScreen(model, back)
                                         route.startsWith("group/") && group != null -> GroupScreen(group, data, model, navigate, back)
                                         route.startsWith("members/") && group != null -> MembersScreen(group, data, model, navigate, back)

@@ -65,7 +65,8 @@ internal fun SplitExpenseCard(
     hasLaterPeerEvent: Boolean,
     splitIndex: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    startsRun: Boolean = true
 ) {
     val isCancelled: Boolean = status == SplitStatus.CANCELLED
     val event = runCatching { SharedLedgerCodec.toDomainEvent(record) }.getOrNull()
@@ -74,21 +75,22 @@ internal fun SplitExpenseCard(
     val isOutgoing: Boolean = record.actorMemberId == data.ownId
     val payerName: String = data.label(record.actorMemberId)
     val timeStr: String = formatChatTime(record.createdAtMillis, zone)
+    val isDark = com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors.current.isDark
     val cardBackground: Color = if (isCancelled) {
-        if (isOutgoing) Color(0xFFEDF2EE) else Color(0xFFF5F6F5)
+        if (isOutgoing) (if (isDark) Color(0xFF17201B) else Color(0xFFEDF2EE)) else (if (isDark) Color(0xFF151618) else Color(0xFFF5F6F5))
     } else {
-        if (isOutgoing) Color(0xFFE3F1E8) else CardSurface
+        if (isOutgoing) (if (isDark) Color(0xFF1C2E24) else Color(0xFFE3F1E8)) else CardSurface
     }
     val cardBorderColor: Color = if (isCancelled) {
-        if (isOutgoing) Color(0xFFCAD4CD) else Color(0xFFD5DAD6)
+        if (isOutgoing) (if (isDark) Color(0xFF202B24) else Color(0xFFCAD4CD)) else (if (isDark) Color(0xFF222428) else Color(0xFFD5DAD6))
     } else {
-        if (isOutgoing) Color(0xFFD4E7D8) else BorderLight
+        if (isOutgoing) (if (isDark) Color(0xFF244131) else Color(0xFFD4E7D8)) else BorderLight
     }
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = if (isOutgoing) Alignment.End else Alignment.Start
     ) {
-        if (!isOutgoing) {
+        if (!isOutgoing && startsRun) {
             Text(
                 text = payerName,
                 color = Green,
@@ -101,7 +103,7 @@ internal fun SplitExpenseCard(
             modifier = Modifier
                 .widthIn(max = 285.dp)
                 .clickable(onClick = onClick),
-            shape = if (isOutgoing) RoundedCornerShape(18.dp, 4.dp, 18.dp, 18.dp) else RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp),
+            shape = chatBubbleShape(isOutgoing, startsRun),
             color = cardBackground,
             border = BorderStroke(1.dp, cardBorderColor)
         ) {
@@ -122,6 +124,7 @@ private fun SplitCardHeader(
     isOutgoing: Boolean,
     isCancelled: Boolean
 ) {
+    val isDark = com.just_sri.suvidha.expenses.ui.theme.LocalSuvidhaColors.current.isDark
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,11 +154,11 @@ private fun SplitCardHeader(
             if (isCancelled) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFFCE8E6)
+                    color = if (isDark) Color(0xFF321A1A) else Color(0xFFFCE8E6)
                 ) {
                     Text(
                         text = "CANCELLED",
-                        color = Color(0xFFBA1A1A),
+                        color = if (isDark) Danger else Color(0xFFBA1A1A),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

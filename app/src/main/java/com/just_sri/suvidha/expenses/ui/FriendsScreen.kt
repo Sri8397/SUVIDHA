@@ -94,12 +94,13 @@ internal fun FriendsScreen(data: AppData, model: AppViewModel, navigate: (String
 }
 
 @Composable
-internal fun BalanceFigure(label: String, amount: String, modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color = Ink) {
+internal fun BalanceFigure(label: String, amount: String, modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified) {
+    val finalColor = if (color != androidx.compose.ui.graphics.Color.Unspecified) color else Ink
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, color = Muted, fontSize = 12.sp)
         Text(
             amount,
-            color = color,
+            color = finalColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,

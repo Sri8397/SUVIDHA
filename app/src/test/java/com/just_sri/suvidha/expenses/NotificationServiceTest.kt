@@ -19,6 +19,14 @@ class NotificationServiceTest {
     }
 
     @Test
+    fun chatNotificationIdIsStablePerGroupAndOutsideTransactionRange() {
+        val id = NotificationService.chatNotificationId("group-a")
+        assertEquals(id, NotificationService.chatNotificationId("group-a"))
+        assertTrue(id != NotificationService.chatNotificationId("group-b"))
+        assertTrue(id >= 1_000_000)
+    }
+
+    @Test
     fun typeAliasResolvesCorrectly() {
         assertEquals(NotificationService.TRANSACTION_CHANNEL_ID, TransactionNotificationService.TRANSACTION_CHANNEL_ID)
     }

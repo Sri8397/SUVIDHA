@@ -10,6 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.just_sri.suvidha.expenses.ui.*
+import com.just_sri.suvidha.expenses.ui.theme.ThemePreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,13 +61,30 @@ class MainActivity : ComponentActivity() {
                 }
             }
             LaunchedEffect(Unit) { open() }
-            SuvidhaTheme {
-                val db = database
-                if (db != null) {
-                    val model: AppViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T = AppViewModel(application, db) as T
-                    })
+            val db = database
+            val model: AppViewModel? = if (db != null) {
+                viewModel(factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T = AppViewModel(application, db) as T
+                })
+            } else null
+            val themePref = model?.themePreference ?: remember {
+                ThemePreference.from(getSharedPreferences("expense_settings", MODE_PRIVATE).getString("theme_preference", "SYSTEM"))
+            }
+            val isDark = when (themePref) {
+                ThemePreference.SYSTEM -> isSystemInDarkTheme()
+                ThemePreference.LIGHT -> false
+                ThemePreference.DARK -> true
+            }
+            DisposableEffect(isDark) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (isDark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                    navigationBarStyle = if (isDark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                )
+                onDispose {}
+            }
+            SuvidhaTheme(themePref = themePref) {
+                if (model != null) {
                     SuvidhaApp(model, destination)
                 } else Surface(Modifier.fillMaxSize(), color = Canvas) {
                     Column(Modifier.fillMaxSize().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {

@@ -26,4 +26,13 @@ class PeerSplitSyncResultTest {
     @Test fun invalidHistoricalEventsDoNotCreateEndlessRetries() {
         assertFalse(PeerSplitSyncResult(healthy.copy(errors = 5), false).needsRetry)
     }
+
+    @Test fun unreachableRelayIsNotReportedAsProcessingError() {
+        val result = PeerSplitSyncResult(healthy.copy(relaysResponded = 1, errors = 1, relayFailures = 1), false)
+        assertTrue(result.message.contains("relays did not respond"))
+    }
+
+    @Test fun failedEventsAreReportedAsErrors() {
+        assertTrue(PeerSplitSyncResult(healthy.copy(errors = 2), false).message.startsWith("Synced with some errors"))
+    }
 }

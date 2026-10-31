@@ -1,0 +1,80 @@
+version: "1.2"
+category: refresh
+
+rules:
+  manual_pull_refresh:
+    actor: user
+    conditions:
+      - is_not_busy
+    confirm: null
+    actions:
+      - set_busy_indicator_active
+      - publish_pending_welcomes
+      - publish_pending_encrypted_events
+      - execute_parallel_relay_fetches
+      - process_inbound_welcomes
+      - decrypt_and_append_remote_ledger_events
+      - reconcile_active_group_rosters
+      - notify_newly_inserted_events
+      - display_sync_status_summary
+    on_failure:
+      - display_sync_error_summary
+      - schedule_background_retry_if_needed
+    finally:
+      - clear_busy_indicator
+    message: "Synced group activity"
+
+  background_idle_sync:
+    actor: system
+    conditions:
+      - background_sync_allowed
+    confirm: null
+    actions:
+      - publish_pending_welcomes
+      - publish_pending_encrypted_events
+      - execute_parallel_relay_fetches
+      - process_inbound_welcomes
+      - decrypt_and_append_remote_ledger_events
+      - reconcile_active_group_rosters
+      - notify_newly_inserted_events
+    on_failure:
+      - schedule_background_retry_if_needed
+    message: null
+
+  scheduled_retry_sync:
+    actor: work_manager
+    conditions:
+      - has_pending_uploads_or_relay_failures
+      - network_connected
+    confirm: null
+    actions:
+      - execute_background_sync
+    on_failure:
+      - persist_retry_state
+    message: null
+
+  inbound_expense_notification:
+    actor: system
+    conditions:
+      - event_is_newly_inserted
+      - event_is_expense_added
+      - actor_is_not_current_user
+      - notifications_enabled
+    confirm: null
+    actions:
+      - format_expense_amount
+      - post_system_notification
+    message: "{payer} added {amount} in {group}"
+
+  inbound_settlement_notification:
+    actor: system
+    conditions:
+      - event_is_newly_inserted
+      - event_is_settlement_recorded
+      - actor_is_not_current_user
+      - notifications_enabled
+    confirm: null
+    actions:
+      - format_settlement_amount
+      - post_system_notification
+    message: "Payment received in {group}"

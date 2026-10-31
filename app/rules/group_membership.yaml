@@ -1,0 +1,74 @@
+version: "1.2"
+category: group_membership
+
+rules:
+  self_exit:
+    actor: active_member
+    conditions:
+      - owner_must_transfer_or_close
+    confirm: "Leave group?"
+    actions:
+      - cancel_authored_active_splits
+      - request_mls_self_removal
+      - sync_causal_ledger_event
+    message: "{member} left the group"
+
+  admin_removal:
+    actor: owner_only
+    conditions:
+      - net_balance_zero
+      - no_outstanding_pairwise_debts
+    confirm: "Remove member?"
+    actions:
+      - mls_remove_member
+      - sync_causal_ledger_event
+    message: "{member} was removed by admin"
+
+  departed_member:
+    actor: system
+    conditions: []
+    actions:
+      - enforce_read_only_history
+      - preserve_chat_history
+      - preserve_settled_transactions
+      - display_as_former_member
+
+  invitation_candidate_visibility:
+    actor: active_member
+    conditions:
+      - recipient_is_friend
+      - recipient_has_nostr_id
+    actions:
+      - show_recipient_in_invitation_list
+
+  invitation_action_enablement:
+    actor: active_member
+    conditions:
+      - recipient_is_friend
+      - recipient_has_nostr_id
+      - recipient_invitation_status_enabled
+      - recipient_has_valid_keypackage
+    actions:
+      - enable_invite_action
+
+  invitation_enabled:
+    actor: user
+    conditions:
+      - has_nostr_identity
+    actions:
+      - generate_fresh_mls_keypackage
+      - publish_keypackage_kind_30443
+      - publish_signed_invitation_status_enabled
+      - sync_pending_welcomes
+      - process_valid_previous_invitations
+      - sync_joined_groups
+
+  invitation_disabled:
+    actor: user
+    conditions: []
+    actions:
+      - publish_signed_invitation_status_disabled
+      - stop_keypackage_publication
+      - request_deletion_of_published_keypackages
+      - preserve_pending_welcome_keys
+      - defer_incoming_welcomes
