@@ -1,5 +1,6 @@
 package com.just_sri.suvidha.expenses.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,11 +16,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -138,15 +143,17 @@ internal fun NewGroupScreen(data: AppData, model: AppViewModel, navigate: (Strin
 @Composable
 internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
     var tab by rememberSaveable(group.id) { mutableStateOf("Group chat") }
+    var amountTab by rememberSaveable(group.id) { mutableStateOf("Net amounts") }
     var menu by remember { mutableStateOf(false) }
     var payment by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var removeDebt by remember { mutableStateOf<SharedDebtBalance?>(null) }
+    var selectedMember by remember { mutableStateOf<SharedGroupMemberEntity?>(null) }
+    var selectedDebt by remember { mutableStateOf<SharedDebtBalance?>(null) }
     var amount by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     val projection = remember(group, data.events, data.members) { data.projection(group) }
     val members = data.members.filter { it.groupId == group.id && (it.isActive || projection.balanceByMemberId.getOrDefault(it.memberId, 0) != 0L) }
     val debts = projection.debtById.values.filter { it.remainingAmountMinor > 0 }
-
     // Await each pass and stop polling when the screen leaves the foreground.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(group.id, lifecycleOwner) {
@@ -157,95 +164,158 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
             }
         }
     }
-
-    PageColumn {
-        PageHeader(group.name, back) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton({ navigate("members/${group.id}") }, Modifier.size(36.dp)) {
-                    Icon(Icons.Outlined.Person, "Members", tint = Green, modifier = Modifier.size(20.dp))
-                }
-                Box {
-                    IconButton({ menu = true }, Modifier.size(36.dp)) { Icon(Icons.Outlined.MoreVert, "Group options") }
-                    DropdownMenu(menu, { menu = false }) {
-                        DropdownMenuItem({ Text("Members") }, { menu = false; navigate("members/${group.id}") })
-                        DropdownMenuItem({ Text("Sync now") }, { menu = false; model.sync() }, enabled = !model.busy)
+    if (selectedMember != null) {
+        val member: SharedGroupMemberEntity = selectedMember!!
+        BackHandler { selectedMember = null }
+        MemberDetailScreen(
+            member = member,
+            group = group,
+            data = data,
+            balance = projection.balanceByMemberId.getOrDefault(member.memberId, 0L),
+            debts = debts,
+            back = { selectedMember = null },
+            onSettleDebt = { d: SharedDebtBalance ->
+                selectedMember = null
+                payment = d
+                amount = SharedSplitMoney.format(d.remainingAmountMinor, group.currencyCode)
+                error = null
+            }
+        )
+    } else if (selectedDebt != null) {
+        val debt: SharedDebtBalance = selectedDebt!!
+        BackHandler { selectedDebt = null }
+        DebtDetailScreen(
+            debt = debt,
+            group = group,
+            data = data,
+            back = { selectedDebt = null },
+            onRecordPayment = {
+                selectedDebt = null
+                payment = debt
+                amount = SharedSplitMoney.format(debt.remainingAmountMinor, group.currencyCode)
+                error = null
+            },
+            onDeleteDebt = {
+                selectedDebt = null
+                removeDebt = debt
+            }
+        )
+    } else {
+        PageColumn {
+            PageHeader(group.name, back) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton({ navigate("members/${group.id}") }, Modifier.size(36.dp)) {
+                        Icon(Icons.Outlined.Person, "Members", tint = Green, modifier = Modifier.size(20.dp))
+                    }
+                    Box {
+                        IconButton({ menu = true }, Modifier.size(36.dp)) { Icon(Icons.Outlined.MoreVert, "Group options") }
+                        DropdownMenu(menu, { menu = false }) {
+                            DropdownMenuItem({ Text("Members") }, { menu = false; navigate("members/${group.id}") })
+                            DropdownMenuItem({ Text("Sync now") }, { menu = false; model.sync() }, enabled = !model.busy)
+                        }
                     }
                 }
             }
-        }
-
-        Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-            Segments(listOf("Group chat", "Amount"), tab, { tab = it })
-        }
-
-        if (projection.pendingEventIds.isNotEmpty()) {
-            Text(
-                "Some activity is waiting for earlier updates. Sync to complete the history.",
-                color = Muted,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp)
-            )
-        }
-        if (projection.rejectedEvents.isNotEmpty()) {
-            Box(Modifier.padding(horizontal = 20.dp, vertical = 2.dp)) {
-                ErrorText("${projection.rejectedEvents.size} conflicting updates could not be applied.")
+            Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
+                Segments(listOf("Group chat", "Amount"), tab, { tab = it })
             }
-        }
-
-        if (tab == "Amount") {
-            PageList {
-                item { SectionHeading("Net amounts", "${members.size} people") }
-                item { Text("+ To receive    ·    − To pay", color = Muted, fontSize = 12.sp) }
-                itemsIndexed(members, key = { _, member -> member.memberId }) { _, member ->
-                    val balance = projection.balanceByMemberId.getOrDefault(member.memberId, 0L)
-                    Panel {
-                        LedgerRow(
-                            data.label(member.memberId),
-                            if (!member.isActive) "Former member" else null,
-                            "${if (balance > 0) "+" else if (balance < 0) "−" else ""}${minorMoney(abs(balance), group.currencyCode)}",
-                            amountColor = if (balance < 0) Danger else if (balance > 0) Green else Muted
-                        )
-                    }
-                }
-                item { SectionHeading("Outstanding payments", "${debts.size}") }
-                if (debts.isEmpty()) item { EmptyState("All caught up", "There are no outstanding payments in this group.") }
-                itemsIndexed(debts, key = { _, debt -> debt.debtUnitId }) { _, debt ->
-                    Panel {
-                        LedgerRow(
-                            "${data.label(debt.debtorMemberId)} → ${data.label(debt.creditorMemberId)}",
-                            if (debt.creditorMemberId == data.ownId) "Tap to record a payment" else "Awaiting payment confirmation",
-                            minorMoney(debt.remainingAmountMinor, group.currencyCode),
-                            amountColor = if (debt.debtorMemberId == data.ownId) Danger else Green,
-                            onClick = if (debt.creditorMemberId == data.ownId) {{
-                                payment = debt
-                                amount = SharedSplitMoney.format(debt.remainingAmountMinor, group.currencyCode)
-                                error = null
-                            }} else null
-                        )
-                    }
-                }
-                item {
-                    PrimaryButton(
-                        "+ Add split expense",
-                        { navigate("group-split/${group.id}") },
-                        enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
-                    )
-                }
-                if (members.count { it.isActive } <= 1) {
-                    item { SecondaryButton("Add group members", { navigate("members/${group.id}") }) }
+            if (projection.pendingEventIds.isNotEmpty()) {
+                Text(
+                    "Some activity is waiting for earlier updates. Sync to complete the history.",
+                    color = Muted,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp)
+                )
+            }
+            if (projection.rejectedEvents.isNotEmpty()) {
+                Box(Modifier.padding(horizontal = 20.dp, vertical = 2.dp)) {
+                    ErrorText("${projection.rejectedEvents.size} conflicting updates could not be applied.")
                 }
             }
-        } else {
-            ChatScreen(
-                group = group,
-                data = data,
-                model = model,
-                navigate = navigate,
-                modifier = Modifier.weight(1f).fillMaxWidth()
-            )
+            if (tab == "Amount") {
+                Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)) {
+                    Segments(listOf("Net amounts", "Outstanding payments"), amountTab, { amountTab = it })
+                }
+                if (amountTab == "Net amounts") {
+                    PageList {
+                        item { SectionHeading("Net amounts", "${members.size} people") }
+                        item { Text("+ To receive    ·    − To pay", color = Muted, fontSize = 12.sp) }
+                        if (members.isEmpty()) {
+                            item { EmptyState("No members", "Add members to this group to track net balances.") }
+                        } else {
+                            item {
+                                Panel {
+                                    members.forEachIndexed { index: Int, member: SharedGroupMemberEntity ->
+                                        val balance: Long = projection.balanceByMemberId.getOrDefault(member.memberId, 0L)
+                                        LedgerRow(
+                                            title = data.label(member.memberId),
+                                            subtitle = if (!member.isActive) "Former member" else null,
+                                            amount = "${if (balance > 0) "+" else if (balance < 0) "−" else ""}${minorMoney(abs(balance), group.currencyCode)}",
+                                            amountColor = if (balance < 0) Danger else if (balance > 0) Green else Muted,
+                                            divider = index < members.lastIndex,
+                                            onClick = { selectedMember = member }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            PrimaryButton(
+                                "+ Add split expense",
+                                { navigate("group-split/${group.id}") },
+                                enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
+                            )
+                        }
+                        if (members.count { it.isActive } <= 1) {
+                            item { SecondaryButton("Add group members", { navigate("members/${group.id}") }) }
+                        }
+                    }
+                } else {
+                    PageList {
+                        item { SectionHeading("Outstanding payments", "${debts.size}") }
+                        if (debts.isEmpty()) {
+                            item { EmptyState("All caught up", "There are no outstanding payments in this group.") }
+                        } else {
+                            item {
+                                Panel {
+                                    debts.forEachIndexed { index: Int, debt: SharedDebtBalance ->
+                                        val isDebtor: Boolean = debt.debtorMemberId == data.ownId
+                                        val isCreditor: Boolean = debt.creditorMemberId == data.ownId
+                                        LedgerRow(
+                                            title = "${data.label(debt.debtorMemberId)} → ${data.label(debt.creditorMemberId)}",
+                                            subtitle = if (isCreditor) "Tap to record or view details" else if (isDebtor) "You owe this payment" else "Awaiting payment confirmation",
+                                            amount = minorMoney(debt.remainingAmountMinor, group.currencyCode),
+                                            amountColor = if (isDebtor) Danger else if (isCreditor) Green else Ink,
+                                            divider = index < debts.lastIndex,
+                                            onClick = { selectedDebt = debt }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            PrimaryButton(
+                                "+ Add split expense",
+                                { navigate("group-split/${group.id}") },
+                                enabled = members.count { it.isActive } > 1 && data.ownId != null && !model.busy
+                            )
+                        }
+                        if (members.count { it.isActive } <= 1) {
+                            item { SecondaryButton("Add group members", { navigate("members/${group.id}") }) }
+                        }
+                    }
+                }
+            } else {
+                ChatScreen(
+                    group = group,
+                    data = data,
+                    model = model,
+                    navigate = navigate,
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                )
+            }
         }
     }
-
     payment?.let { debt ->
         AlertDialog(onDismissRequest = { if (!model.busy) payment = null }, title = { Text("Record a payment") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -269,6 +339,297 @@ internal fun GroupScreen(group: SharedGroupEntity, data: AppData, model: AppView
     }
     removeDebt?.let { debt -> ConfirmDialog("Delete outstanding debt?", "The remaining debt will be removed for all members. Earlier history stays available.", "Delete", { removeDebt = null },
         { model.perform("Debt removed", { removeDebt = null }) { model.peers.removeDebt(group.id, debt.debtUnitId) } }, model.busy) }
+}
+
+@Composable
+internal fun MemberDetailScreen(
+    member: SharedGroupMemberEntity,
+    group: SharedGroupEntity,
+    data: AppData,
+    balance: Long,
+    debts: List<SharedDebtBalance>,
+    back: () -> Unit,
+    onSettleDebt: (SharedDebtBalance) -> Unit
+): Unit {
+    val name: String = data.label(member.memberId)
+    val memberDebts: List<SharedDebtBalance> = debts.filter { it.debtorMemberId == member.memberId || it.creditorMemberId == member.memberId }
+    PageColumn {
+        PageHeader(name, back)
+        PageList {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(Ui.Mint, RoundedCornerShape(999.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (!member.isActive) "FORMER MEMBER" else if (member.role == "owner") "GROUP ADMIN" else "MEMBER",
+                            color = Green,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = name,
+                        color = Ink,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 32.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "${if (balance > 0) "+" else if (balance < 0) "−" else ""} ${minorMoney(abs(balance), group.currencyCode)}",
+                        color = if (balance < 0) Danger else if (balance > 0) Green else Muted,
+                        fontSize = 38.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(fontFeatureSettings = "tnum")
+                    )
+                }
+            }
+            item {
+                Text(
+                    text = "LEDGER INFORMATION",
+                    color = Muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                )
+            }
+            item {
+                Panel {
+                    LedgerDetailRow(
+                        label = "Group",
+                        value = group.name,
+                        icon = Icons.Outlined.DateRange,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Membership",
+                        value = if (!member.isActive) "Former member" else if (member.role == "owner") "Group owner" else "Active member",
+                        icon = Icons.Outlined.Person,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Net Balance",
+                        value = if (balance > 0) "To receive ${minorMoney(balance, group.currencyCode)}" else if (balance < 0) "Owes ${minorMoney(abs(balance), group.currencyCode)}" else "Fully settled",
+                        icon = Icons.Outlined.AccountBalanceWallet,
+                        isValueGreen = balance > 0,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Status",
+                        value = if (balance == 0L) "Settled" else "Active balance",
+                        icon = Icons.Outlined.CheckCircle,
+                        isBadge = true,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Member ID",
+                        value = member.memberId,
+                        icon = Icons.Outlined.Tag,
+                        isMono = true,
+                        showDivider = false
+                    )
+                }
+            }
+            if (memberDebts.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "OUTSTANDING PAYMENTS (${memberDebts.size})",
+                        color = Muted,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                    )
+                }
+                item {
+                    Panel {
+                        memberDebts.forEachIndexed { i: Int, d: SharedDebtBalance ->
+                            val isCreditor: Boolean = d.creditorMemberId == data.ownId
+                            val isDebtor: Boolean = d.debtorMemberId == data.ownId
+                            LedgerRow(
+                                title = "${data.label(d.debtorMemberId)} → ${data.label(d.creditorMemberId)}",
+                                subtitle = if (isCreditor) "Tap to record payment" else if (isDebtor) "You owe this payment" else "Pending between members",
+                                amount = minorMoney(d.remainingAmountMinor, group.currencyCode),
+                                amountColor = if (isDebtor) Danger else if (isCreditor) Green else Ink,
+                                divider = i < memberDebts.lastIndex,
+                                onClick = if (isCreditor) { { onSettleDebt(d) } } else null
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun DebtDetailScreen(
+    debt: SharedDebtBalance,
+    group: SharedGroupEntity,
+    data: AppData,
+    back: () -> Unit,
+    onRecordPayment: () -> Unit,
+    onDeleteDebt: () -> Unit
+): Unit {
+    val isCreditor: Boolean = debt.creditorMemberId == data.ownId
+    val isDebtor: Boolean = debt.debtorMemberId == data.ownId
+    PageColumn {
+        PageHeader("Payment details", back)
+        PageList {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(Ui.Mint, RoundedCornerShape(999.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (isCreditor) "RECEIVABLE PAYMENT" else if (isDebtor) "PAYABLE DEBT" else "OUTSTANDING PAYMENT",
+                            color = Green,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "${data.label(debt.debtorMemberId)} → ${data.label(debt.creditorMemberId)}",
+                        color = Ink,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 32.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = minorMoney(debt.remainingAmountMinor, group.currencyCode),
+                        color = if (isDebtor) Danger else if (isCreditor) Green else Ink,
+                        fontSize = 38.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(fontFeatureSettings = "tnum")
+                    )
+                }
+            }
+            item {
+                Text(
+                    text = "LEDGER INFORMATION",
+                    color = Muted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                )
+            }
+            item {
+                Panel {
+                    LedgerDetailRow(
+                        label = "Payer (Owes)",
+                        value = data.label(debt.debtorMemberId),
+                        icon = Icons.Outlined.Person,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Payee (To receive)",
+                        value = data.label(debt.creditorMemberId),
+                        icon = Icons.Outlined.Person,
+                        showDivider = true
+                    )
+                    if (debt.originalAmountMinor != debt.remainingAmountMinor) {
+                        LedgerDetailRow(
+                            label = "Original Amount",
+                            value = minorMoney(debt.originalAmountMinor, group.currencyCode),
+                            icon = Icons.Outlined.AccountBalanceWallet,
+                            showDivider = true
+                        )
+                        LedgerDetailRow(
+                            label = "Already Settled",
+                            value = minorMoney(debt.originalAmountMinor - debt.remainingAmountMinor, group.currencyCode),
+                            icon = Icons.Outlined.CheckCircle,
+                            isValueGreen = true,
+                            showDivider = true
+                        )
+                    }
+                    LedgerDetailRow(
+                        label = "Status",
+                        value = if (isCreditor) "Awaiting your confirmation" else if (isDebtor) "You owe this payment" else "Pending between members",
+                        icon = Icons.Outlined.CheckCircle,
+                        isBadge = true,
+                        showDivider = true
+                    )
+                    LedgerDetailRow(
+                        label = "Debt ID",
+                        value = debt.debtUnitId,
+                        icon = Icons.Outlined.Tag,
+                        isMono = true,
+                        showDivider = false
+                    )
+                }
+            }
+            if (isCreditor) {
+                item {
+                    Spacer(Modifier.height(8.dp))
+                    PrimaryButton(
+                        text = "Record payment",
+                        onClick = onRecordPayment
+                    )
+                }
+                item {
+                    DeleteDebtButton(onClick = onDeleteDebt)
+                }
+            } else if (isDebtor) {
+                item {
+                    Panel {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Settlement instructions", fontWeight = FontWeight.SemiBold, color = Ink, fontSize = 14.sp)
+                            Text(
+                                "Pay ${data.label(debt.creditorMemberId)} directly via UPI or cash, and ask them to record the payment in Suvidha.",
+                                color = Muted,
+                                fontSize = 13.sp,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun DeleteDebtButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+): Unit {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(46.dp),
+        enabled = enabled,
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFFFFF8F7),
+        border = BorderStroke(1.dp, Color(0xFFFFDAD6))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Outlined.Delete, null, tint = Danger, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Delete debt", color = Danger, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
 }
 
 @Composable
