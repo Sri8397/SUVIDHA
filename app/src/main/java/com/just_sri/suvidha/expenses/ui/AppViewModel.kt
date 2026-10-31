@@ -55,6 +55,10 @@ internal class AppViewModel(app: Application, val database: ExpenseDatabase) : A
         prefs.edit().putString("theme_preference", value.name).apply()
     }
     fun updateShowLeftGroups(value: Boolean) { showLeftGroups = value; prefs.edit().putBoolean("show_left_groups", value).apply() }
+    var archivedGroupIds: Set<String> by mutableStateOf(prefs.getStringSet("archived_group_ids", emptySet()).orEmpty().toSet()); private set
+    fun archiveGroups(ids: Set<String>) { archivedGroupIds = archivedGroupIds + ids; persistArchivedGroups() }
+    fun unarchiveGroups(ids: Set<String>) { archivedGroupIds = archivedGroupIds - ids; persistArchivedGroups() }
+    private fun persistArchivedGroups() { prefs.edit().putStringSet("archived_group_ids", archivedGroupIds).apply() }
     fun updateProfileName(value: String) { profileName = value.trim().take(60); prefs.edit().putString("profile_name", profileName).apply() }
     fun updateCategories(value: List<String>) {
         categories = (value.map { it.trim() }.filter { it.isNotBlank() && it != "Other" } + "Other").distinct()

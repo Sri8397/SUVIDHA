@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
@@ -134,12 +133,7 @@ internal fun ExpensesScreen(
         )
     } else {
         PageColumn {
-            PageHeader("Expenses", back) {
-                TextButton({ navigate("add-expense") }) {
-                    Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
-                    Text("Add", fontSize = 13.sp)
-                }
-            }
+            PageHeader("Expenses") { AddHeaderButton("Add expense") { navigate("add-expense") } }
             PageList {
                 item {
                     TotalHeroCard(
@@ -672,13 +666,12 @@ private fun SpendingTrendPanel(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column(
-                    modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     Text(

@@ -7,9 +7,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.ui.Inter
 
@@ -28,6 +30,8 @@ enum class ThemePreference(val title: String, val subtitle: String) {
 }
 
 typealias ThemeConfig = ThemePreference
+
+private const val MAX_FONT_SCALE: Float = 1.15f
 
 private val LightColorScheme = lightColorScheme(
     primary = GreenLight,
@@ -84,7 +88,9 @@ fun SuvidhaTheme(
     val colors = if (darkTheme) DarkSuvidhaColors else LightSuvidhaColors
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
-    CompositionLocalProvider(LocalSuvidhaColors provides colors) {
+    val density: Density = LocalDensity.current
+    val cappedDensity: Density = Density(density.density, minOf(density.fontScale, MAX_FONT_SCALE))
+    CompositionLocalProvider(LocalSuvidhaColors provides colors, LocalDensity provides cappedDensity) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography(

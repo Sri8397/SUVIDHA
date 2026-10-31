@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -80,19 +83,26 @@ internal fun PageList(modifier: Modifier = Modifier, content: LazyListScope.() -
 }
 
 @Composable
-internal fun PageHeader(title: String, onBack: () -> Unit, leading: (@Composable () -> Unit)? = null, action: (@Composable RowScope.() -> Unit)? = null) {
+internal fun PageHeader(title: String, onBack: (() -> Unit)? = null, leading: (@Composable () -> Unit)? = null, action: (@Composable RowScope.() -> Unit)? = null) {
     Column {
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            IconButton(onBack, Modifier.size(40.dp).background(Ui.Mint, CircleShape)) {
+            if (onBack != null) IconButton(onBack, Modifier.size(40.dp).background(Ui.Mint, CircleShape)) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", Modifier.size(20.dp), tint = Green)
             }
             leading?.invoke()
-            Text(title, Modifier.weight(1f), color = Ink, fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
+            Text(title, Modifier.weight(1f), color = Ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             action?.invoke(this)
         }
         HorizontalDivider(color = BorderLight)
+    }
+}
+
+@Composable
+internal fun AddHeaderButton(description: String, enabled: Boolean = true, onClick: () -> Unit) {
+    IconButton(onClick, Modifier.size(40.dp).background(Green, CircleShape), enabled = enabled) {
+        Icon(Icons.Outlined.Add, description, Modifier.size(22.dp), tint = OnGreen)
     }
 }
 
@@ -235,19 +245,26 @@ internal fun LedgerRow(
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     divider: Boolean = false,
-    leading: (@Composable () -> Unit)? = null
+    leading: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
+    onLongClick: (() -> Unit)? = null
 ): Unit {
     val finalAmountColor = if (amountColor != Color.Unspecified) amountColor else Ink
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .then(if (selected) Modifier.background(Ui.Mint) else Modifier)
+                .then(if (onClick != null || onLongClick != null) Modifier.combinedClickable(onClick = onClick ?: {}, onLongClick = onLongClick) else Modifier)
                 .padding(horizontal = 16.dp, vertical = 15.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (leading != null) {
+            if (selected) {
+                Box(Modifier.size(40.dp).background(Green, CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Check, null, Modifier.size(20.dp), tint = OnGreen)
+                }
+            } else if (leading != null) {
                 leading()
             } else {
                 Avatar(title, icon)

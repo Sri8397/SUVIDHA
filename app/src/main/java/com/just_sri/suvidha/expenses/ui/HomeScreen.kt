@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
@@ -45,11 +46,11 @@ internal fun HomeScreen(data: AppData, name: String, showLeftGroups: Boolean, na
                     listOf("Add expense" to "add-expense", "Expenses" to "expenses", "Friends" to "friends", "Groups" to "groups").forEachIndexed { i, (title, route) ->
                         Column(Modifier.weight(1f).clickable { navigate(route) }.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.size(52.dp).background(if (i == 0) Green else Ui.Mint, RoundedCornerShape(17.dp)), contentAlignment = Alignment.Center) {
-                                if (i == 0) Icon(Icons.Outlined.Add, null, tint = OnGreen)
-                                else AppIcon(route, tint = Green)
+                            Box(Modifier.size(64.dp).background(if (i == 0) Green else Ui.Mint, RoundedCornerShape(20.dp)), contentAlignment = Alignment.Center) {
+                                if (i == 0) Icon(Icons.Outlined.Add, null, Modifier.size(32.dp), tint = OnGreen)
+                                else AppIcon(route, tint = Green, size = 30.dp)
                             }
-                            Text(title, color = Ink, fontSize = 11.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                            Text(title, Modifier.fillMaxWidth(), color = Ink, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -60,8 +61,9 @@ internal fun HomeScreen(data: AppData, name: String, showLeftGroups: Boolean, na
                     data.friends.map { friend -> Recent(friend.name, "Friend", "friend/${friend.id}",
                         maxOf(friend.updatedAt, data.splits.filter { it.friendId == friend.id }.maxOfOrNull { it.date } ?: 0,
                             data.groupTransactions[friend.id].orEmpty().maxOfOrNull { it.occurredAtMillis } ?: 0), false) }).sortedByDescending { it.date }.take(8)
-                if (recent.isEmpty()) EmptyState("A place for your everyday money", "Add a friend or create a group to keep your shared expenses together.") {
-                    SecondaryButton("Add your first friend", { navigate("new-friend") })
+                if (recent.isEmpty()) Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    PrimaryButton("Add friend", { navigate("new-friend") })
+                    SecondaryButton("Add group", { navigate("new-group") })
                 } else Panel {
                     recent.forEachIndexed { i, entry ->
                         LedgerRow(entry.title, entry.subtitle, icon = if (entry.group) Icons.Outlined.DateRange else null,

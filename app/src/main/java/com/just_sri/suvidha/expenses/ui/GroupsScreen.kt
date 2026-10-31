@@ -17,7 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.DateRange
@@ -65,10 +65,33 @@ import kotlinx.coroutines.delay
 internal fun GroupsScreen(data: AppData, model: AppViewModel, navigate: (String) -> Unit, back: () -> Unit) {
     var search: String by rememberSaveable { mutableStateOf("") }
     var byName: Boolean by rememberSaveable { mutableStateOf(false) }
-    val visible: List<SharedGroupEntity> = data.groups.filter { (model.showLeftGroups || !data.hasLeft(it.id)) && it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
+    var selectedGroupIds: Set<String> by remember { mutableStateOf(emptySet()) }
+    var archivedNow: Set<String> by remember { mutableStateOf(emptySet()) }
+    val isSelecting: Boolean = selectedGroupIds.isNotEmpty()
+    val visible: List<SharedGroupEntity> = data.groups.filter { (model.showLeftGroups || !data.hasLeft(it.id)) && !model.archivedGroupIds.contains(it.id) && it.name.contains(search.trim(), true) }.let { if (byName) it.sortedBy { it.name.lowercase() } else it.sortedByDescending { it.updatedAtMillis } }
+    val archivedCount: Int = data.groups.count { model.archivedGroupIds.contains(it.id) }
     val ptrState = rememberPullToRefreshState()
+    BackHandler(enabled = isSelecting) { selectedGroupIds = emptySet() }
+    LaunchedEffect(archivedNow) {
+        if (archivedNow.isNotEmpty()) {
+            delay(UNDO_WINDOW_MILLIS)
+            archivedNow = emptySet()
+        }
+    }
     PageColumn {
-        PageHeader("Groups", back) { TextButton({ navigate("new-group") }, enabled = !model.busy) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text("New group", fontSize = 12.sp) } }
+        PageHeader(
+            title = if (isSelecting) "${selectedGroupIds.size} selected" else "Groups",
+            onBack = if (isSelecting) ({ selectedGroupIds = emptySet() }) else null
+        ) {
+            if (isSelecting) IconButton({
+                archivedNow = selectedGroupIds
+                model.archiveGroups(selectedGroupIds)
+                selectedGroupIds = emptySet()
+            }, Modifier.size(40.dp).background(Green, CircleShape)) {
+                Icon(Icons.Outlined.Archive, "Archive selected groups", Modifier.size(22.dp), tint = OnGreen)
+            }
+            else AddHeaderButton("New group", enabled = !model.busy) { navigate("new-group") }
+        }
         PullToRefreshBox(
             isRefreshing = model.busy,
             onRefresh = model::sync,
@@ -87,11 +110,29 @@ internal fun GroupsScreen(data: AppData, model: AppViewModel, navigate: (String)
             PageList {
                 item { SearchField(search, { search = it }, "Search groups") }
                 item { SectionHeading("Your groups", "${visible.size}") { TextButton({ byName = !byName }) { Text(if (byName) "Name A–Z ▾" else "Recently added ▾", fontSize = 11.sp) } } }
-                if (visible.isEmpty()) item { EmptyState(if (data.groups.isEmpty()) "Share expenses together" else "No groups found", if (data.groups.isEmpty()) "Create a group or sync an invitation from a friend." else "Try a different name.") }
+                if (visible.isEmpty()) item {
+                    if (search.isBlank()) PrimaryButton("Add group", { navigate("new-group") })
+                    else EmptyState("No groups found", "Try a different name.")
+                }
                 item {
                     if (visible.isNotEmpty()) Panel { visible.forEachIndexed { i, group -> LedgerRow(group.name,
                         "${data.members.count { it.groupId == group.id && it.isActive }} members · ${group.currencyCode}", icon = Icons.Outlined.DateRange,
-                        onClick = { navigate("group/${group.id}") }, divider = i < visible.lastIndex) } }
+                        selected = group.id in selectedGroupIds,
+                        onClick = {
+                            if (isSelecting) selectedGroupIds = if (group.id in selectedGroupIds) selectedGroupIds - group.id else selectedGroupIds + group.id
+                            else navigate("group/${group.id}")
+                        },
+                        onLongClick = { selectedGroupIds = selectedGroupIds + group.id },
+                        divider = i < visible.lastIndex) } }
+                }
+                if (!isSelecting && archivedCount > 0) item {
+                    Panel { LedgerRow("Archived groups · $archivedCount", icon = Icons.Outlined.Archive, onClick = { navigate("archived-groups") }) }
+                }
+                if (archivedNow.isNotEmpty()) item {
+                    UndoBar("Archived ${archivedNow.size} ${if (archivedNow.size == 1) "group" else "groups"}", "Undo") {
+                        model.unarchiveGroups(archivedNow)
+                        archivedNow = emptySet()
+                    }
                 }
             }
         }
@@ -812,3 +853,15 @@ internal fun MembersScreen(group: SharedGroupEntity, data: AppData, model: AppVi
 }
 
 
+
+private const val UNDO_WINDOW_MILLIS: Long = 5_000L
+
+@Composable
+private fun UndoBar(message: String, actionLabel: String, onAction: () -> Unit) {
+    Panel {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(message, Modifier.weight(1f), color = Ink, fontSize = 13.sp)
+            TextButton(onAction) { Text(actionLabel, color = Green, fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+        }
+    }
+}

@@ -51,7 +51,7 @@ internal fun ProfileScreen(model: AppViewModel, navigate: (String) -> Unit, back
     var showQr by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     PageColumn {
-        PageHeader("Profile", back)
+        PageHeader("Profile")
         PageList {
             item {
                 Surface(

@@ -1,9 +1,7 @@
-name: Deploy to Play Store (Closed Testing)
+name: Deploy to Play Store (Internal Testing)
 
 on:
-  push:
-    branches: [main, develop]
-  workflow_dispatch: # Allow manual trigger from GitHub UI
+  workflow_dispatch: # Manual trigger only, from GitHub UI or `gh workflow run`
 
 # Cancel any in-progress runs on the same branch
 concurrency:
@@ -74,13 +72,13 @@ jobs:
           name: release-aab
           path: app/build/outputs/bundle/release
 
-      # ── Upload to Play Store (Closed Testing) ─────────────────
+      # ── Upload to Play Store (Internal Testing) ───────────────
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.just_sri.suvidhaapp
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          tracks: alpha
+          tracks: internal
           status: completed
           whatsNewDirectory: whatsnew/

@@ -3,20 +3,24 @@ package com.just_sri.suvidha.expenses.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.ui.res.painterResource
-import com.just_sri.suvidha.expenses.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.just_sri.suvidha.expenses.*
@@ -53,15 +57,14 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
     PageColumn {
         PageHeader(if (details) title else "", goBack)
         if (!details) {
-            Column(Modifier.fillMaxSize().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxSize().imePadding().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(Modifier.height(28.dp))
                 Text(if (isSplit) "Enter total amount" else "Enter expense amount", color = Muted, fontSize = 16.sp)
                 Spacer(Modifier.height(24.dp))
-                Text("$symbol ${amount.ifBlank { "0" }}", color = Ink, fontSize = if (amount.length > 9) 34.sp else 48.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
+                AmountField(amount, { amount = it }, symbol, SharedSplitMoney.digits(code))
                 Spacer(Modifier.weight(1f))
                 PrimaryButton("Next", { details = true }, enabled = total > 0)
                 Spacer(Modifier.height(20.dp))
-                NumericKeypad(amount, { amount = it }, SharedSplitMoney.digits(code))
             }
         } else {
             Column(Modifier.fillMaxSize()) {
@@ -99,7 +102,7 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                                     if (includeSelf && splitMode != "Equally") InputField(inputs[ownId].orEmpty(),
                                         { inputs[ownId] = it.take(if (splitMode == "By shares") 6 else 12); error = null },
                                         if (splitMode == "Exact") symbol else "1 share", modifier = Modifier.width(110.dp),
-                                        keyboard = KeyboardOptions(keyboardType = if (splitMode == "By shares") KeyboardType.Number else KeyboardType.Decimal))
+                                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Phone))
                                     if (includeSelf) Text(minorMoney(previewShares[ownId] ?: 0L, code), color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                 }
                             }
@@ -111,7 +114,7 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
                                     Text(name, Modifier.weight(1f), color = Ink, fontSize = 14.sp)
                                     if (splitMode != "Equally" && deselected[id] != true) InputField(inputs[id].orEmpty(), { inputs[id] = it.take(if (splitMode == "By shares") 6 else 12); error = null },
                                         if (splitMode == "Exact") symbol else "1 share", modifier = Modifier.width(110.dp),
-                                        keyboard = KeyboardOptions(keyboardType = if (splitMode == "By shares") KeyboardType.Number else KeyboardType.Decimal))
+                                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Phone))
                                     if (deselected[id] != true) Text(minorMoney(previewShares[id] ?: 0L, code), color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                 }
                             }
@@ -184,23 +187,27 @@ internal fun MoneyFlow(data: AppData, model: AppViewModel, back: () -> Unit, gro
 }
 
 @Composable
-internal fun NumericKeypad(value: String, onChange: (String) -> Unit, fractionDigits: Int) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf(".", "0", "delete")).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { key ->
-                    Surface(onClick = { onChange(keypadValue(value, key, fractionDigits)) }, modifier = Modifier.weight(1f), shape = Ui.FieldRadius,
-                        color = CardSurface, enabled = key != "." || fractionDigits > 0) {
-                        Box(Modifier.height(56.dp), contentAlignment = Alignment.Center) {
-                            if (key == "delete") Icon(painterResource(R.drawable.ic_backspace), "Delete digit", tint = Ink)
-                            else Text(key, color = Ink, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
+internal fun AmountField(value: String, onChange: (String) -> Unit, symbol: String, fractionDigits: Int) {
+    val focusRequester: FocusRequester = remember { FocusRequester() }
+    val amountSize: TextUnit = if (value.length > 9) 34.sp else 48.sp
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    BasicTextField(value, { onChange(sanitizeAmount(it, fractionDigits)) }, Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true,
+        textStyle = TextStyle(color = Ink, fontSize = amountSize, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), cursorBrush = SolidColor(Green),
+        decorationBox = { inner ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Text(symbol, color = Ink, fontSize = amountSize, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
+                Spacer(Modifier.width(8.dp))
+                Box(contentAlignment = Alignment.CenterStart) {
+                    if (value.isEmpty()) Text("0", color = Muted, fontSize = amountSize, fontWeight = FontWeight.Bold)
+                    inner()
                 }
             }
-        }
-    }
+        })
 }
+
+internal fun sanitizeAmount(input: String, fractionDigits: Int): String =
+    input.replace(',', '.').fold("") { current, char -> keypadValue(current, char.toString(), fractionDigits) }
 
 internal fun keypadValue(current: String, key: String, fractionDigits: Int): String = when {
     key == "delete" -> current.dropLast(1)

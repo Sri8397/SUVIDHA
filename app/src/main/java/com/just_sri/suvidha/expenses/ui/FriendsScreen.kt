@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.MoreVert
@@ -47,7 +45,7 @@ internal fun FriendsScreen(data: AppData, model: AppViewModel, navigate: (String
     val visible: List<Friend> = data.friends.filter { it.name.contains(search.trim(), true) }.let { list -> if (sortName) list.sortedBy { it.name.lowercase() } else list.sortedByDescending { abs(balances[it.id] ?: 0.0) } }
     val ptrState = rememberPullToRefreshState()
     PageColumn {
-        PageHeader("Friends", back) { TextButton({ navigate("new-friend") }) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text("Add friend", fontSize = 12.sp) } }
+        PageHeader("Friends") { AddHeaderButton("Add friend") { navigate("new-friend") } }
         PullToRefreshBox(
             isRefreshing = model.busy,
             onRefresh = model::sync,
@@ -76,7 +74,10 @@ internal fun FriendsScreen(data: AppData, model: AppViewModel, navigate: (String
                 }
                 item { SearchField(search, { search = it }, "Search friends") }
                 item { SectionHeading("Your friends", "${visible.size}") { TextButton({ sortName = !sortName }) { Text(if (sortName) "Name A–Z ▾" else "Highest balance ▾", fontSize = 11.sp) } } }
-                if (visible.isEmpty()) item { EmptyState(if (data.friends.isEmpty()) "No friends yet" else "No friends found", if (data.friends.isEmpty()) "Save a friend’s name and public ID to start sharing expenses." else "Try a different name.") }
+                if (visible.isEmpty()) item {
+                    if (data.friends.isEmpty()) PrimaryButton("Add friend", { navigate("new-friend") })
+                    else EmptyState("No friends found", "Try a different name.")
+                }
                 item {
                     if (visible.isNotEmpty()) Panel {
                         visible.forEachIndexed { i, friend ->
@@ -136,14 +137,13 @@ internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
             item {
                 Panel {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Text("* Required", color = Muted, fontSize = 12.sp)
-                        Text("Ask your friend for the public ID on their profile. Once saved, you can add them to groups.", color = Muted, fontSize = 14.sp, lineHeight = 22.sp)
+                        Text("Public ID is optional. It's used when you split expenses with this friend.", color = Muted, fontSize = 14.sp, lineHeight = 22.sp)
+                        Text("64 characters · letters a–f and numbers 0–9", color = Muted, fontSize = 12.sp)
                         InputField(
                             value = publicId,
                             onChange = { publicId = it; error = null },
                             placeholder = "Paste or scan full public ID",
-                            label = "Public ID *",
-                            multiline = true,
+                            label = "Public ID (optional)",
                             labelTrailing = {
                                 Surface(
                                     onClick = { startScan() },
@@ -167,7 +167,6 @@ internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
                                 }
                             }
                         )
-                        Text("64 characters · letters a–f and numbers 0–9", color = Muted, fontSize = 12.sp)
                         InputField(name, { name = it.take(60); error = null }, "How you know them", "Name *")
                         ErrorText(error)
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -175,8 +174,8 @@ internal fun AddFriendScreen(model: AppViewModel, back: () -> Unit) {
                             PrimaryButton(if (model.busy) "Saving…" else "Add friend", {
                                 val key = publicId.trim().lowercase()
                                 when {
-                                    !key.matches(Regex("[0-9a-f]{64}")) -> error = "Enter a full 64-character public ID using a–f and 0–9."
                                     name.isBlank() -> error = "Enter your friend’s name."
+                                    key.isNotEmpty() && !key.matches(Regex("[0-9a-f]{64}")) -> error = "Enter a full 64-character public ID using a–f and 0–9."
                                     else -> model.perform("Friend added", back) { model.repository.addFriend(name, key, model.publicId) }
                                 }
                             }, Modifier.weight(1.15f), enabled = !model.busy)

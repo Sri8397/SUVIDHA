@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,6 +84,7 @@ internal fun SuvidhaApp(model: AppViewModel, initialRoute: String = "home") {
                                         route == "expenses" -> ExpensesScreen(data, model, navigate, back)
                                         route == "friends" -> FriendsScreen(data, model, navigate, back)
                                         route == "groups" -> GroupsScreen(data, model, navigate, back)
+                                        route == "archived-groups" -> ArchivedGroupsScreen(data, model, back)
                                         route == "profile" -> ProfileScreen(model, navigate, back)
                                         route == "new-friend" -> AddFriendScreen(model, back)
                                         route == "new-group" -> NewGroupScreen(data, model, navigate, back)
@@ -166,11 +168,11 @@ private fun MainNavigation(selected: String, onSelect: (String) -> Unit) {
 }
 
 @Composable
-internal fun AppIcon(name: String, tint: Color = Green) {
+internal fun AppIcon(name: String, tint: Color = Green, size: Dp = 24.dp) {
     when (name) {
-        "home" -> Icon(Icons.Outlined.Home, null, Modifier.size(24.dp), tint)
-        "friends" -> Icon(painterResource(R.drawable.ic_friends), null, Modifier.size(24.dp), tint)
-        "profile" -> Icon(Icons.Outlined.Person, null, Modifier.size(24.dp), tint)
-        else -> Icon(painterResource(if (name == "expenses") R.drawable.ic_analytics else R.drawable.ic_community), null, Modifier.size(24.dp), tint)
+        "home" -> Icon(Icons.Outlined.Home, null, Modifier.size(size), tint)
+        "friends" -> Icon(painterResource(R.drawable.ic_friends), null, Modifier.size(size), tint)
+        "profile" -> Icon(Icons.Outlined.Person, null, Modifier.size(size), tint)
+        else -> Icon(painterResource(if (name == "expenses") R.drawable.ic_analytics else R.drawable.ic_community), null, Modifier.size(size), tint)
     }
 }

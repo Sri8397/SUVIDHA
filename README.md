@@ -1,7 +1,7 @@
 # SUVIDHA 💸
 
 [![CI](https://github.com/Sri8397/SUVIDHA/actions/workflows/ci.yml/badge.svg)](https://github.com/Sri8397/SUVIDHA/actions/workflows/ci.yml)
-[![Deploy to Play Store (Closed Testing)](https://github.com/Sri8397/SUVIDHA/actions/workflows/deploy-play-store.yml/badge.svg)](https://github.com/Sri8397/SUVIDHA/actions/workflows/deploy-play-store.yml)
+[![Deploy to Play Store (Internal Testing)](https://github.com/Sri8397/SUVIDHA/actions/workflows/deploy-play-store.yml/badge.svg)](https://github.com/Sri8397/SUVIDHA/actions/workflows/deploy-play-store.yml)
 
 **SUVIDHA** is a native Android app for tracking personal expenses and splitting bills with friends and groups. Your personal data lives in a local Room database on your device. Shared groups sync through end-to-end encrypted messages over public Nostr relays, so the app works offline and sends changes when a connection is available.
 
@@ -168,7 +168,7 @@ Two workflows live in [`.github/workflows/`](.github/workflows/):
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `ci.yml` (CI) | Pull requests, pushes to `main` / `develop`, manual | Runs `assembleDebug`, `testDebugUnitTest`, `lintDebug` and `assembleDebugAndroidTest` on JDK 17. Uploads test and lint reports when a run fails. |
-| `deploy-play-store.yml` | Pushes to `main` / `develop`, manual | Builds a signed release AAB and uploads it to the Google Play closed-testing track. |
+| `deploy-play-store.yml` | Manual only | Builds a signed release AAB and uploads it to the Google Play internal-testing track. |
 
 To skip the Play Store deploy for a push, include `[skip deploy]` in the head commit message. CI still runs. To skip everything, use `[skip ci]`.
 
